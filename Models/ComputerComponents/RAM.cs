@@ -1,0 +1,37 @@
+﻿using ComputerStoreApplication.Models.ComponentSpecifications;
+using ComputerStoreApplication.Models.Vendors_Producers;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ComputerStoreApplication.Models.ComputerComponents
+{
+    internal class RAM : ComputerPartType
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        [Required]
+        public int ManufacturerId { get; set; }
+
+        public virtual Manufacturer Manufacturer { get; set; }
+
+        [Required]
+        public int MemoryTypeId { get; set; }
+
+        public virtual MemoryType MemoryType { get; set; }
+
+        public int MemorySizePerStick { get; set; }
+
+        public decimal MemorySpeed {  get; set; }
+
+        [Required]
+        public int RamProfileFeaturesId { get; set; }
+
+        public virtual RamProfileFeatures RamProfileFeatures { get; set; }
+    }
+}

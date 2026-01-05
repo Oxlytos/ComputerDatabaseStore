@@ -1,4 +1,4 @@
-﻿namespace WindowDemo
+﻿namespace ComputerStoreApplication.MickesWindow
 {
     internal class Program
     {
