@@ -9,27 +9,19 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    internal class GPU : ComputerPartType
+    public class GPU : ComputerPartType
     {
-        public int Id { get; set; }
+        public int? ManufacturerId { get; set; }
 
-        public string Name { get; set; }
+        public virtual Manufacturer? Manufacturer { get; set; } //MSI, ASUS 
 
-        [Required]
-        public int ManufacturerId { get; set; }
+        public int? VendorId { get; set; }
 
-        public virtual Manufacturer Manufacturer { get; set; } //MSI, ASUS 
+        public virtual Vendor? Vendor { get; set; } //Intel, AMD RX
+        
+        public int? MemoryTypeId { get; set; }
 
-        [Required]
-        public int VendorId { get; set; }
-
-        public virtual Vendor Vendor { get; set; } //Intel, AMD RX
-
-        [Required]
-
-        public int MemoryTypeId { get; set; }
-
-        public virtual MemoryType MemoryType { get; set; }
+        public virtual MemoryType? MemoryType { get; set; }
 
         public int MemorySizeGB { get; set; }
 

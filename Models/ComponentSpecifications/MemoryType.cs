@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
-    internal class MemoryType
+    public class MemoryType
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string MemoryTypeName { get; set; }
     }
 }

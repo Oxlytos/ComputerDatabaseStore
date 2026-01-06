@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
-    internal class CPUSocket
+    public class CPUSocket
     {
 
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string CPUSocketName { get; set; }
     }
 }

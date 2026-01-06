@@ -9,19 +9,13 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    internal class RAM : ComputerPartType
+    public class RAM : ComputerPartType
     {
-        public int Id { get; set; }
+        public int? ManufacturerId { get; set; }
 
-        public string Name { get; set; }
+        public virtual Manufacturer? Manufacturer { get; set; }
 
-        [Required]
-        public int ManufacturerId { get; set; }
-
-        public virtual Manufacturer Manufacturer { get; set; }
-
-        [Required]
-        public int MemoryTypeId { get; set; }
+        public int? MemoryTypeId { get; set; }
 
         public virtual MemoryType MemoryType { get; set; }
 
@@ -29,9 +23,9 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public decimal MemorySpeed {  get; set; }
 
-        [Required]
-        public int RamProfileFeaturesId { get; set; }
+        public int? RamProfileFeaturesId { get; set; }
 
-        public virtual RamProfileFeatures RamProfileFeatures { get; set; }
+        public virtual RamProfileFeatures? RamProfileFeatures { get; set; }
     }
+
 }

@@ -6,19 +6,14 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Customer
 {
-    internal class CustomerShippingInfo
+    public class CustomerShippingInfo
     {
-        public int CustomerId { get; set; }
-
-        public virtual Customer Customer { get; set; }
+        public int? CustomerId { get; set; }
+        public virtual Customer? Customer { get; set; }
         public int PostalCode { get; set; }
-
         public string StreetName { get; set; }
-
         public string City { get; set; }
-
-        public string StateCountyProvince { get; set; }
-
+        public string State_Or_County_Or_Province { get; set; }
         public string Country { get; set; }
     }
 }

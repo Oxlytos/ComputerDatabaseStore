@@ -9,38 +9,24 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    internal class Motherboard : ComputerPartType
+    public class Motherboard : ComputerPartType
     {
-        public int Id { get; set; }
 
-        [Required]
-        public string Name { get; set; }
+        public int? ManufacturerId { get; set; }
 
-        [Required]
-        public int ManufacturerId { get; set; }
+        public virtual Manufacturer? Manufacturer { get; set; }
 
-        public virtual Manufacturer Manufacturer { get; set; }
+        public int? CPUSocketId { get; set; }
 
-        [Required]
-        public int CPUSocketId { get; set; }
+        public virtual CPUSocket? CPUSocket { get; set; }
+        public int? CPUArchitectureId { get; set; }
 
-        public virtual CPUSocket CPUSocket { get; set; }
-
-        [Required]
-        public int CPUArchitectureId { get; set; }
-
-        public virtual CPUArchitecture CPUSocketArchitecture { get; set; }
-
-        [Required]
-        public int MemoryTypeId { get; set; }
-
-        public virtual MemoryType MemoryType { get; set; }
+        public virtual CPUArchitecture? CPUSocketArchitecture { get; set; }
+        public int? MemoryTypeId { get; set; }
+        public virtual MemoryType? MemoryType { get; set; }
         public bool Overclockable { get; set; }
-
         public bool Bluetooth { get; set; }
-
         public bool Wifi { get; set; }
-
         public bool Soundcard { get; set; }
     }
 }

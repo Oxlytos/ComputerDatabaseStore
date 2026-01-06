@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
-    internal class EnergyClass
+    public class EnergyClass
     {
         public int Id { get; set; }
 

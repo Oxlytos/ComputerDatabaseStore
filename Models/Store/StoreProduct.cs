@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Store
 {
-    internal class StoreProduct
+    public class StoreProduct
     {
         public int Id { get; set; }
 
@@ -16,12 +16,12 @@ namespace ComputerStoreApplication.Models.Store
 
         public int ProductId { get; set; }
 
-        public int PartTypeId { get; set; }
-        public virtual ComputerPartType PartType { get; set; }
+        public int? PartTypeId { get; set; }
+        public virtual ComputerPartType? PartType { get; set; }
 
-        public int ManufacturerId { get; set; }
+        public int? ManufacturerId { get; set; }
 
-        public virtual Manufacturer Manufacturer { get; set; }
+        public virtual Manufacturer? Manufacturer { get; set; }
 
         public float Price { get; set; }
 

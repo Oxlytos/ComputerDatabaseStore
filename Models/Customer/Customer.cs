@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Customer
 {
-    internal class Customer
+    public class Customer
     {
         public int Id { get; set; }
 
@@ -20,6 +20,6 @@ namespace ComputerStoreApplication.Models.Customer
 
         public int CustomerShippingInfoId { get; set; }
 
-        public virtual List<CustomerShippingInfo> CustomerShippingInfo { get; set; } //A customer can have multiple saved addreses
+        public virtual List<CustomerShippingInfo> CustomerShippingInfo { get; set; } //A customer can have multiple saved addreses, or something, ship to work?
     }
 }

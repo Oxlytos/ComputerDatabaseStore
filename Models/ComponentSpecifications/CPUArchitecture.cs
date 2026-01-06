@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
-    internal class CPUArchitecture
+    public class CPUArchitecture
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string CPUArchitectureName { get; set; }
     }
 }
