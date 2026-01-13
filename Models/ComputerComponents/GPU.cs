@@ -9,16 +9,8 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    public class GPU : ComputerPartType
+    public class GPU : ComputerPart
     {
-        public int? ManufacturerId { get; set; }
-
-        public virtual Manufacturer? Manufacturer { get; set; } //MSI, ASUS 
-
-        public int? VendorId { get; set; }
-
-        public virtual Vendor? Vendor { get; set; } //Intel, AMD RX
-        
         public int? MemoryTypeId { get; set; }
 
         public virtual MemoryType? MemoryType { get; set; }
@@ -28,9 +20,10 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public decimal MemorySpeed {  get; set; }
 
         public bool Overclock {  get; set; }
+        public int RecommendedPSUWattage { get; set; }
+        public int WattageConsumption { get; set; }
 
-        public int RequiredWattage { get; set; }
-
+        public GPU() { }
 
     }
 }

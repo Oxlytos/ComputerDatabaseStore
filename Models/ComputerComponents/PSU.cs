@@ -8,16 +8,14 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    public class PSU : ComputerPartType
+    public class PSU : ComputerPart
     {
-        public int? ManufacturerId { get; set; }
-
-        public virtual Manufacturer? Manufacturer { get; set; }
-
         public decimal Wattage {  get; set; }
 
         public int? EnergyClassId { get; set; }
 
         public virtual EnergyClass? EnergyClass { get; set; }
+
+        public PSU() { }
     }
 }

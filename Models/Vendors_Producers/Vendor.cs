@@ -10,11 +10,10 @@ namespace ComputerStoreApplication.Models.Vendors_Producers
 {
     public class Vendor
     {
-        [Key]
         public int Id { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
-        public ICollection<CPU> CPUs = new List<CPU>();
+        public ICollection<ComputerPart> Parts { get; set; } = new List<ComputerPart>();
     }
 }

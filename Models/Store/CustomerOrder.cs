@@ -15,5 +15,13 @@ namespace ComputerStoreApplication.Models.Store
         public virtual Customer.Customer? Customer { get; set; }
 
         public virtual List<OrderProduct> Products { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+
+        public DateTime DeliveryDate { get; set; }
+
+        public bool Delivered { get; set; } = false;
+
+
     }
 }

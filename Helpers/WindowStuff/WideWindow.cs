@@ -14,6 +14,7 @@ namespace ComputerStoreApplication.Helpers.WindowStuff
         public int Top { get; set; }
         public List<string> Words { get; set; }
 
+        public int? InputedInt { get; set; }
 
         public WideWindow(string header, int left, int top, List<string> textRows)
         {
@@ -26,12 +27,9 @@ namespace ComputerStoreApplication.Helpers.WindowStuff
         public void Draw()
         {
             int width = 0;
-            string completedWord = String.Join(" ", Words);
-            foreach (var word in Words) 
-            {
-                width += word.Length;
-            }
-
+            string completedWord = String.Join("", Words);
+           
+            int windowWith = Math.Max(completedWord.Length, Header.Length);
             // Kolla om Header är längre än det längsta ordet i listan
             if (width < Header.Length + 4)
             {
@@ -40,27 +38,41 @@ namespace ComputerStoreApplication.Helpers.WindowStuff
             ;
 
             // Rita Header
+            int whereToPlaceHeader = (windowWith -Header.Length) / 2;
+           
             Console.SetCursorPosition(Left, Top);
             if (Header != "")
             {
-                Console.Write('┌' + " ");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write(Header);
+                Console.Write('┌' );
+                
+             
+                Console.Write(new String('─', windowWith) + '┐');
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(" " + new String('─', width - Header.Length) + '┐');
+
+                int headX = Left + 1 + whereToPlaceHeader;
+
+
+                Console.SetCursorPosition(headX, Top);
+                Console.Write(Header);
+                Console.ForegroundColor = ConsoleColor.DarkGray;
             }
             else
             {
-                Console.Write('┌' + new String('─', width + 2) + '┐');
+                Console.Write('┌' + new String('─', windowWith) + '┐');
             }
 
             Console.SetCursorPosition(Left, Top + 1);
-            Console.WriteLine('│' + completedWord + '│');
+            Console.Write('│');
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(completedWord.PadRight(windowWith));
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.Write('│');
             // Rita raderna i sträng-Listan
 
             // Rita undre delen av fönstret
             Console.SetCursorPosition(Left, Top +2);
-            Console.Write('└' + new String('─', width + 2) + '┘');
+            Console.Write('└' + new String('─', windowWith) + '┘');
 
 
             // Kolla vilket som är den nedersta posotion, i alla fönster, som ritats ut
@@ -70,6 +82,7 @@ namespace ComputerStoreApplication.Helpers.WindowStuff
             }
 
             Console.SetCursorPosition(0, Lowest.LowestPosition);
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
 

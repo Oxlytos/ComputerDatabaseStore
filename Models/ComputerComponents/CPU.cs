@@ -10,15 +10,11 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    public class CPU : ComputerPartType
+    public class CPU : ComputerPart
     {
         //https://stackoverflow.com/questions/5542864/how-should-i-declare-foreign-key-relationships-using-code-first-entity-framework
 
         //https://learn.microsoft.com/en-us/ef/core/modeling/entity-properties?tabs=data-annotations%2Cwith-nrt
-
-        public int? VendorId { get; set; }
-
-        public virtual Vendor? Vendor { get; set; } //AMD, Nvidia
 
         public decimal? MemorySpeedGhz { get; set; }
 
@@ -32,7 +28,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public int? CPUArchitectureId { get; set; }
         public virtual CPUArchitecture? CPUArchitecture { get; set; }
 
-        public bool? Overclockable { get; set; }
+        public bool Overclockable { get; set; }
 
         public decimal? CPUCache { get; set; }
 

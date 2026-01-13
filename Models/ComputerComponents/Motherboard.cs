@@ -9,12 +9,8 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
-    public class Motherboard : ComputerPartType
+    public class Motherboard : ComputerPart
     {
-
-        public int? ManufacturerId { get; set; }
-
-        public virtual Manufacturer? Manufacturer { get; set; }
 
         public int? CPUSocketId { get; set; }
 
@@ -28,5 +24,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public bool Bluetooth { get; set; }
         public bool Wifi { get; set; }
         public bool Soundcard { get; set; }
+
+        public Motherboard() { }
     }
 }

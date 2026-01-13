@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,13 +12,13 @@ namespace ComputerStoreApplication.Models.Vendors_Producers
 {
     public class Manufacturer
     {
-        [Key]
         public int Id { get; set; }
 
         public string Name { get; set; } //Nvidia, AMD, Intel, Seagate
 
-        //Manufacturers have products they sell, MSI has GPUs, Corsair has Ram sticks RIP and Intel CPUs, but they're all 
+        //Manufacturers have products they sell, MSI has GPUs, Corsair has Ram sticks (RIP) and Intel CPUs, but they're all 
         //contextually Computer Parts (of different types)
-        public ICollection<ComputerPartType> Products { get; set; } = new List<ComputerPartType>();
+        public ICollection<ComputerPart> Products { get; set; } = new List<ComputerPart>();
+        public ICollection<StoreProduct> StoreProducts { get; set; } = new List<StoreProduct>();
     }
 }
