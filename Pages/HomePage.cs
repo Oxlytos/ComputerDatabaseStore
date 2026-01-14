@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Pages
 {
-    public class CustomerPage : IPage
+    public class HomePage : IPage
     {
         public void RenderPage()
         {
-            Console.WriteLine("Customer Account and Info");
+            Helpers.GeneralHelpers.LoadSiteGraphics();
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic)
         {
+            if (UserInput.Key == ConsoleKey.C)
+            {
+                return new CustomerPage();
+            }
             if (UserInput.Key == ConsoleKey.B)
             {
                 return new BrowseProducts();
-            }
-            if (UserInput.Key == ConsoleKey.H)
-            {
-                return new HomePage();
             }
             if (UserInput.Key == ConsoleKey.A)
             {
@@ -29,5 +29,7 @@ namespace ComputerStoreApplication.Pages
             }
             return null;
         }
+
+      
     }
 }

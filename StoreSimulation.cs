@@ -34,13 +34,39 @@ namespace ComputerStoreApplication
         }
         private static void MainSimulationLogic() 
         {
-            using var computerApplicationLogic = new Logic.ApplicationLogic();
+            //Databas connection
+            var db = new Logic.ComputerDBContext();
+
+            //Validerings hanterarer innan vi sparar saker och så
+            var val = new Logic.ValidationManager();
+
+            //Repon som ringer db och sparar till den
+            var rep = new Logic.ComponentRepo(db);
+
+            //Komponenten som hanterar olika services/API kallelser
+            var service = new Logic.ComponentService(rep, val);
+
+            //Hanterar sido-logik
+            var computerApplicationLogic = new Logic.ApplicationManager(service);
 
             while (true) 
             {
+                Console.Clear();
+                //Visa nuvarande sida
                 computerApplicationLogic.CurrentPage.RenderPage();
-            
-                Console.ReadKey();
+
+                //Knapptryck på denna sida
+                ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
+
+                //Gör X sak på sida genom HandleUserInput
+                var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
+
+                //Existerar sidan, byt till den, gör dens funktioner sedan
+                if (actionOnPage != null)
+                {
+                    computerApplicationLogic.CurrentPage = actionOnPage;
+                }
+
             }
         }
 

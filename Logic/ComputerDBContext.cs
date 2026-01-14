@@ -15,10 +15,6 @@ namespace ComputerStoreApplication.Logic
     public class ComputerDBContext :DbContext
     {
         //https://www.entityframeworktutorial.net/code-first/simple-code-first-example.aspx
-        public ComputerDBContext() : base()
-        {
-
-        }
         //DB Sets for things to query later for convinience
         //Component specifcations
         public DbSet<CPUArchitecture> CPUArchitectures { get; set; }

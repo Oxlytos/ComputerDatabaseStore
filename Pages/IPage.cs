@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ComputerStoreApplication.Logic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,6 @@ namespace ComputerStoreApplication.Pages
         void RenderPage();
 
         //Hantera input som variabel på alla sidor, ge de olika funktioner per sida
-        IPage? HandleUserInput(ConsoleKeyInfo UserInput);
+        IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic);
     }
 }
