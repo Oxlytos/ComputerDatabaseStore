@@ -15,6 +15,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public virtual MemoryType? MemoryType { get; set; }
 
+        public decimal? GPUFrequency { get; set; }
+
         public int MemorySizeGB { get; set; }
 
         public decimal MemorySpeed {  get; set; }

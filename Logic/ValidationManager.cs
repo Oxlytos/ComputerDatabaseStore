@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Logic
 {
-    //Before saving and handling API calls, check if reasonable/Can be done
+    //Här ska vi försöka validera saker
+    //Se till att inget heter droptable eller create databaste, saker som kanske kan strula
+    //och att inget dupletter förekommer
     public class ValidationManager
     {
         public  void Validate(string huh)

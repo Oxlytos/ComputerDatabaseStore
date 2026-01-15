@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Logic
 {
+    //Application manager ser till att vi har en databas igång
+    //Den skickar sedan vidare förfrågningar till service som kan validera och hämta info från databasen
+    //Vi hanterar även sidor här
     public class ApplicationManager : IDisposable
     {
         private readonly ComponentService _services;
@@ -21,7 +24,7 @@ namespace ComputerStoreApplication.Logic
             ComputerPartShopDB = new ComputerDBContext();
 
             //Startsidan blir där man kan browse:a produkter
-            CurrentPage = new BrowseProducts();
+            CurrentPage = new HomePage();
             _services = service;
         }
 
@@ -41,9 +44,17 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetCPUArchitectures();
         }
+        public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes()
+        {
+            return _services.GetMemoryTypes();
+        }
         public void SaveCPU(CPU cPU)
         {
             _services.SaveCPU(cPU);
+        }
+        public void SaveGPU(GPU gPU)
+        {
+            _services.SaveGPU(gPU);
         }
         public void Dispose() { }   
     }

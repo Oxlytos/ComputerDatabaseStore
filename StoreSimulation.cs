@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.MickesWindow;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
@@ -48,10 +49,11 @@ namespace ComputerStoreApplication
 
             //Hanterar sido-logik
             var computerApplicationLogic = new Logic.ApplicationManager(service);
-
+            var stuff = computerApplicationLogic.GetManufacturers();
             while (true) 
             {
                 Console.Clear();
+                Console.CursorVisible = false;
                 //Visa nuvarande sida
                 computerApplicationLogic.CurrentPage.RenderPage();
 
@@ -75,7 +77,7 @@ namespace ComputerStoreApplication
             Console.WriteLine("Loading admin page...");
             Console.ReadLine();
             Console.Clear();
-            GeneralHelpers.LoadSiteGraphics();
+            PageBanners.DrawShopBanner();
             List<string> adminActions = new List<string> { "Register Product", "Edit Product", "Delete Product", "Add new category" };
             adminActions = GeneralHelpers.ReturnNumberedList(adminActions);
             var adminWindow = new Window("Admin Actions, Press 'A' to choose an action", 2, 4, adminActions);
@@ -193,7 +195,7 @@ namespace ComputerStoreApplication
                 {
                     ConsoleKeyInfo key = Console.ReadKey();
                     Console.Clear();
-                    GeneralHelpers.LoadSiteGraphics();
+                    PageBanners.DrawShopBanner();
                     List<Type> types = GeneralHelpers.ReturnComputerPartTypes();
                     List<string> customerOptions = GeneralHelpers.AllCategoriesFoundAsStrings(types, true);
                     var customerWindow = new Window("Site Actions", 120, 4, customerOptions);

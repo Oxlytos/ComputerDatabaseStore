@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.CreateStuff;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
+using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,15 @@ namespace ComputerStoreApplication.Pages
 {
     public class AdminPage : IPage
     {
+        static List<string> pageOptions = new List<string> { "[H] to go to Home page", "","[C] for customer page", "","[B] to browse products" };
         public void RenderPage()
         {
+            Console.Clear();
+            Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
+            Graphics.PageBanners.DrawAdmingBanner();
+            Console.SetCursorPosition(0, 10);
             Console.WriteLine("Admin page");
-            Console.WriteLine("Press (N) to start registering a new product (CPU, GPU, PSU, RAM, Motherboard");
+            Console.WriteLine("Press (N) to start registering a new product (CPU, GPU, PSU, RAM, Motherboard)");
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -46,8 +52,7 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine("What type of product?");
             var vendors = logic.GetVendors();
             var manufacturers = logic.GetManufacturers();
-            var sockets = logic.GetCPUSockets();
-            var archs = logic.GetCPUArchitectures();
+           
             List<Type> types = GeneralHelpers.ReturnComputerPartTypes();
             for (int i = 0; i < types.Count; i++)
             {
@@ -62,12 +67,20 @@ namespace ComputerStoreApplication.Pages
                 {
                     case 0: //CPU
                         Console.WriteLine("Fetching function....");
+                        var sockets = logic.GetCPUSockets();
+                        var archs = logic.GetCPUArchitectures();
                         CPU chudCPU = CreateComponents.RegisterNewCPU(vendors, manufacturers, sockets, archs);
                         logic.SaveCPU(chudCPU);
                         Console.ReadLine();
                         break;
                     case 1:
-                        Console.WriteLine("Bongos");
+                        //GPU
+
+                        Console.WriteLine("Fetching function....");
+                        var memoryTypes = logic.GetMemoryTypes();
+                        GPU newGPU = CreateComponents.RegisterNewGPU(vendors, manufacturers, memoryTypes);
+                        logic.SaveGPU(newGPU);
+                        break;
                         break;
                     case 2:
                         Console.WriteLine("Bongos");
@@ -89,6 +102,11 @@ namespace ComputerStoreApplication.Pages
             }
         }
 
-       
+        public void PageOptions(List<string> stuff)
+        {
+            
+        }
+
+      
     }
 }

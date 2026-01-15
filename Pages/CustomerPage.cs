@@ -9,8 +9,12 @@ namespace ComputerStoreApplication.Pages
 {
     public class CustomerPage : IPage
     {
+        static List<string> pageOptions = new List<string> { "[B] to browse products", "","[H] to go the home page", "", "[A] for admin page" };
         public void RenderPage()
         {
+            Console.Clear();
+            Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkGreen);
+            Console.SetCursorPosition(0, 10);
             Console.WriteLine("Customer Account and Info");
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
@@ -28,6 +32,11 @@ namespace ComputerStoreApplication.Pages
                 return new AdminPage();
             }
             return null;
+        }
+
+        public void PageOptions()
+        {
+            throw new NotImplementedException();
         }
     }
 }

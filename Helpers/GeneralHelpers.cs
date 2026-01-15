@@ -15,13 +15,10 @@ namespace ComputerStoreApplication.Helpers
         {
         https://stackoverflow.com/questions/26733/getting-all-types-that-implement-an-interface
             Type computerParts = typeof(ComputerPart);
-
-            var computerPartCategories = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => computerParts.IsAssignableFrom(p));
-
-            List<Type> types = computerPartCategories.ToList();
-            //Ta bort abstrakta klassen från listan, den ska inte synas för någon 
-            types.Remove(typeof(ComputerPart));
-            return types;
+            //Få alla objket av classen ComputerPart som finns i Assembly, fast som inte är abstrakt
+            var compPartCat = typeof(ComputerPart).Assembly.GetTypes(). Where(p=>computerParts.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract);
+            //Användbar
+            return compPartCat.ToList();
         }
         internal static List<string> AllCategoriesFoundAsStrings(List<Type> types, bool numbered)
         {
@@ -52,6 +49,30 @@ namespace ComputerStoreApplication.Helpers
                 newText.Add($"{i+1}. {text[i]} ");
             }
             return newText;
+        }
+        internal static string ReturnedCenteredText(string text, int width)
+        {
+            int leftPadding = Math.Max(0, (width - text.Length) / 2);
+            return (new string(' ', leftPadding) + text).PadRight(width);
+        }
+
+        internal static MemoryType ChooseMemoryType(List<MemoryType> mems)
+        {
+            Console.WriteLine("What memorytype does the graphics card have? Choose by inputting an int");
+            foreach (MemoryType memoryType in mems)
+            {
+                Console.WriteLine($"ID: {memoryType.Id} Name/Type: {memoryType.MemoryTypeName}");
+            }
+            if (Int32.TryParse(Console.ReadLine(), out int choice))
+            {
+                var hit = mems.FirstOrDefault(v => v.Id == choice);
+                return hit;
+            }
+            else
+            {
+                Console.WriteLine("Some kind of errror");
+                return null;
+            }
         }
         internal static Vendor ChooseVendor(List<Vendor> vendors)
         {
@@ -166,14 +187,6 @@ namespace ComputerStoreApplication.Helpers
             {
                 return false;
             }
-        }
-
-        internal static void LoadSiteGraphics()
-        {
-            Console.Clear();
-            List<string> pageHeader = new List<string> { "Oscar's Computer Store ", "Most Things PC related :^)" };
-            var windowTop1 = new Helpers.WindowStuff.WideWindow("•ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• ", 2, 0, pageHeader);
-            windowTop1.Draw();
         }
         
     }

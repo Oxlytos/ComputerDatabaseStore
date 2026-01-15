@@ -9,19 +9,30 @@ namespace ComputerStoreApplication.Logic
 {
     public class ComponentService
     {
+        //Här är steget innan det läggs till i databasen
+        //Validera så att sakerna vi lägger till inte redan finns eller är konstigt strukturerat
+        //Vi hämtar även information direkt från databasen som vendors, gpus annat
         private readonly ComponentRepo _repo;
         private readonly ValidationManager _validation;
 
         public ComponentService( ComponentRepo repo, ValidationManager val)
         {
             _repo = repo;
-            _validation = val;
         }
         public void SaveCPU(CPU newCPU)
         {
             //Validate lol
             _validation.Validate("huh");
             _repo.SaveNewCPU(newCPU);
+        }
+        public void SaveGPU(GPU gpu)
+        {
+            _repo.SaveNewGPU(gpu);
+        }
+        public void SaveManufacturer(Models.Vendors_Producers.Manufacturer newMan)
+        {
+            _validation.Validate("huh");
+            _repo.SaveManufacturer(newMan);
         }
         public List<Models.Vendors_Producers.Vendor> GetVendors()
         {
@@ -38,6 +49,10 @@ namespace ComputerStoreApplication.Logic
         public List<Models.ComponentSpecifications.CPUArchitecture> GetCPUArchitectures()
         {
             return _repo.GetCPUArchitectures();
+        }
+        public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes() 
+        {
+            return _repo.GetMemoryTypes();
         }
     }
 }

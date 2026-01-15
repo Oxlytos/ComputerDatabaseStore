@@ -12,6 +12,9 @@ namespace ComputerStoreApplication.Logic
 {
     public class ComponentRepo
     {
+        //Här sparar vi till databasen
+        //Och hämtar saker från dbn
+        //Här ska saker varit validerade innan något sparas
         readonly ComputerDBContext _dbContext;
 
         public ComponentRepo(ComputerDBContext dBContext)
@@ -46,10 +49,27 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.CPUArchitectures.Cast<CPUArchitecture>().ToList();
         }
+        public List<MemoryType> GetMemoryTypes()
+        {
+            return _dbContext.MemoryTypes.Cast<MemoryType>().ToList();
+        }
         public void SaveNewCPU(CPU cpu)
         {
             _dbContext.CPUs.Add(cpu);
             _dbContext.SaveChanges();
+        }
+        public void SaveNewGPU(GPU gpu)
+        {
+            _dbContext.GPUs.Add(gpu);
+            _dbContext.SaveChanges();
+        }
+        public void SaveManufacturer(Manufacturer manufacturer) 
+        {
+            _dbContext.Manufacturers.Add(manufacturer);
+            Console.WriteLine("Saved manufacturer!");
+            Console.ReadLine();
+            _dbContext.SaveChanges();
+        
         }
 
     }

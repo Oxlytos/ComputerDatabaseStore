@@ -9,8 +9,12 @@ namespace ComputerStoreApplication.Pages
 {
     public class BrowseProducts : IPage
     {
+        static List<string> pageOptions = new List<string> { "[A] for admin page", "","[C] for customer page", "","[H] to go the home page" };
         public void RenderPage()
         {
+            Console.Clear();
+            Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkGreen);
+            Console.SetCursorPosition(0, 10);
             Console.WriteLine("Browse product page");
         }
 
@@ -31,5 +35,9 @@ namespace ComputerStoreApplication.Pages
             return null;
         }
 
+        public void PageOptions()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
