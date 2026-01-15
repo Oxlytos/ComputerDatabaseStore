@@ -13,6 +13,6 @@ namespace ComputerStoreApplication.Pages
         void RenderPage();
 
         //Hantera input som variabel på alla sidor, ge de olika funktioner per sida
-        IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic);
+        IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic);
     }
 }

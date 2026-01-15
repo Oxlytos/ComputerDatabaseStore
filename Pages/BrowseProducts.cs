@@ -14,7 +14,7 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine("Browse product page");
         }
 
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic)
+        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             if (UserInput.Key == ConsoleKey.C) 
             {

@@ -13,7 +13,7 @@ namespace ComputerStoreApplication.Pages
         {
             Helpers.GeneralHelpers.LoadSiteGraphics();
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic)
+        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             if (UserInput.Key == ConsoleKey.C)
             {

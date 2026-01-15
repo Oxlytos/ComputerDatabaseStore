@@ -13,7 +13,7 @@ namespace ComputerStoreApplication.Pages
         {
             Console.WriteLine("Customer Account and Info");
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationLogic applicationLogic)
+        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             if (UserInput.Key == ConsoleKey.B)
             {
