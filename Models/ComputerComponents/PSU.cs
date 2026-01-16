@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Models.ComponentSpecifications;
+﻿using ComputerStoreApplication.Logic;
+using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,25 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public virtual EnergyClass? EnergyClass { get; set; }
 
         public PSU() { }
+
+        public override void Create(ApplicationManager lol)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Read(ApplicationManager lol, int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Update(ApplicationManager lol, int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Delete(ApplicationManager lol, int id) 
+        {
+            throw new NotImplementedException();
+        }
     }
 }

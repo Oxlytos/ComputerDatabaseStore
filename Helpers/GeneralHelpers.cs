@@ -41,6 +41,15 @@ namespace ComputerStoreApplication.Helpers
 
                 return categories;
         }
+        internal static int CenterOfTheScreen()
+        {
+            return Console.WindowHeight / 2;
+        }
+        internal static int ReturnMiddleOfTheScreenXAxisWithOffsetForSomeStringOrLength(int length)
+        {
+            int middleOfTheScreen = (Console.WindowWidth - length) / 2;
+            return middleOfTheScreen;
+        }
         internal static List<string> ReturnNumberedList(List<string> text)
         {
             List<string> newText = new List<string>();
@@ -76,7 +85,7 @@ namespace ComputerStoreApplication.Helpers
         }
         internal static Vendor ChooseVendor(List<Vendor> vendors)
         {
-            Console.WriteLine("Which vendor? Choose by inputting an int");
+           Console.WriteLine("Which vendor? Choose by inputting an int");
             foreach (Vendor v in vendors) 
             {
                 Console.WriteLine($"ID: {v.Id} Name: {v.Name}");
@@ -154,12 +163,8 @@ namespace ComputerStoreApplication.Helpers
             {
                 return intVal;
             }
-            else
-            {
-                Console.WriteLine("Error");
-                return 0;
-            }
-         
+            //Borde lägga till någon throw error här
+            return 0;
         }
         internal static decimal StringToDecimal(string userInput)
         {

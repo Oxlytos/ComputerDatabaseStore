@@ -12,6 +12,7 @@ namespace ComputerStoreApplication.Pages
         //Abrstract void, alla sidor ska rendera sig själv som metod, fast det kan se olika ut
         void RenderPage();
 
+        void SetPageCommands();
         //Hantera input som variabel på alla sidor, ge de olika funktioner per sida
         IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic);
     }

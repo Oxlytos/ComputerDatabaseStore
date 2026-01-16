@@ -9,34 +9,56 @@ namespace ComputerStoreApplication.Pages
 {
     public class CustomerPage : IPage
     {
-        static List<string> pageOptions = new List<string> { "[B] to browse products", "","[H] to go the home page", "", "[A] for admin page" };
+        public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void RenderPage()
         {
             Console.Clear();
-            Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkGreen);
+            SetPageCommands();
+            Graphics.PageBanners.DrawCustomerPage();
             Console.SetCursorPosition(0, 10);
-            Console.WriteLine("Customer Account and Info");
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
-            if (UserInput.Key == ConsoleKey.B)
+            //har vi inte deras input
+            if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
+                return this; //retunera samma sida igen
+
+            //retunera sida beroende på sida
+            switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
-                return new BrowseProducts();
+                //Kolla page commands metoden
+                case PageControls.PageOption.Home:
+                    return new HomePage();
+                case PageControls.PageOption.CustomerPage:
+                    return this;
+                case PageControls.PageOption.AdminPage:
+                    return new AdminPage();
+                case PageControls.PageOption.Browse:
+                    return new BrowseProducts();
             }
-            if (UserInput.Key == ConsoleKey.H)
-            {
-                return new HomePage();
-            }
-            if (UserInput.Key == ConsoleKey.A)
-            {
-                return new AdminPage();
-            }
-            return null;
+            ;
+            return this;
         }
 
-        public void PageOptions()
+
+        public void SetPageCommands()
         {
-            throw new NotImplementedException();
+            //Specific commands per sida
+            //Sparar kommandon till tangenter på sidor
+            PageCommands = new Dictionary<ConsoleKey, PageControls.PageCommand>
+            {
+                { ConsoleKey.H, PageControls.HomeCommand },
+                {ConsoleKey.C, PageControls. CustomerHomePage},
+                { ConsoleKey.B, PageControls.BrowseCommand },
+                { ConsoleKey.A, PageControls.Admin },
+            };
+            //hitta beskrivningarna
+            var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
+            //Boom, rita dem
+            if (pageOptions.Any())
+            {
+                Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
+            }
         }
     }
 }

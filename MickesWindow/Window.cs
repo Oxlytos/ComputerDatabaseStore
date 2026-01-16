@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.MickesWindow
 {
+
     public class Window
     {
         public string Header { get; set; }
@@ -22,6 +23,7 @@ namespace ComputerStoreApplication.MickesWindow
             Top = top;
             TextRows = textRows;
         }
+
 
         public void Draw()
         {
@@ -70,11 +72,11 @@ namespace ComputerStoreApplication.MickesWindow
             Console.SetCursorPosition(0, Lowest.LowestPosition);
         }
 
+       
 
-    }
-
-    public static class Lowest
-    {
-        public static int LowestPosition { get; set; }
+        public static class Lowest
+        {
+            public static int LowestPosition { get; set; }
+        }
     }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using ComputerStoreApplication.Logic;
 
 namespace ComputerStoreApplication.Models.ComputerComponents
 {
@@ -30,5 +31,11 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public ICollection<StoreProduct> Products { get; set; } = new List<StoreProduct>();
 
         public int? Stock {  get; set; }
+
+        public abstract void Create(ApplicationManager lol);
+        public abstract void Read(ApplicationManager lol, int id);
+        public abstract void Update(ApplicationManager lol, int id);
+        public abstract void Delete(ApplicationManager lol, int id);
+
     }
 }

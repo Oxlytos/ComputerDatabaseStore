@@ -50,6 +50,11 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetCPUArchitectures();
         }
+
+        public List<Models.ComputerComponents.GPU> GetGPUs()
+        {
+            return _repo.GetGPUs();
+        }
         public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes() 
         {
             return _repo.GetMemoryTypes();

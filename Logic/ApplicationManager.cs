@@ -48,6 +48,10 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetMemoryTypes();
         }
+        public List<Models.ComputerComponents.GPU> GetGPUs()
+        {
+            return _services.GetGPUs();
+        }
         public void SaveCPU(CPU cPU)
         {
             _services.SaveCPU(cPU);

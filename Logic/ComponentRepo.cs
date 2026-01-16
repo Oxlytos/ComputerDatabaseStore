@@ -53,6 +53,11 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.MemoryTypes.Cast<MemoryType>().ToList();
         }
+
+        public List<GPU> GetGPUs()
+        {
+            return _dbContext.GPUs.ToList();
+        }
         public void SaveNewCPU(CPU cpu)
         {
             _dbContext.CPUs.Add(cpu);

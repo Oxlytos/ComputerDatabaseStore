@@ -19,22 +19,20 @@ namespace ComputerStoreApplication
 {
     internal class StoreSimulation
     {
-        static List<Type> PartTypes = GeneralHelpers.ReturnComputerPartTypes();
-
         public static void Run()
         {
             Console.WriteLine("Make sure to fullscreen the applicaiton, then press enter");
             Console.ReadLine();
-            PartTypes = GeneralHelpers.ReturnComputerPartTypes();
            // FillDatabaseWithBaseInformation();
             //  SetupMenus();
-
+            Console.BackgroundColor = ConsoleColor.Gray;
             MainSimulationLogic();
 
             Console.ReadLine();
         }
         private static void MainSimulationLogic() 
         {
+           
             //Databas connection
             var db = new Logic.ComputerDBContext();
 
@@ -49,6 +47,9 @@ namespace ComputerStoreApplication
 
             //Hanterar sido-logik
             var computerApplicationLogic = new Logic.ApplicationManager(service);
+            //Bestäm sidofärg
+
+
             var stuff = computerApplicationLogic.GetManufacturers();
             while (true) 
             {
@@ -56,7 +57,6 @@ namespace ComputerStoreApplication
                 Console.CursorVisible = false;
                 //Visa nuvarande sida
                 computerApplicationLogic.CurrentPage.RenderPage();
-
                 //Knapptryck på denna sida
                 ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
 

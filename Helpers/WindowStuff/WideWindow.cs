@@ -8,7 +8,6 @@ namespace ComputerStoreApplication.Helpers.WindowStuff
 {
     internal class WideWindow
     {
-
         public string Header { get; set; }
         public int Left { get; set; }
         public int Top { get; set; }
