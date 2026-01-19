@@ -14,10 +14,22 @@ namespace ComputerStoreApplication.Logic
         //Vi hämtar även information direkt från databasen som vendors, gpus annat
         private readonly ComponentRepo _repo;
         private readonly ValidationManager _validation;
-
+        
         public ComponentService( ComponentRepo repo, ValidationManager val)
         {
             _repo = repo;
+        }
+        //Fältet var static, kan inte vara om det ska connectad till resten
+        public IEnumerable<ComputerPart> GetObjectsOfTheSameType(ComputerPart part)
+        {
+            return part switch
+            {
+                GPU=>_repo.GetGPUs(),
+                CPU=> _repo.GetCPUs(),
+
+                _ => throw new ArgumentException("Unknown computer part type")
+
+            };
         }
         public void SaveCPU(CPU newCPU)
         {
@@ -54,6 +66,10 @@ namespace ComputerStoreApplication.Logic
         public List<Models.ComputerComponents.GPU> GetGPUs()
         {
             return _repo.GetGPUs();
+        }
+        public List<Models.ComputerComponents.CPU> GetCPUs()
+        {
+            return _repo.GetCPUs();
         }
         public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes() 
         {

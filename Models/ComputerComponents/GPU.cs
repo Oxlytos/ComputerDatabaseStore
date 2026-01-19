@@ -80,17 +80,17 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             lol.SaveGPU(newGpu);
         }
 
-        public override void Read(ApplicationManager lol, int id)
-        {
-
-        }
-
-        public override void Update(ApplicationManager lol, int id)
+        public override void Read(ApplicationManager lol)
         {
             throw new NotImplementedException();
         }
 
-        public override void Delete(ApplicationManager lol, int id)
+        public override void Update(ApplicationManager lol)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Delete(ApplicationManager lo)
         {
             throw new NotImplementedException();
         }

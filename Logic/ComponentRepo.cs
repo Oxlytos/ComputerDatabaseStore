@@ -58,6 +58,26 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.GPUs.ToList();
         }
+        public List<CPU> GetCPUs()
+        {
+            var cpus = _dbContext.CPUs.ToList();
+
+            //Koppla ihop virtuella proprterties här
+            var man = GetManufacturers();
+            var vendors = GetVendors();
+            var sockets = GetSockets();
+            var cpuArchs = GetCPUArchitectures();
+            foreach (var cpu in cpus) 
+            {
+                cpu.Manufacturer = man.FirstOrDefault(s=>s.Id == cpu.ManufacturerId);
+                cpu.Vendor = vendors.FirstOrDefault(s=>s.Id==cpu.VendorId);
+                cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
+                cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
+                
+            }
+
+            return cpus;
+        }
         public void SaveNewCPU(CPU cpu)
         {
             _dbContext.CPUs.Add(cpu);

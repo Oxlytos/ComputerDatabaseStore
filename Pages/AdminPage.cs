@@ -55,7 +55,7 @@ namespace ComputerStoreApplication.Pages
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
                 case PageControls.PageOption.AdminCreate:
-                    Crud_Related.CreateComponents.GetInputs(applicationLogic);
+                    Crud_Related.CrudHandler.GetInputs(applicationLogic);
                     return this; //This blir denna sida
                 case PageControls.PageOption.AdminEdit:
                    // Crud_Related.UpdateComponent.GetEditInputs(applicationLogic);

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Crud_Related
 {
-    public class CreateComponents
+    public class CrudHandler
     {
         public Dictionary<ConsoleKey, CRUD> keyValuePairs;
         private static readonly Dictionary<ConsoleKey, CRUD> Commandos = new()
@@ -33,7 +33,18 @@ namespace ComputerStoreApplication.Crud_Related
         }
         public static void GetInputs(ApplicationManager logic)
         {
-            ComputerPart whatItIs = AskWhatProductType(logic);
+            ComputerPart componentToCreate = AskWhatProductType(logic);
+
+            var relevantObjects = logic.GetComputerComponentsByType(componentToCreate).ToList();
+
+            Console.ReadLine();
+            Console.WriteLine($"You chose: {componentToCreate.GetType().ToString()}");
+            Console.WriteLine("Current components in this category");
+            foreach (var part in relevantObjects)
+            {
+                Console.WriteLine($"Id: {part.Id} Name: {part.Name}");
+            }
+
             Console.WriteLine("What CRUD action?");
             foreach (var key in Commandos)
             {
@@ -48,29 +59,23 @@ namespace ComputerStoreApplication.Crud_Related
             switch (userCrudValue)
             {
                 case CRUD.Create:
-                    whatItIs.Create(logic);
+                    componentToCreate.Create(logic);
                     break;
                 case CRUD.Read:
-                    //logic.get
-                    //int whichObjectDoesItAffect;
-                    //logic.Printa alla objekt av X typ
-                    //få id av rätt, kalla sen logik därifrån
+                    componentToCreate.GetType();
                     Console.WriteLine("Input the corresponding ID as an int in the console please");
-                    foreach(var gpu in logic.GetGPUs())
-                    {
-                        Console.WriteLine($"ID: {gpu.Id} Name: {gpu.Name}");
-                    }
                     int whatID = GeneralHelpers.StringToInt(Console.ReadLine());
+                    var selectedComponent = relevantObjects.Where(s => s.Id == whatID).FirstOrDefault();
                     if (whatID != null)
                     {
-                        whatItIs.Read(logic, whatID);
+                        selectedComponent.Read(logic);
                     }
                     break;
                 case CRUD.Update:
-                    whatItIs.Update(logic, 1);
+                    componentToCreate.Update(logic);
                     break;
                 case CRUD.Delete:
-                    whatItIs.Delete(logic, 1);
+                    componentToCreate.Delete(logic);
                     break;
             }
             /*
@@ -124,28 +129,6 @@ namespace ComputerStoreApplication.Crud_Related
                 }
             }*/
         }
-        static void CreateProduct(CPU component, ApplicationManager logic)
-        {
-            Console.WriteLine("What type of product do you wanna create/register?");
-            ComputerPart what = AskWhatProductType(logic);
-        }
-        static void CreateProduct(GPU component, ApplicationManager logic)
-        {
-
-        }
-        static void ReadProduct(ApplicationManager logic)
-        {
-            AskWhatProductType(logic);
-        }
-        static void UpdateProduct(ApplicationManager logic)
-        {
-            AskWhatProductType(logic);
-        }
-        static void DeleteProduct(ApplicationManager logic)
-        {
-            AskWhatProductType(logic);
-        }
-
         static ComputerPart AskWhatProductType(ApplicationManager logic)
         {
             Console.WriteLine("What type of product?");

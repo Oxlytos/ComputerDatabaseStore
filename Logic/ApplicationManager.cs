@@ -27,7 +27,10 @@ namespace ComputerStoreApplication.Logic
             CurrentPage = new HomePage();
             _services = service;
         }
-
+        public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
+        {
+            return _services.GetObjectsOfTheSameType(type);
+        }
         public List<Models.Vendors_Producers.Vendor> GetVendors()
         {
             return _services.GetVendors();

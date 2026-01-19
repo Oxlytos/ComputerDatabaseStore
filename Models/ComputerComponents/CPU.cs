@@ -95,24 +95,75 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             lol.SaveCPU(newCPU);
         }
 
-        public override void Read(ApplicationManager lol, int id)
+        public override void Read(ApplicationManager lo)
         {
+            //Hämta alla properties
+            var propertiers = this.GetType().GetProperties();
+            Console.WriteLine($"Info on this {this.Name}");
+            foreach (var prop in propertiers)
+            {
+                //Hämta value på denna property i loopen
+                var value = prop.GetValue(this);
+                //Kolla specifika props, för formatering och att vi får deras properties korrekt
+                switch (value)
+                {
+                    case Manufacturer m:
+                        Console.WriteLine($"{prop.Name} : {m.Name}");
+                        break;
+                    case Vendor v:
+                        Console.WriteLine($"{prop.Name} : {v.Name}");
+                        break;
+                    case CPUArchitecture c:
+                        Console.WriteLine($"{prop.Name} : {c.CPUArchitectureName}");
+                        break;
+                    case CPUSocket cs:
+                        Console.WriteLine($"{prop.Name} : {cs.CPUSocketName}");
+                        break;
+                    default:
+                        Console.WriteLine($"{prop.Name} : {value}");
+                        break;
+                }
+            }
+            Console.ReadLine();
+        }
+
+        public override void Update(ApplicationManager lol)
+        {
+            Console.WriteLine("To update a field, input the corresponding name to edit it");
+            Console.WriteLine("For example, want to edit name? Type in 'name' ");
+            Console.WriteLine("To quit this, press enter on the input");
             var propertiers = this.GetType().GetProperties();
             Console.WriteLine($"Info on this {this.GetType()} {this.Name}");
-            foreach (var prop in propertiers) 
+            foreach (var prop in propertiers)
             {
                 var propertyValue = prop.GetValue(this);
                 Console.WriteLine($"{prop.Name} : {propertyValue}");
             }
+            string userInput = Console.ReadLine();
+            var thisProperty = propertiers.FirstOrDefault(p=>p.Name.ToLower() == userInput.ToLower());
+            if (thisProperty!=null)
+            {
+                Console.WriteLine("Editing");
+            }
+            else
+            {
+                Console.WriteLine("Exiting edit mode...");
+            }
         }
 
-        public override void Update(ApplicationManager lol, int id)
+        public override void Delete(ApplicationManager lo)
         {
-            Console.WriteLine("Update name? Leave empty to not change");
-        }
-
-        public override void Delete(ApplicationManager lol, int id)
-        {
+            Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
+            bool userAnswer = Helpers.GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            if (userAnswer) 
+            {
+                Console.WriteLine("Deleting....");
+                //Checka här om det går att ta bort på riktigt
+                //Det ska inte gå att ta bort något om det kanske är en utvald produkt? Eller håller på att fraktas?
+                //Validering för det
+                //Sen ta bort
+              //  lol.RemoveCPU();
+            }
         }
     }
 }
