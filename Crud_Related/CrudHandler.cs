@@ -31,18 +31,18 @@ namespace ComputerStoreApplication.Crud_Related
             Update = ConsoleKey.U, //Uppdatera som i att vi ändrar värden
             Delete = ConsoleKey.D, //Ta bort, duh
         }
+        //Vill vi skiippa och printa tråkiga fälts med ID och annat för användaren
         public static void GetInputs(ApplicationManager logic)
         {
             ComputerPart componentToCreate = AskWhatProductType(logic);
 
             var relevantObjects = logic.GetComputerComponentsByType(componentToCreate).ToList();
 
-            Console.ReadLine();
             Console.WriteLine($"You chose: {componentToCreate.GetType().ToString()}");
-            Console.WriteLine("Current components in this category");
+            Console.WriteLine("Current components in this category;");
             foreach (var part in relevantObjects)
             {
-                Console.WriteLine($"Id: {part.Id} Name: {part.Name}");
+                Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
             }
 
             Console.WriteLine("What CRUD action?");
@@ -56,78 +56,48 @@ namespace ComputerStoreApplication.Crud_Related
                 Console.WriteLine("Some error here bud");
                 return;
             }
-            switch (userCrudValue)
+            if (userCrudValue != CRUD.Create)
             {
-                case CRUD.Create:
-                    componentToCreate.Create(logic);
-                    break;
-                case CRUD.Read:
-                    componentToCreate.GetType();
-                    Console.WriteLine("Input the corresponding ID as an int in the console please");
-                    int whatID = GeneralHelpers.StringToInt(Console.ReadLine());
-                    var selectedComponent = relevantObjects.Where(s => s.Id == whatID).FirstOrDefault();
-                    if (whatID != null)
-                    {
-                        selectedComponent.Read(logic);
-                    }
-                    break;
-                case CRUD.Update:
-                    componentToCreate.Update(logic);
-                    break;
-                case CRUD.Delete:
-                    componentToCreate.Delete(logic);
-                    break;
-            }
-            /*
-            Console.WriteLine("What type of product?");
-            var vendors = logic.GetVendors();
-            var manufacturers = logic.GetManufacturers();
-
-            List<Type> types = GeneralHelpers.ReturnComputerPartTypes();
-            for (int i = 0; i < types.Count; i++)
-            {
-                Console.WriteLine($"{i + 1} {types[i].Name}");
-            }
-
-            string usIn = Console.ReadLine();
-            if (Int32.TryParse(usIn, out int choice))
-            {
-                choice -= 1;
-                switch (choice)
+                var selectedComponent = GetObjectByTypeAndId(relevantObjects);
+                switch (userCrudValue)
                 {
-                    case 0: //CPU
-                        Console.WriteLine("Starting creation process and form for CPU...");
-                        var sockets = logic.GetCPUSockets();
-                        var archs = logic.GetCPUArchitectures();
-                        CPU chudCPU = CreateComponents.RegisterNewCPU(vendors, manufacturers, sockets, archs);
-                        logic.SaveCPU(chudCPU);
-                        Console.ReadLine();
+                    case CRUD.Read:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Read(logic);
+                        }
                         break;
-                    case 1:
-                        //GPU
-                        Console.WriteLine("Starting creation process and form for GPU...");
-                        var memoryTypes = logic.GetMemoryTypes();
-                        GPU newGPU = CreateComponents.RegisterNewGPU(vendors, manufacturers, memoryTypes);
-                        logic.SaveGPU(newGPU);
+                    case CRUD.Update:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Update(logic);
+                        }
                         break;
-                    case 2:
-                        Console.WriteLine("Creating PSU form...");
+                    case CRUD.Delete:
+                        if (selectedComponent != null) 
+                        {
+                            selectedComponent.Delete(logic);
+                        }
                         break;
-                    case 3:
-                        Console.WriteLine("Bongos");
-                        break;
-                    case 4:
-                        Console.WriteLine("Bongos");
-                        break;
-                    case 5:
-                        Console.WriteLine("Bongos");
-                        break;
-                    case 6:
-                        Console.WriteLine("Bongos");
-                        break;
-
                 }
-            }*/
+            }
+            else
+            {
+                componentToCreate.Create(logic);
+            }
+        }
+        static ComputerPart GetObjectByTypeAndId(List<ComputerPart> compObjs)
+        {
+            Console.WriteLine("What object (by ID) do you want to interact with?");
+            int idChoice = GeneralHelpers.StringToInt(Console.ReadLine());
+            if(compObjs.Any(x => x.Id == idChoice))
+            {
+                return compObjs.FirstOrDefault(c => c.Id == idChoice);
+            }
+            else
+            {
+                return null;
+            }
         }
         static ComputerPart AskWhatProductType(ApplicationManager logic)
         {

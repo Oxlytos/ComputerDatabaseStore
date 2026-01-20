@@ -27,6 +27,10 @@ namespace ComputerStoreApplication.Logic
             CurrentPage = new HomePage();
             _services = service;
         }
+        public void SaveChangesOnComponent()
+        {
+            _services.SaveChangesOnComponent();
+        }
         public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
         {
             return _services.GetObjectsOfTheSameType(type);
@@ -54,6 +58,14 @@ namespace ComputerStoreApplication.Logic
         public List<Models.ComputerComponents.GPU> GetGPUs()
         {
             return _services.GetGPUs();
+        }
+        public void SaveNewComponent(ComputerPart part)
+        {
+            _services.SaveNew(part);
+        }
+        public void RemoveComponent(ComputerPart part)
+        {
+            _services.RemoveComponent(part);
         }
         public void SaveCPU(CPU cPU)
         {

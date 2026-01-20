@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,19 @@ namespace ComputerStoreApplication.Logic
                 _ => throw new ArgumentException("Unknown computer part type")
 
             };
+        }
+        public void SaveNew(ComputerPart part)
+        {
+            _repo.SaveNew(part);
+        }
+        public bool SaveChangesOnComponent()
+        {
+                bool status = _repo.TrySaveChanges();
+                return status;
+        }
+        public void RemoveComponent(ComputerPart part)
+        {
+            _repo.RemoveComponent(part);
         }
         public void SaveCPU(CPU newCPU)
         {

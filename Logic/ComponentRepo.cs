@@ -3,6 +3,7 @@ using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,6 +79,27 @@ namespace ComputerStoreApplication.Logic
 
             return cpus;
         }
+        public void SaveNew(ComputerPart part)
+        {
+            _dbContext.AllParts.Add(part);
+            bool check = TrySaveChanges();
+            if (check) 
+            {
+                Console.WriteLine("Managed to save new part to database, press enter to continue");
+                Console.ReadLine();
+            }
+            
+        }
+        public void RemoveComponent(ComputerPart part)
+        {
+            _dbContext.Remove(part);
+            bool check = TrySaveChanges();
+            if (check) 
+            {
+                Console.WriteLine("Managed to remove part from database, press enter to continue");
+                Console.ReadLine();
+            }
+        }
         public void SaveNewCPU(CPU cpu)
         {
             _dbContext.CPUs.Add(cpu);
@@ -87,6 +109,22 @@ namespace ComputerStoreApplication.Logic
         {
             _dbContext.GPUs.Add(gpu);
             _dbContext.SaveChanges();
+        }
+        public bool TrySaveChanges()
+        {
+            try
+            {
+                _dbContext.SaveChanges();
+                Console.WriteLine("DB Operation succesfull, press enter to continue");
+                Console.ReadLine(); 
+                return true;
+            }
+            catch (DbException ex)
+            {
+                Console.WriteLine($"Error when saving, {ex.Message}");
+                return false;
+            }
+          
         }
         public void SaveManufacturer(Manufacturer manufacturer) 
         {

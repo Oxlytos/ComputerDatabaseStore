@@ -2,11 +2,15 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -92,7 +96,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
             };
 
-            lol.SaveCPU(newCPU);
+            lol.SaveNewComponent(newCPU);
         }
 
         public override void Read(ApplicationManager lo)
@@ -104,24 +108,28 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             {
                 //Hämta value på denna property i loopen
                 var value = prop.GetValue(this);
-                //Kolla specifika props, för formatering och att vi får deras properties korrekt
-                switch (value)
+                string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
+                if (!skips.Contains(prop.Name))
                 {
-                    case Manufacturer m:
-                        Console.WriteLine($"{prop.Name} : {m.Name}");
-                        break;
-                    case Vendor v:
-                        Console.WriteLine($"{prop.Name} : {v.Name}");
-                        break;
-                    case CPUArchitecture c:
-                        Console.WriteLine($"{prop.Name} : {c.CPUArchitectureName}");
-                        break;
-                    case CPUSocket cs:
-                        Console.WriteLine($"{prop.Name} : {cs.CPUSocketName}");
-                        break;
-                    default:
-                        Console.WriteLine($"{prop.Name} : {value}");
-                        break;
+                    //Kolla specifika props, för formatering och att vi får deras properties korrekt
+                    switch (value)
+                    {
+                        case Manufacturer m:
+                            Console.WriteLine($"{prop.Name} : {m.Name}");
+                            break;
+                        case Vendor v:
+                            Console.WriteLine($"{prop.Name} : {v.Name}");
+                            break;
+                        case CPUArchitecture c:
+                            Console.WriteLine($"{prop.Name} : {c.CPUArchitectureName}");
+                            break;
+                        case CPUSocket cs:
+                            Console.WriteLine($"{prop.Name} : {cs.CPUSocketName}");
+                            break;
+                        default:
+                            Console.WriteLine($"{prop.Name} : {value}");
+                            break;
+                    }
                 }
             }
             Console.ReadLine();
@@ -131,38 +139,105 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         {
             Console.WriteLine("To update a field, input the corresponding name to edit it");
             Console.WriteLine("For example, want to edit name? Type in 'name' ");
-            Console.WriteLine("To quit this, press enter on the input");
+            Console.WriteLine("Exit by submitting an empty answer");
             var propertiers = this.GetType().GetProperties();
             Console.WriteLine($"Info on this {this.GetType()} {this.Name}");
+            //Print
             foreach (var prop in propertiers)
             {
                 var propertyValue = prop.GetValue(this);
-                Console.WriteLine($"{prop.Name} : {propertyValue}");
+                string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
+                if (!skips.Contains(prop.Name))
+                {
+                    switch (propertyValue)
+                    {
+                        case Manufacturer m:
+                            Console.WriteLine($"{prop.Name} (Id: {ManufacturerId}): {m.Name}");
+                            break;
+                        case Vendor v:
+                            Console.WriteLine($"{prop.Name} (Id: {VendorId}): {v.Name}");
+                            break;
+                        case CPUArchitecture c:
+                            Console.WriteLine($"{prop.Name} (Id: {CPUArchitectureId}): {c.CPUArchitectureName}");
+                            break;
+                        case CPUSocket cs:
+                            Console.WriteLine($"{prop.Name} (Id: {SocketId}): {cs.CPUSocketName}");
+                            break;
+                        default:
+                            Console.WriteLine($"{prop.Name} : {propertyValue}");
+                            break;
+                    }
+                }
             }
+            //Input
             string userInput = Console.ReadLine();
-            var thisProperty = propertiers.FirstOrDefault(p=>p.Name.ToLower() == userInput.ToLower());
-            if (thisProperty!=null)
+            string[] keywords = GeneralHelpers.SpecialFields();
+            var selectedProperty = propertiers.FirstOrDefault(p => p.Name.ToLower() == userInput.ToLower());
+            if (selectedProperty != null)
             {
-                Console.WriteLine("Editing");
+                string field = selectedProperty.Name;
+                if (!keywords.Contains(field))
+                {
+                    var value = GeneralHelpers.TryAndUpdateValueOnObject(selectedProperty);
+                    if (value != null)
+                    {
+                        selectedProperty.SetValue(this, value);
+                        Console.WriteLine("Done! Press Enter");
+                        lol.SaveChangesOnComponent();
+                        Console.ReadLine();
+                    }
+                }
+                else
+                {
+                    //Expandera till en helper metod som hanterar alla specialfall för alla komponenter
+                    //Eller något
+                    switch (field)
+                    {
+                        case "Manufacturer":
+                            var man = lol.GetManufacturers();
+                            Console.WriteLine("Which manufacturer should we change this to? Input the corresponding Id");
+                            foreach (var v in man)
+                            {
+                                Console.WriteLine($"{v.Id}. {v.Name}");
+                            }
+                            int manId = GeneralHelpers.StringToInt(Console.ReadLine());
+                            bool valid = man.Any(s => s.Id == manId);
+                            if (valid)
+                            {
+                                this.Manufacturer = null;
+                                this.ManufacturerId = manId;
+                                Console.WriteLine("Done! Press Enter");
+                                lol.SaveChangesOnComponent();
+                                Console.ReadLine();
+                            }
+                            else
+                            {
+                                Console.WriteLine("Oopsie woopsie error here");
+                            }
+                            break;
+                    }
+                }
+
             }
             else
             {
                 Console.WriteLine("Exiting edit mode...");
+                Console.ReadLine();
             }
         }
 
         public override void Delete(ApplicationManager lo)
         {
             Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = Helpers.GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
-            if (userAnswer) 
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            if (userAnswer)
             {
-                Console.WriteLine("Deleting....");
-                //Checka här om det går att ta bort på riktigt
+                // Checka här om det går att ta bort på riktigt
                 //Det ska inte gå att ta bort något om det kanske är en utvald produkt? Eller håller på att fraktas?
                 //Validering för det
                 //Sen ta bort
-              //  lol.RemoveCPU();
+                Console.WriteLine("Deleting....");
+                lo.RemoveComponent(this);
             }
         }
     }
