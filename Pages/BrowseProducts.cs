@@ -1,4 +1,6 @@
-﻿using ComputerStoreApplication.Logic;
+﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Logic;
+using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,12 @@ namespace ComputerStoreApplication.Pages
 {
     public class BrowseProducts : IPage
     {
+        List<CPU> cPUs = new List<CPU>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+        public void Load(ApplicationManager appLol)
+        {
+            cPUs = appLol.GetCPUs();
+        }
         public void RenderPage()
         {
             Console.Clear();
@@ -17,8 +24,13 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
             Console.WriteLine("Browse product page");
-        }
+            foreach (CPU cpu in cPUs) 
+            {
+                Console.WriteLine(cpu.Name);
+            }
+            
 
+        }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
@@ -62,5 +74,7 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
+
+        
     }
 }

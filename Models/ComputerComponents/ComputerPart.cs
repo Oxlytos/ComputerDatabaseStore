@@ -19,13 +19,15 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         [StringLength(80)]
         public string Name { get; set; } = string.Empty;
 
-        public int? ManufacturerId { get; set; }
+        public string? Description = string.Empty;
 
-        public virtual Manufacturer? Manufacturer { get; set; } //MSI, ASUS 
+        public int? BrandId { get; set; }
 
-        public int? VendorId { get; set; }
+        public virtual Brand? BrandManufacturer { get; set; } //MSI, ASUS 
 
-        public virtual Vendor? Vendor { get; set; } //Intel, AMD RX
+        public int? ChipsetVendorId { get; set; }
+
+        public virtual ChipsetVendor? ChipsetVendor { get; set; } //Intel, AMD RX
 
         //Implement later use
         public ICollection<StoreProduct> Products { get; set; } = new List<StoreProduct>();

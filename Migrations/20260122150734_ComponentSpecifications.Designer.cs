@@ -4,6 +4,7 @@ using ComputerStoreApplication.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComputerStoreApplication.Migrations
 {
     [DbContext(typeof(ComputerDBContext))]
-    partial class ComputerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260122150734_ComponentSpecifications")]
+    partial class ComponentSpecifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,16 +33,22 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(34)
+                        .HasColumnType("nvarchar(34)");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("AllComponentSpecifcations");
+                    b.ToTable("AllComoinentSpecifications");
 
-                    b.UseTptMappingStrategy();
+                    b.HasDiscriminator().HasValue("ComponentSpecification");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComputerComponents.ComputerPart", b =>
@@ -208,12 +217,6 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ComputerPartId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("ManufacturerId")
                         .HasColumnType("int");
 
@@ -221,6 +224,9 @@ namespace ComputerStoreApplication.Migrations
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("PartTypeId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -236,9 +242,9 @@ namespace ComputerStoreApplication.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ComputerPartId");
-
                     b.HasIndex("ManufacturerId");
+
+                    b.HasIndex("PartTypeId");
 
                     b.ToTable("StoreProducts");
                 });
@@ -296,35 +302,35 @@ namespace ComputerStoreApplication.Migrations
                 {
                     b.HasBaseType("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification");
 
-                    b.ToTable("CPUArchitectures", (string)null);
+                    b.HasDiscriminator().HasValue("CPUArchitecture");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.CPUSocket", b =>
                 {
                     b.HasBaseType("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification");
 
-                    b.ToTable("CPUSockets");
+                    b.HasDiscriminator().HasValue("CPUSocket");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.EnergyClass", b =>
                 {
                     b.HasBaseType("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification");
 
-                    b.ToTable("EnergyClasses");
+                    b.HasDiscriminator().HasValue("EnergyClass");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.MemoryType", b =>
                 {
                     b.HasBaseType("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification");
 
-                    b.ToTable("MemoryTypes");
+                    b.HasDiscriminator().HasValue("MemoryType");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.RamProfileFeatures", b =>
                 {
                     b.HasBaseType("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification");
 
-                    b.ToTable("RamProfiles");
+                    b.HasDiscriminator().HasValue("RamProfileFeatures");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.ComputerComponents.CPU", b =>
@@ -509,20 +515,19 @@ namespace ComputerStoreApplication.Migrations
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.StoreProduct", b =>
                 {
-                    b.HasOne("ComputerStoreApplication.Models.ComputerComponents.ComputerPart", "ComputerPart")
-                        .WithMany("Products")
-                        .HasForeignKey("ComputerPartId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ComputerStoreApplication.Models.Vendors_Producers.Brand", "Manufacturer")
                         .WithMany("StoreProducts")
                         .HasForeignKey("ManufacturerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("ComputerPart");
+                    b.HasOne("ComputerStoreApplication.Models.ComputerComponents.ComputerPart", "PartType")
+                        .WithMany("Products")
+                        .HasForeignKey("PartTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Manufacturer");
+
+                    b.Navigation("PartType");
                 });
 
             modelBuilder.Entity("RAMRamProfileFeatures", b =>
@@ -536,51 +541,6 @@ namespace ComputerStoreApplication.Migrations
                     b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.RamProfileFeatures", null)
                         .WithMany()
                         .HasForeignKey("SupportedRamProfilesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.CPUArchitecture", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification", null)
-                        .WithOne()
-                        .HasForeignKey("ComputerStoreApplication.Models.ComponentSpecifications.CPUArchitecture", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.CPUSocket", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification", null)
-                        .WithOne()
-                        .HasForeignKey("ComputerStoreApplication.Models.ComponentSpecifications.CPUSocket", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.EnergyClass", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification", null)
-                        .WithOne()
-                        .HasForeignKey("ComputerStoreApplication.Models.ComponentSpecifications.EnergyClass", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.MemoryType", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification", null)
-                        .WithOne()
-                        .HasForeignKey("ComputerStoreApplication.Models.ComponentSpecifications.MemoryType", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.ComponentSpecifications.RamProfileFeatures", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.ComponentSpecifications.ComponentSpecification", null)
-                        .WithOne()
-                        .HasForeignKey("ComputerStoreApplication.Models.ComponentSpecifications.RamProfileFeatures", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

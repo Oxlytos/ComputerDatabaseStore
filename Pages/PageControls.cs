@@ -17,7 +17,8 @@ namespace ComputerStoreApplication.Pages
             CustomerLogin,
             CustomerPage,
             AdminLogin,
-            AdminCreate,
+            AdminCreateComponent,
+            AdminCreateCategory,
             AdminEdit,
             AdminPage,
             Browse,
@@ -41,8 +42,11 @@ namespace ComputerStoreApplication.Pages
         public static readonly PageCommand Admin =
             new(PageOption.AdminPage, "Login to Admin");
 
-        public static readonly PageCommand AdminCreate =
-           new(PageOption.AdminCreate, "To register a new product");
+        public static readonly PageCommand AdminCreateProduct =
+           new(PageOption.AdminCreateComponent, "To register a new product");
+
+        public static readonly PageCommand AdminCreateCategory =
+           new(PageOption.AdminCreateCategory, "To register a component specification");
 
         public static readonly PageCommand AdminEdit = new(PageOption.AdminEdit, "To edit a existing product");
 

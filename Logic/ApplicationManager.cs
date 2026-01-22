@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Pages;
 using System;
@@ -35,13 +36,25 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetObjectsOfTheSameType(type);
         }
-        public List<Models.Vendors_Producers.Vendor> GetVendors()
+        public IEnumerable<ComponentSpecification> GetComponentSpecifications(ComponentSpecification spec)
+        {
+            return _services.GetSpecsOTheSameType(spec);
+        }
+        public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
         {
             return _services.GetVendors();
         }
-        public List<Models.Vendors_Producers.Manufacturer> GetManufacturers()
+        public List<Models.Vendors_Producers.Brand> GetManufacturers()
         {
             return _services.GetManufacturers();
+        }
+        public List<Models.ComponentSpecifications.EnergyClass> GetEnergyClasses()
+        {
+            return _services.GetEnergyClasses();
+        }
+        public List<Models.ComponentSpecifications.RamProfileFeatures> GetRamProfileFeatures()
+        {
+            return _services.GetRamProfileFeatures();
         }
         public List<Models.ComponentSpecifications.CPUSocket> GetCPUSockets()
         {
@@ -59,6 +72,14 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetGPUs();
         }
+        public List<Models.ComputerComponents.CPU> GetCPUs()
+        {
+            return _services.GetCPUs();
+        }
+        public void SaveNewSpecification(ComponentSpecification spec)
+        {
+            _services.SaveNewSpecification(spec);
+        }
         public void SaveNewComponent(ComputerPart part)
         {
             _services.SaveNew(part);
@@ -66,6 +87,10 @@ namespace ComputerStoreApplication.Logic
         public void RemoveComponent(ComputerPart part)
         {
             _services.RemoveComponent(part);
+        }
+        public void RemoveComponentSpecifications(ComponentSpecification speec)
+        {
+            _services.RemoveComponentSpecifications(speec);
         }
         public void SaveCPU(CPU cPU)
         {

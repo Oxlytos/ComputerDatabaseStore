@@ -32,24 +32,39 @@ namespace ComputerStoreApplication.Crud_Related
             Delete = ConsoleKey.D, //Ta bort, duh
         }
         //Vill vi skiippa och printa tråkiga fälts med ID och annat för användaren
-        public static void GetInputs(ApplicationManager logic)
+        public static void ComponentInput(ApplicationManager logic)
         {
             ComputerPart componentToCreate = AskWhatProductType(logic);
 
-            var relevantObjects = logic.GetComputerComponentsByType(componentToCreate).ToList();
+            var relevantObjects = logic.GetComputerComponentsByType(componentToCreate);
 
             Console.WriteLine($"You chose: {componentToCreate.GetType().ToString()}");
             Console.WriteLine("Current components in this category;");
-            foreach (var part in relevantObjects)
+            if (relevantObjects != null)
             {
-                Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
+                foreach (var part in relevantObjects)
+                {
+                    Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No component of this type yet");
+            }
+            Console.WriteLine("What CRUD action?");
+            if (relevantObjects != null)
+            {
+                foreach (var key in Commandos)
+                {
+
+                    Console.WriteLine($"[{key.Key}] to {key.Value} a product");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Only action available is to Create, by pressing [C]");
             }
 
-            Console.WriteLine("What CRUD action?");
-            foreach (var key in Commandos)
-            {
-                Console.WriteLine($"[{key.Key}] to {key.Value} a product");
-            }
             var userInputC = Console.ReadKey(true);
             if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
             {
@@ -58,7 +73,7 @@ namespace ComputerStoreApplication.Crud_Related
             }
             if (userCrudValue != CRUD.Create)
             {
-                var selectedComponent = GetObjectByTypeAndId(relevantObjects);
+                var selectedComponent = GetObjectByTypeAndId(relevantObjects.ToList());
                 switch (userCrudValue)
                 {
                     case CRUD.Read:
@@ -74,7 +89,7 @@ namespace ComputerStoreApplication.Crud_Related
                         }
                         break;
                     case CRUD.Delete:
-                        if (selectedComponent != null) 
+                        if (selectedComponent != null)
                         {
                             selectedComponent.Delete(logic);
                         }
@@ -86,11 +101,88 @@ namespace ComputerStoreApplication.Crud_Related
                 componentToCreate.Create(logic);
             }
         }
+        public static void CategoryInput(ApplicationManager logic)
+        {
+            ComponentSpecification specCreate = AskWhatComponentSpecification(logic);
+
+            var relevantObjects = logic.GetComponentSpecifications(specCreate);
+
+            Console.WriteLine($"You chose: {relevantObjects.GetType().ToString()}");
+            Console.WriteLine("Current components in this category;");
+            if (relevantObjects != null)
+            {
+                foreach (var spec in relevantObjects)
+                {
+                    Console.WriteLine($"-\tId: {spec.Id} {spec.Name}");
+                }
+            }
+            Console.WriteLine("What CRUD action?");
+            if (relevantObjects != null)
+            {
+                foreach (var key in Commandos)
+                {
+                    Console.WriteLine($"[{key.Key}] to {key.Value} a product");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Only action available is to Create, by pressing [C]");
+            }
+
+            var userInputC = Console.ReadKey(true);
+            if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
+            {
+                Console.WriteLine("Some error here bud");
+                return;
+            }
+            if (userCrudValue != CRUD.Create)
+            {
+                var selectedComponent = GetSpecByTypeAndId(relevantObjects.ToList());
+                switch (userCrudValue)
+                {
+                    case CRUD.Read:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Read(logic);
+                        }
+                        break;
+                    case CRUD.Update:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Update(logic);
+                        }
+                        break;
+                    case CRUD.Delete:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Delete(logic);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                specCreate.Create(logic);
+            }
+        }
         static ComputerPart GetObjectByTypeAndId(List<ComputerPart> compObjs)
         {
             Console.WriteLine("What object (by ID) do you want to interact with?");
             int idChoice = GeneralHelpers.StringToInt(Console.ReadLine());
-            if(compObjs.Any(x => x.Id == idChoice))
+            if (compObjs.Any(x => x.Id == idChoice))
+            {
+                return compObjs.FirstOrDefault(c => c.Id == idChoice);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        static ComponentSpecification GetSpecByTypeAndId(List<ComponentSpecification> compObjs)
+        {
+            Console.WriteLine("What object (by ID) do you want to interact with?");
+            int idChoice = GeneralHelpers.StringToInt(Console.ReadLine());
+            if (compObjs.Any(x => x.Id == idChoice))
             {
                 return compObjs.FirstOrDefault(c => c.Id == idChoice);
             }
@@ -128,6 +220,36 @@ namespace ComputerStoreApplication.Crud_Related
             }
             return null;
         }
+        static ComponentSpecification AskWhatComponentSpecification(ApplicationManager logic)
+        {
+            Console.WriteLine("What type of category?");
+            List<Type> types = GeneralHelpers.ReturnComponentSpecificationTypes();
+            Console.WriteLine(types.Count);
+            for (int i = 0; i < types.Count; i++)
+            {
+                Console.WriteLine($"{i + 1} {types[i].Name}");
+            }
+
+            string usIn = Console.ReadLine();
+            if (Int32.TryParse(usIn, out int choice))
+            {
+                choice -= 1;
+                switch (choice)
+                {
+                    case 0:
+                        return new CPUArchitecture();
+                    case 1:
+                        return new CPUSocket();
+                    case 2:
+                        return new EnergyClass();
+                    case 3:
+                        return new MemoryType();
+                    case 4:
+                        return new RamProfileFeatures();
+                }
+            }
+            return null;
+        }
         static void LoadBackgroundForm()
         {
             int startPosX = GeneralHelpers.ReturnMiddleOfTheScreenXAxisWithOffsetForSomeStringOrLength(15);
@@ -140,107 +262,6 @@ namespace ComputerStoreApplication.Crud_Related
                 BgColor = ConsoleColor.Red,
             };
             form.Draw();
-        }
-        public static CPU RegisterNewCPU(List<Vendor> vendors, List<Manufacturer> manufacturers, List<CPUSocket> socks, List<CPUArchitecture> archs)
-        {
-            Console.WriteLine("Name of the CPU?");
-            string CPUName = Console.ReadLine();
-
-            Vendor vendor = GeneralHelpers.ChooseVendor(vendors);
-            Manufacturer manufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
-            CPUSocket socket = GeneralHelpers.ChooseCPUSocket(socks);
-            CPUArchitecture arch = GeneralHelpers.ChooseCPUArch(archs);
-
-            Console.WriteLine("Amount of cores?");
-            int cores = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            Console.WriteLine("Threadcount?");
-            int threads = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            Console.WriteLine("Clock speed (GHz)?");
-            decimal clockSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
-
-            Console.WriteLine("Overclockable? Type (Y) for yes, (N) for no, then press 'Enter'");
-            bool overclockable = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
-
-            Console.WriteLine("How many we got in stock of this new CPU?");
-            int stock = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            Console.WriteLine("How much CPU cache?");
-            decimal cach = GeneralHelpers.StringToDecimal(Console.ReadLine());
-
-            CPU newCPU = new CPU
-            {
-                Name = CPUName,
-
-                Vendor = vendor,
-                VendorId = vendor.Id,
-                Manufacturer = manufacturer,
-                ManufacturerId = manufacturer.Id,
-
-                SocketType = socket,
-                SocketId = socket.Id,
-                CPUArchitecture = arch,
-                CPUArchitectureId = arch.Id,
-
-                Cores = cores,
-                Threads = threads,
-                MemorySpeedGhz = clockSpeed,
-                Overclockable = overclockable,
-                Stock = stock,
-                CPUCache = cach
-
-            };
-
-            return newCPU;
-        }
-        public static GPU RegisterNewGPU(List<Vendor> vendors, List<Manufacturer> manufacturers, List<MemoryType> memTypes)
-        {
-            Console.WriteLine("Name?");
-            string gpuName = Console.ReadLine();
-
-            Vendor vendor = GeneralHelpers.ChooseVendor(vendors);
-            Manufacturer manufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
-            MemoryType whatMemoryType = GeneralHelpers.ChooseMemoryType(memTypes);
-
-            Console.WriteLine("Memory speed? (MHz)");
-            decimal memorySpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
-
-            Console.WriteLine("How many GBs?");
-            int gbs = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            Console.WriteLine("GPU frequency (MHz)?");
-            decimal freqSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
-
-            Console.WriteLine("Overclockable? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool overclock = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
-
-            Console.WriteLine("Recommended PSU Wattage?");
-            int psuPower = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            Console.WriteLine("Wattage consumption?");
-            int wConsumption = GeneralHelpers.StringToInt(Console.ReadLine());
-
-            GPU newGpu = new GPU
-            {
-                Name = gpuName,
-                Vendor = vendor,
-                VendorId = vendor.Id,
-                Manufacturer = manufacturer,
-                ManufacturerId = manufacturer.Id,
-                MemoryType = whatMemoryType,
-                MemoryTypeId = whatMemoryType.Id,
-
-                MemorySpeed = memorySpeed,
-                MemorySizeGB = gbs,
-                GPUFrequency = freqSpeed,
-
-                Overclock = overclock,
-                RecommendedPSUWattage = psuPower,
-                WattageConsumption = wConsumption,
-            };
-            return newGpu;
-
         }
     }
 }

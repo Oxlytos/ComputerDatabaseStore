@@ -10,6 +10,8 @@ namespace ComputerStoreApplication.Pages
     public interface IPage
     {
         //Abrstract void, alla sidor ska rendera sig själv som metod, fast det kan se olika ut
+        void Load(ApplicationManager appLol);
+
         void RenderPage();
 
         void SetPageCommands();

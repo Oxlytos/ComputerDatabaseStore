@@ -17,6 +17,8 @@ namespace ComputerStoreApplication.Logic
         //https://www.entityframeworktutorial.net/code-first/simple-code-first-example.aspx
         //DB Sets for things to query later for convinience
         //Component specifcations
+        public DbSet<ComponentSpecification> AllComponentSpecifcations { get; set; }   
+
         public DbSet<CPUArchitecture> CPUArchitectures { get; set; }
         public DbSet<CPUSocket> CPUSockets { get; set; }
         public DbSet<EnergyClass> EnergyClasses { get; set; }
@@ -37,8 +39,8 @@ namespace ComputerStoreApplication.Logic
         public DbSet<OrderProduct> OrderedProducts { get; set; }
         public DbSet<StoreProduct> StoreProducts { get; set; }
         //Producers
-        public DbSet<Manufacturer> Manufacturers { get; set; }
-        public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Brand> BrandManufacturers { get; set; }
+        public DbSet<ChipsetVendor> ChipsetVendors { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerComponentWebshop; Trusted_Connection=True;TrustServerCertificate=True;");
@@ -53,18 +55,21 @@ namespace ComputerStoreApplication.Logic
             modelBuilder.Entity<PSU>().ToTable("PSUs");
             modelBuilder.Entity<Motherboard>().ToTable("Motherboards");
             modelBuilder.Entity<RAM>().ToTable("RAMs");
-            ////
-            /// All abstract parts here
+
+            modelBuilder.Entity<CPUArchitecture>().ToTable("CPUArchitectures");
+
+
+
             modelBuilder.Entity<ComputerPart>(). //A part
-                HasOne(c=>c.Manufacturer). //has a manufacturer i e a ram stick from gskill
+                HasOne(c=>c.BrandManufacturer). //has a manufacturer i e a ram stick from gskill
                 WithMany(m=>m.Products). //A manufacturer has many products
-                HasForeignKey(q=>q.ManufacturerId).//We link the manufacturer with the id as FK
+                HasForeignKey(q=>q.BrandId).//We link the manufacturer with the id as FK
                 OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<ComputerPart>(). 
-                HasOne(v=>v.Vendor).
+                HasOne(v=>v.ChipsetVendor).
                 WithMany(m=>m.Parts).
-                HasForeignKey(q=>q.VendorId).
+                HasForeignKey(q=>q.ChipsetVendorId).
                  OnDelete(DeleteBehavior.SetNull);
 
             //BAsE CPU relations
@@ -135,11 +140,12 @@ namespace ComputerStoreApplication.Logic
                 HasForeignKey(Q=>Q.CustomerId).
                 OnDelete(DeleteBehavior.Restrict);
 
+            //En store product
             modelBuilder.Entity<StoreProduct>().
-                HasOne(SP=>SP.PartType).
-                WithMany(SP=>SP.Products).
-                HasForeignKey(s=>s.PartTypeId).
-                OnDelete(DeleteBehavior.Restrict);
+                HasOne(SP=>SP.ComputerPart). //Har en counterpart i db
+                WithMany(C=>C.Products). //Många produkter kan vara CPUer
+                HasForeignKey(s=>s.ComputerPartId). //Vi hittar typen genom här
+                OnDelete(DeleteBehavior.Restrict); //Ta inte bort om det används
 
             modelBuilder.Entity<StoreProduct>(). //Mostly for filtering products
                 HasOne(s=>s.Manufacturer). //A manufacturer

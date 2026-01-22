@@ -17,14 +17,16 @@ namespace ComputerStoreApplication.Models.Store
         [StringLength(40)]
         public string Name { get; set; }
 
+        public string? Description { get; set; }
+
         public int ProductId { get; set; }
 
-        public int? PartTypeId { get; set; }
-        public virtual ComputerPart? PartType { get; set; }
+        public int ComputerPartId { get; set; }
+        public virtual ComputerPart ComputerPart { get; set; }
 
         public int? ManufacturerId { get; set; }
 
-        public virtual Manufacturer? Manufacturer { get; set; }
+        public virtual Brand? Manufacturer { get; set; }
 
         public decimal Price { get; set; }
 

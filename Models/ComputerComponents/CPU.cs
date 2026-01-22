@@ -50,8 +50,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine("Name of the CPU?");
             string CPUName = Console.ReadLine();
 
-            Vendor vendor = GeneralHelpers.ChooseVendor(vendors);
-            Manufacturer manufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
+            ChipsetVendor vendor = GeneralHelpers.ChooseVendor(vendors);
             CPUSocket socket = GeneralHelpers.ChooseCPUSocket(sockets);
             CPUArchitecture arch = GeneralHelpers.ChooseCPUArch(archs);
 
@@ -77,10 +76,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             {
                 Name = CPUName,
 
-                Vendor = vendor,
-                VendorId = vendor.Id,
-                Manufacturer = manufacturer,
-                ManufacturerId = manufacturer.Id,
+                ChipsetVendor = vendor,
+                ChipsetVendorId = vendor.Id,
 
                 SocketType = socket,
                 SocketId = socket.Id,
@@ -114,24 +111,25 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     //Kolla specifika props, för formatering och att vi får deras properties korrekt
                     switch (value)
                     {
-                        case Manufacturer m:
-                            Console.WriteLine($"{prop.Name} : {m.Name}");
+                        case Brand m:
+                            Console.WriteLine($"-  {prop.Name} : {m.Name}");
                             break;
-                        case Vendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
+                        case ChipsetVendor v:
+                            Console.WriteLine($"- {prop.Name} : {v.Name}");
                             break;
                         case CPUArchitecture c:
-                            Console.WriteLine($"{prop.Name} : {c.CPUArchitectureName}");
+                            Console.WriteLine($"-  {prop.Name} : {c.Name}");
                             break;
                         case CPUSocket cs:
-                            Console.WriteLine($"{prop.Name} : {cs.CPUSocketName}");
+                            Console.WriteLine($"- {prop.Name} : {cs.Name}");
                             break;
                         default:
-                            Console.WriteLine($"{prop.Name} : {value}");
+                            Console.WriteLine($"- {prop.Name} : {value}");
                             break;
                     }
                 }
             }
+            Console.WriteLine("Press Enter to Continue");
             Console.ReadLine();
         }
 
@@ -140,43 +138,19 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine("To update a field, input the corresponding name to edit it");
             Console.WriteLine("For example, want to edit name? Type in 'name' ");
             Console.WriteLine("Exit by submitting an empty answer");
+            Read(lol);
+            Console.WriteLine("Please, input the Name of the property you want to update");
             var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.GetType()} {this.Name}");
-            //Print
-            foreach (var prop in propertiers)
-            {
-                var propertyValue = prop.GetValue(this);
-                string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
-                if (!skips.Contains(prop.Name))
-                {
-                    switch (propertyValue)
-                    {
-                        case Manufacturer m:
-                            Console.WriteLine($"{prop.Name} (Id: {ManufacturerId}): {m.Name}");
-                            break;
-                        case Vendor v:
-                            Console.WriteLine($"{prop.Name} (Id: {VendorId}): {v.Name}");
-                            break;
-                        case CPUArchitecture c:
-                            Console.WriteLine($"{prop.Name} (Id: {CPUArchitectureId}): {c.CPUArchitectureName}");
-                            break;
-                        case CPUSocket cs:
-                            Console.WriteLine($"{prop.Name} (Id: {SocketId}): {cs.CPUSocketName}");
-                            break;
-                        default:
-                            Console.WriteLine($"{prop.Name} : {propertyValue}");
-                            break;
-                    }
-                }
-            }
             //Input
             string userInput = Console.ReadLine();
             string[] keywords = GeneralHelpers.SpecialFields();
             var selectedProperty = propertiers.FirstOrDefault(p => p.Name.ToLower() == userInput.ToLower());
             if (selectedProperty != null)
             {
-                string field = selectedProperty.Name;
-                if (!keywords.Contains(field))
+                var propVal = selectedProperty.GetValue(this);
+                Console.WriteLine($"Prop val name: {propVal.GetType().Name}");
+                //Basic properties som ints, decimals, strängar
+                if (!keywords.Contains(propVal.GetType().Name))
                 {
                     var value = GeneralHelpers.TryAndUpdateValueOnObject(selectedProperty);
                     if (value != null)
@@ -187,37 +161,47 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                         Console.ReadLine();
                     }
                 }
+                //Här ändrar vi Vendor, Manufactuer IDs och annat
                 else
                 {
-                    //Expandera till en helper metod som hanterar alla specialfall för alla komponenter
-                    //Eller något
-                    switch (field)
+                    //Vi byter lokalt virtual property på vårat objekt
+                    //Påverkar bara this
+                    switch (propVal)
                     {
-                        case "Manufacturer":
+                        case Brand M:
                             var man = lol.GetManufacturers();
-                            Console.WriteLine("Which manufacturer should we change this to? Input the corresponding Id");
-                            foreach (var v in man)
+                            if (GeneralHelpers.ChangeManufacturer(man,this))
                             {
-                                Console.WriteLine($"{v.Id}. {v.Name}");
-                            }
-                            int manId = GeneralHelpers.StringToInt(Console.ReadLine());
-                            bool valid = man.Any(s => s.Id == manId);
-                            if (valid)
-                            {
-                                this.Manufacturer = null;
-                                this.ManufacturerId = manId;
-                                Console.WriteLine("Done! Press Enter");
                                 lol.SaveChangesOnComponent();
                                 Console.ReadLine();
                             }
-                            else
+                            break;
+                        case ChipsetVendor V:
+                            var vend = lol.GetVendors();
+                            if (GeneralHelpers.ChangeVendor(vend,this))
                             {
-                                Console.WriteLine("Oopsie woopsie error here");
+                                lol.SaveChangesOnComponent();
+                                Console.ReadLine();
+                            }
+                            break;
+                        case CPUArchitecture CA:
+                            var archs = lol.GetCPUArchitectures();
+                            if (GeneralHelpers.ChangeCPUArch(archs, this))
+                            {
+                                lol.SaveChangesOnComponent();
+                                Console.ReadLine();
+                            }
+                            break;
+                        case CPUSocket SO:
+                            var sockets = lol.GetCPUSockets();
+                            if (GeneralHelpers.ChangeSocket(sockets, this))
+                            {
+                                lol.SaveChangesOnComponent();
+                                Console.ReadLine();
                             }
                             break;
                     }
                 }
-
             }
             else
             {
@@ -240,5 +224,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                 lo.RemoveComponent(this);
             }
         }
+
     }
+
+
 }

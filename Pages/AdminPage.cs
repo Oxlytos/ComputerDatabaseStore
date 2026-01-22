@@ -23,8 +23,8 @@ namespace ComputerStoreApplication.Pages
                 { ConsoleKey.H, PageControls.HomeCommand },
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
-                {ConsoleKey.N, PageControls.AdminCreate },
-                {ConsoleKey.E, PageControls.AdminEdit }
+                {ConsoleKey.N, PageControls.AdminCreateProduct },
+                {ConsoleKey.M, PageControls.AdminCreateCategory }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -54,11 +54,11 @@ namespace ComputerStoreApplication.Pages
             switch(whateverButtonUserPressed.PageCommandOptionInteraction)
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
-                case PageControls.PageOption.AdminCreate:
-                    Crud_Related.CrudHandler.GetInputs(applicationLogic);
+                case PageControls.PageOption.AdminCreateComponent:
+                    Crud_Related.CrudHandler.ComponentInput(applicationLogic);
                     return this; //This blir denna sida
-                case PageControls.PageOption.AdminEdit:
-                   // Crud_Related.UpdateComponent.GetEditInputs(applicationLogic);
+                case PageControls.PageOption.AdminCreateCategory:
+                    Crud_Related.CrudHandler.CategoryInput(applicationLogic);
                     return this;
                 case PageControls.PageOption.Home:
                     return new HomePage();
@@ -71,6 +71,9 @@ namespace ComputerStoreApplication.Pages
 
         }
 
-
+        public void Load(ApplicationManager appLol)
+        {
+            Console.WriteLine("Hello");
+        }
     }
 }

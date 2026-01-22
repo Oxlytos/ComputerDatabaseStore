@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Vendors_Producers
 {
-    public class Manufacturer
+    public class Brand
     {
         public int Id { get; set; }
 

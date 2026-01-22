@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -33,18 +34,25 @@ namespace ComputerStoreApplication.Logic
                 .Concat(_dbContext.Motherboards).
                 ToList();
         }
-
-        public List<Vendor> GetVendors()
+        public List<RAM> GetRAMs()
         {
-            return _dbContext.Vendors.Cast<Vendor>().ToList();
+            return null;
         }
-        public List<Manufacturer> GetManufacturers()
+        public List<ChipsetVendor> GetVendors()
         {
-            return _dbContext.Manufacturers.Cast<Manufacturer>().ToList();
+            return _dbContext.ChipsetVendors.Cast<ChipsetVendor>().ToList();
+        }
+        public List<Brand> GetManufacturers()
+        {
+            return _dbContext.BrandManufacturers.Cast<Brand>().ToList();
         }
         public List<CPUSocket> GetSockets() 
         {
             return _dbContext.CPUSockets.Cast<CPUSocket>().ToList();
+        }
+        public List<EnergyClass> GetEnergyClasses()
+        {
+            return _dbContext.EnergyClasses.ToList();
         }
         public List<CPUArchitecture> GetCPUArchitectures()
         {
@@ -54,7 +62,10 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.MemoryTypes.Cast<MemoryType>().ToList();
         }
-
+        public List<RamProfileFeatures> GetRamProfileFeatures()
+        {
+            return _dbContext.RamProfiles.Cast<RamProfileFeatures>().ToList();
+        }
         public List<GPU> GetGPUs()
         {
             return _dbContext.GPUs.ToList();
@@ -70,8 +81,8 @@ namespace ComputerStoreApplication.Logic
             var cpuArchs = GetCPUArchitectures();
             foreach (var cpu in cpus) 
             {
-                cpu.Manufacturer = man.FirstOrDefault(s=>s.Id == cpu.ManufacturerId);
-                cpu.Vendor = vendors.FirstOrDefault(s=>s.Id==cpu.VendorId);
+                cpu.BrandManufacturer = man.FirstOrDefault(s=>s.Id == cpu.BrandId);
+                cpu.ChipsetVendor = vendors.FirstOrDefault(s=>s.Id==cpu.ChipsetVendorId);
                 cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
                 cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
                 
@@ -82,33 +93,32 @@ namespace ComputerStoreApplication.Logic
         public void SaveNew(ComputerPart part)
         {
             _dbContext.AllParts.Add(part);
-            bool check = TrySaveChanges();
-            if (check) 
-            {
-                Console.WriteLine("Managed to save new part to database, press enter to continue");
-                Console.ReadLine();
-            }
-            
+            TrySaveChanges();
+        }
+        public void SaveNewSpecification(ComponentSpecification spec)
+        {
+            _dbContext.AllComponentSpecifcations.Add(spec);
+             TrySaveChanges();
         }
         public void RemoveComponent(ComputerPart part)
         {
             _dbContext.Remove(part);
-            bool check = TrySaveChanges();
-            if (check) 
-            {
-                Console.WriteLine("Managed to remove part from database, press enter to continue");
-                Console.ReadLine();
-            }
+            TrySaveChanges();
+        }
+        public void RemoveSpec(ComponentSpecification spec)
+        {
+            _dbContext.Remove(spec);
+            TrySaveChanges();
         }
         public void SaveNewCPU(CPU cpu)
         {
             _dbContext.CPUs.Add(cpu);
-            _dbContext.SaveChanges();
+            TrySaveChanges();
         }
         public void SaveNewGPU(GPU gpu)
         {
             _dbContext.GPUs.Add(gpu);
-            _dbContext.SaveChanges();
+            TrySaveChanges();
         }
         public bool TrySaveChanges()
         {
@@ -119,16 +129,20 @@ namespace ComputerStoreApplication.Logic
                 Console.ReadLine(); 
                 return true;
             }
-            catch (DbException ex)
+            catch (DbUpdateConcurrencyException ex)
             {
-                Console.WriteLine($"Error when saving, {ex.Message}");
+                Console.WriteLine($"Error when updating, {ex.Message}");
                 return false;
             }
-          
+            catch(DbException ex)
+            {
+               Console.WriteLine($"Error when trying to save, {ex.Message}");
+                return false;
+            }
         }
-        public void SaveManufacturer(Manufacturer manufacturer) 
+        public void SaveManufacturer(Brand manufacturer) 
         {
-            _dbContext.Manufacturers.Add(manufacturer);
+            _dbContext.BrandManufacturers.Add(manufacturer);
             Console.WriteLine("Saved manufacturer!");
             Console.ReadLine();
             _dbContext.SaveChanges();

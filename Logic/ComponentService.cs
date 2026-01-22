@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Models.ComputerComponents;
+﻿using ComputerStoreApplication.Models.ComponentSpecifications;
+using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -27,9 +28,23 @@ namespace ComputerStoreApplication.Logic
             {
                 GPU=>_repo.GetGPUs(),
                 CPU=> _repo.GetCPUs(),
+                RAM=>_repo.GetRAMs(),
 
                 _ => throw new ArgumentException("Unknown computer part type")
 
+            };
+        }
+        public IEnumerable<ComponentSpecification> GetSpecsOTheSameType(ComponentSpecification spec)
+        {
+            return spec switch
+            {
+                CPUArchitecture => _repo.GetCPUArchitectures(),
+                CPUSocket => _repo.GetSockets(),
+                EnergyClass => _repo.GetEnergyClasses(),
+                MemoryType => _repo.GetMemoryTypes(),
+                RamProfileFeatures => _repo.GetRamProfileFeatures(),
+
+                _ => throw new ArgumentException("Unknown specifcation category type")
             };
         }
         public void SaveNew(ComputerPart part)
@@ -45,6 +60,14 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.RemoveComponent(part);
         }
+        public void SaveNewSpecification(ComponentSpecification spec)
+        {
+            _repo.SaveNewSpecification(spec);
+        }
+        public void RemoveComponentSpecifications(ComponentSpecification spec)
+        {
+            _repo.RemoveSpec(spec);
+        }
         public void SaveCPU(CPU newCPU)
         {
             //Validate lol
@@ -55,16 +78,16 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.SaveNewGPU(gpu);
         }
-        public void SaveManufacturer(Models.Vendors_Producers.Manufacturer newMan)
+        public void SaveManufacturer(Models.Vendors_Producers.Brand newMan)
         {
             _validation.Validate("huh");
             _repo.SaveManufacturer(newMan);
         }
-        public List<Models.Vendors_Producers.Vendor> GetVendors()
+        public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
         {
             return _repo.GetVendors();
         }
-        public List<Models.Vendors_Producers.Manufacturer> GetManufacturers()
+        public List<Models.Vendors_Producers.Brand> GetManufacturers()
         {
             return _repo.GetManufacturers();
         }
@@ -72,9 +95,17 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetSockets();
         }
+        public List<Models.ComponentSpecifications.EnergyClass> GetEnergyClasses()
+        {
+            return _repo.GetEnergyClasses();
+        }
         public List<Models.ComponentSpecifications.CPUArchitecture> GetCPUArchitectures()
         {
             return _repo.GetCPUArchitectures();
+        }
+        public List<Models.ComponentSpecifications.RamProfileFeatures> GetRamProfileFeatures()
+        {
+            return _repo.GetRamProfileFeatures();
         }
 
         public List<Models.ComputerComponents.GPU> GetGPUs()

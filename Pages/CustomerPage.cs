@@ -60,5 +60,10 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
+
+        public void Load(ApplicationManager appLol)
+        {
+            Console.WriteLine("Hello");
+        }
     }
 }

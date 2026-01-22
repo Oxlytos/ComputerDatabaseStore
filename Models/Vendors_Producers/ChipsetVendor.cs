@@ -8,7 +8,7 @@ using ComputerStoreApplication.Models.ComputerComponents;
 
 namespace ComputerStoreApplication.Models.Vendors_Producers
 {
-    public class Vendor
+    public class ChipsetVendor
     {
         public int Id { get; set; }
 

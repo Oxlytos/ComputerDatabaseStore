@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
@@ -35,6 +36,13 @@ namespace ComputerStoreApplication
            
             //Databas connection
             var db = new Logic.ComputerDBContext();
+            Brand ban = new Brand
+            {
+                Name = "Intel",
+                
+            };
+            db.BrandManufacturers.Add(ban);
+            db.SaveChanges();
 
             //Validerings hanterarer innan vi sparar saker och så
             var val = new Logic.ValidationManager();
@@ -50,17 +58,20 @@ namespace ComputerStoreApplication
             //Bestäm sidofärg
 
 
-            var stuff = computerApplicationLogic.GetManufacturers();
             while (true) 
             {
                 Console.Clear();
                 Console.CursorVisible = false;
                 //Visa nuvarande sida
+                computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
+
+
                 computerApplicationLogic.CurrentPage.RenderPage();
                 //Knapptryck på denna sida
                 ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
 
                 //Gör X sak på sida genom HandleUserInput
+            
                 var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
 
                 //Existerar sidan, byt till den, gör dens funktioner sedan
@@ -111,64 +122,91 @@ namespace ComputerStoreApplication
         }
         static void FillDatabaseWithBaseInformation()
         {
+            //CPU arch
+            Console.WriteLine("Seeding database with base specs");
+            Console.ReadLine();
             using var db = new Logic.ComputerDBContext();
-            //archs https://en.wikipedia.org/wiki/Comparison_of_instruction_set_architectures
-            var x86_64 = new CPUArchitecture { CPUArchitectureName = "x86-64" };
-            var x86 = new CPUArchitecture { CPUArchitectureName = "x86" };
-            var x64 = new CPUArchitecture { CPUArchitectureName = "x64" };
-            var ARM = new CPUArchitecture { CPUArchitectureName = "ARM" };
-            var ia32 = new CPUArchitecture { CPUArchitectureName = "IA-32" };
-            // db.CPUArchitectures.AddRange(x86_64, x86, x64, ARM, ia32);
+            var x86_64 = new CPUArchitecture { Name = "x86-64" };
+            var x86 = new CPUArchitecture { Name = "x86" };
+            var x64 = new CPUArchitecture { Name = "x64" };
+            var ARM = new CPUArchitecture { Name = "ARM" };
+            var ia32 = new CPUArchitecture { Name = "IA-32" };
+             //db.AllComponentSpecifcations.AddRange(x86_64, x86, x64, ARM, ia32);
 
-            var amdam4 = new CPUSocket { CPUSocketName = "AMD AM4" };
-            var amdam5 = new CPUSocket { CPUSocketName = "AMD AM5" };
-            var amdstr5 = new CPUSocket { CPUSocketName = "AMD sTR5" };
-            var amdswrx8 = new CPUSocket { CPUSocketName = "AMD sWRX8" };
-            var intel1700 = new CPUSocket { CPUSocketName = "Intel 1700" };
-            var intel1851 = new CPUSocket { CPUSocketName = "Intel 1851" };
-            //  db.CPUSockets.AddRange(amdam4, amdam5, amdstr5, amdswrx8, intel1700, intel1851);
+            //CPU socket
+            var amdam4 = new CPUSocket { Name = "AMD AM4" };
+            var amdam5 = new CPUSocket { Name = "AMD AM5" };
+            var amdstr5 = new CPUSocket { Name = "AMD sTR5" };
+            var amdswrx8 = new CPUSocket { Name = "AMD sWRX8" };
+            var intel1700 = new CPUSocket { Name = "Intel 1700" };
+            var intel1851 = new CPUSocket { Name = "Intel 1851" };
+          //  db.AllComponentSpecifcations.AddRange(amdam4, amdam5, amdstr5, amdswrx8, intel1700, intel1851);
 
-            //
+            //Energy classes
             List<EnergyClass> energyClasses = new List<EnergyClass>();
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Bronze" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Silver" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Gold" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Platinum" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Titanium" });
-            energyClasses.Add(new EnergyClass { EnergyNameClass = "80 Plus Ruby" });
-            // db.EnergyClasses.AddRange(energyClasses);
+            energyClasses.Add(new EnergyClass { Name = "80 Plus" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Bronze" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Silver" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Gold" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Platinum" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Titanium" });
+            energyClasses.Add(new EnergyClass { Name = "80 Plus Ruby" });
+           //  db.AllComponentSpecifcations.AddRange(energyClasses);
 
+            //Most different memeory typesd
             List<MemoryType> memoryTypes = new List<MemoryType>();
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "DDR4" });
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "DDR5" });
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "GDDR5" });
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "GDDR6X" });
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "GDDR6" });
-            memoryTypes.Add(new MemoryType { MemoryTypeName = "GDDR7" });
+            memoryTypes.Add(new MemoryType { Name = "DDR3 SODIMM" });
+            memoryTypes.Add(new MemoryType { Name = "DDR3L SODIMM" });
+            memoryTypes.Add(new MemoryType { Name = "DDR4" });
+            memoryTypes.Add(new MemoryType { Name = "DDR4 SODIMM" });
+            memoryTypes.Add(new MemoryType { Name = "DDR5 CUDIMM" });
+            memoryTypes.Add(new MemoryType { Name = "DDR5 RDIMM" });
+            memoryTypes.Add(new MemoryType { Name = "GDDR5"});
+            memoryTypes.Add(new MemoryType { Name = "GDDR5X" });
+            memoryTypes.Add(new MemoryType { Name = "GDDR6X" });
+            memoryTypes.Add(new MemoryType { Name = "GDDR6" });
+            memoryTypes.Add(new MemoryType { Name = "GDDR7" });
+            memoryTypes.Add(new MemoryType { Name = "GDDR7X" });
 
-            // db.MemoryTypes.AddRange(memoryTypes);
+         //   db.AllComponentSpecifcations.AddRange(memoryTypes);
 
+            //Base profiles that most use
             List<RamProfileFeatures> ramProfileFeatures = new List<RamProfileFeatures>();
-            ramProfileFeatures.Add(new RamProfileFeatures { RamProfileFeaturesType = "XMP" });
-            ramProfileFeatures.Add(new RamProfileFeatures { RamProfileFeaturesType = "EXPO" });
+            ramProfileFeatures.Add(new RamProfileFeatures { Name = "XMP" });
+            ramProfileFeatures.Add(new RamProfileFeatures { Name = "EXPO" });
             //   db.RamProfiles.AddRange(ramProfileFeatures);
 
-            List<Vendor> vendors = new List<Vendor>();
-            vendors.Add(new Vendor { Name = "Intel" });
-            vendors.Add(new Vendor { Name = "AMD" });
-            vendors.Add(new Vendor { Name = "Nvidia" });
+            //maker of chiipsets for cpus, gpus
+            List<ChipsetVendor> vendors = new List<ChipsetVendor>();
+            vendors.Add(new ChipsetVendor { Name = "Intel" });
+            vendors.Add(new ChipsetVendor { Name = "AMD" });
+            vendors.Add(new ChipsetVendor { Name = "Nvidia" });
             //  db.Vendors.AddRange(vendors);
 
-            List<Manufacturer> manufacturers = new List<Manufacturer>();
-            manufacturers.Add(new Manufacturer { Name = "MSI" });
-            manufacturers.Add(new Manufacturer { Name = "ASUS" });
-            manufacturers.Add(new Manufacturer { Name = "Acer" });
-            manufacturers.Add(new Manufacturer { Name = "Kingston" });
-            manufacturers.Add(new Manufacturer { Name = "Corsair" });
-            manufacturers.Add(new Manufacturer { Name = "G.Skill" });
-            manufacturers.Add(new Manufacturer { Name = "Gigabyte" });
-            //   db.Manufacturers.AddRange(manufacturers);
+            //most brands/manufacturers
+            List<Brand> manufacturers = new List<Brand>();
+            manufacturers.Add(new Brand { Name = "MSI" });
+            manufacturers.Add(new Brand { Name = "ASUS" });
+            manufacturers.Add(new Brand { Name = "Acer" });
+            manufacturers.Add(new Brand { Name = "Kingston" });
+            manufacturers.Add(new Brand { Name = "Corsair" });
+            manufacturers.Add(new Brand { Name = "G.Skill" });
+            manufacturers.Add(new Brand { Name = "Gigabyte" });
+            manufacturers.Add(new Brand { Name = "PowerColor" });
+            manufacturers.Add(new Brand { Name = "Sapphire" });
+            manufacturers.Add(new Brand { Name = "Sparkle" });
+            manufacturers.Add(new Brand { Name = "Cooler Master" });
+            manufacturers.Add(new Brand { Name = "Seasonic" });
+            db.BrandManufacturers.AddRange(manufacturers);
+
+            List<ChipsetVendor> chipsetVendors = new List<ChipsetVendor>();
+            chipsetVendors.Add(new ChipsetVendor { Name = "AMD" });
+            chipsetVendors.Add(new ChipsetVendor { Name = "Intel" });
+            chipsetVendors.Add(new ChipsetVendor { Name = "Nvidia" });
+
+        //   db.ChipsetVendors.AddRange(chipsetVendors);
+            db.SaveChanges();
+            Console.WriteLine("Saved changes!");
 
             /*    GPU rtx4070 = new GPU
                 {
