@@ -142,10 +142,10 @@ namespace ComputerStoreApplication.Logic
 
             //En store product
             modelBuilder.Entity<StoreProduct>().
-                HasOne(SP=>SP.ComputerPart). //Har en counterpart i db
-                WithMany(C=>C.Products). //Många produkter kan vara CPUer
-                HasForeignKey(s=>s.ComputerPartId). //Vi hittar typen genom här
-                OnDelete(DeleteBehavior.Restrict); //Ta inte bort om det används
+                HasOne(SP=>SP.ComputerPart).
+                WithMany(C=>C.Products).
+                HasForeignKey(s=>s.ComputerPartId).
+                OnDelete(DeleteBehavior.Restrict); 
 
             modelBuilder.Entity<StoreProduct>(). //Mostly for filtering products
                 HasOne(s=>s.Manufacturer). //A manufacturer

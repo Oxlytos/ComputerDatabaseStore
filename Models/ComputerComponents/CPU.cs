@@ -88,7 +88,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                 Threads = threads,
                 MemorySpeedGhz = clockSpeed,
                 Overclockable = overclockable,
-                Stock = stock,
                 CPUCache = cach
 
             };

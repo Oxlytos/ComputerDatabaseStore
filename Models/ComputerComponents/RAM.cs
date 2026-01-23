@@ -38,10 +38,10 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine("GBs per stick?");
             int gbs = GeneralHelpers.StringToInt(Console.ReadLine());
 
-            Console.WriteLine("Memory Speed (GHz)?");
+            Console.WriteLine("Memory Speed (MHz)?");
             decimal memSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
 
-            Console.WriteLine("How many we got in stock of this new CPU?");
+            Console.WriteLine("How many we got in stock of this Ram collection?");
             int stock = GeneralHelpers.StringToInt(Console.ReadLine());
 
             RAM newRam = new RAM
@@ -51,9 +51,10 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                 SupportedRamProfiles = features,
                 MemorySizePerStick = gbs,
                 MemorySpeed = memSpeed,
-                Stock = stock
 
             };
+
+            lol.SaveNewComponent(newRam);
         }
 
         public override void Read(ApplicationManager lol)

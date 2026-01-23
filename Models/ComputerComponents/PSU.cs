@@ -43,7 +43,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                 BrandManufacturer = manufacturer,
                 Wattage = watt,
                 EnergyClass = eClass,
-                Stock = stock,
             };
             lol.SaveNewComponent(newPsu);
         }

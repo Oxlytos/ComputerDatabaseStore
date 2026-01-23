@@ -1,5 +1,7 @@
 ﻿using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Logic;
+using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +12,8 @@ namespace ComputerStoreApplication.Pages
 {
     public class HomePage : IPage
     {
+        List<ComputerPart> AllPartsForJoin = new List<ComputerPart>();
+        List<StoreProduct> SelectedProducts = new List<StoreProduct>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void RenderPage()
         {
@@ -17,6 +21,12 @@ namespace ComputerStoreApplication.Pages
             SetPageCommands();
             PageBanners.DrawShopBanner();
             Console.SetCursorPosition(0, 10);
+            foreach (var product in SelectedProducts)
+            {
+                Console.WriteLine($"Name: {product.Name} Price: {product.Price} On Sale?:{product.Sale} (Hidden) ProductId: {product.StoreProductId}");
+                var actualProduct = AllPartsForJoin.FirstOrDefault(X=>X.Id==product.ComputerPartId);
+                Console.WriteLine($"\t- {actualProduct.Name} ");
+            }
             
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
@@ -65,6 +75,8 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
+            SelectedProducts = appLol.GetStoreProducts();
+            AllPartsForJoin = appLol.ComputerPartShopDB.AllParts.ToList();
             Console.WriteLine("Hello");
         }
     }

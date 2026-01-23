@@ -24,7 +24,8 @@ namespace ComputerStoreApplication.Pages
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
                 {ConsoleKey.N, PageControls.AdminCreateProduct },
-                {ConsoleKey.M, PageControls.AdminCreateCategory }
+                {ConsoleKey.M, PageControls.AdminCreateCategory },
+                {ConsoleKey.P, PageControls.AdminCreateStoreProduct }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -51,7 +52,7 @@ namespace ComputerStoreApplication.Pages
                 return this; //retunera samma sida igen
 
             //retunera sida beroende på sida
-            switch(whateverButtonUserPressed.PageCommandOptionInteraction)
+            switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
                 case PageControls.PageOption.AdminCreateComponent:
@@ -60,13 +61,17 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.AdminCreateCategory:
                     Crud_Related.CrudHandler.CategoryInput(applicationLogic);
                     return this;
+                case PageControls.PageOption.AdminCreateStoreProduct:
+                    Crud_Related.CrudHandler.StoreProductInput(applicationLogic);
+                    return this;
                 case PageControls.PageOption.Home:
                     return new HomePage();
-                case PageControls.PageOption.CustomerPage: 
+                case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
-                case PageControls.PageOption.Browse: 
+                case PageControls.PageOption.Browse:
                     return new BrowseProducts();
-            };
+            }
+            ;
             return this;
 
         }

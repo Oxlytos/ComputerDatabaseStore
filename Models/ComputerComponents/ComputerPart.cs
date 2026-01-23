@@ -32,8 +32,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         //Implement later use
         public ICollection<StoreProduct> Products { get; set; } = new List<StoreProduct>();
 
-        public int? Stock {  get; set; }
-
         public abstract void Create(ApplicationManager lol);
         public abstract void Read(ApplicationManager lol);
         public abstract void Update(ApplicationManager lol);

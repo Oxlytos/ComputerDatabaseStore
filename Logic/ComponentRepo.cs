@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -36,7 +37,15 @@ namespace ComputerStoreApplication.Logic
         }
         public List<RAM> GetRAMs()
         {
-            return null;
+            return _dbContext.RAMs.Cast<RAM>().ToList();
+        }
+        public List<Motherboard> GetMotherboards()
+        {
+            return _dbContext.Motherboards.Cast<Motherboard>().ToList();
+        }
+        public List<PSU> GetPSUs()
+        {
+            return _dbContext.PSUs.Cast<PSU>().ToList();
         }
         public List<ChipsetVendor> GetVendors()
         {
@@ -66,6 +75,10 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.RamProfiles.Cast<RamProfileFeatures>().ToList();
         }
+        public List<StoreProduct> GetStoreProducts()
+        {
+            return _dbContext.StoreProducts.ToList();
+        }
         public List<GPU> GetGPUs()
         {
             return _dbContext.GPUs.ToList();
@@ -89,6 +102,12 @@ namespace ComputerStoreApplication.Logic
             }
 
             return cpus;
+        }
+       
+        public void SaveNew(StoreProduct product)
+        {
+            _dbContext.StoreProducts.Add(product);
+            TrySaveChanges();
         }
         public void SaveNew(ComputerPart part)
         {

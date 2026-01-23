@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -29,6 +30,9 @@ namespace ComputerStoreApplication.Logic
                 GPU=>_repo.GetGPUs(),
                 CPU=> _repo.GetCPUs(),
                 RAM=>_repo.GetRAMs(),
+                Motherboard =>_repo.GetMotherboards(),
+                PSU =>_repo.GetPSUs(),
+
 
                 _ => throw new ArgumentException("Unknown computer part type")
 
@@ -46,6 +50,14 @@ namespace ComputerStoreApplication.Logic
 
                 _ => throw new ArgumentException("Unknown specifcation category type")
             };
+        }
+        public List<StoreProduct> GetStoreProducts()
+        {
+            return _repo.GetStoreProducts();
+        }
+        public void SaveNew(StoreProduct storeProduct)
+        {
+            _repo.SaveNew(storeProduct);
         }
         public void SaveNew(ComputerPart part)
         {

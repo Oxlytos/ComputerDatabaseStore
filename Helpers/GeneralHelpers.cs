@@ -323,6 +323,7 @@ namespace ComputerStoreApplication.Helpers
         internal static List<RamProfileFeatures> ChooseProfileFeatures(List<RamProfileFeatures> ramProfiles)
         {
             List<RamProfileFeatures> currentFeatues = new List<RamProfileFeatures>();
+            Console.WriteLine("Profiles loaded count: " + ramProfiles.Count);
             bool done = false;
             while (!done)
             {
@@ -454,7 +455,7 @@ namespace ComputerStoreApplication.Helpers
         {
             while (true)
             {
-                Console.WriteLine($"Please input the new name for this specification, max length is {maxLength}");
+                Console.WriteLine($"Please input the new name for this object, max length is {maxLength}");
                 string newName = Console.ReadLine();
                 if (string.IsNullOrEmpty(newName))
                 {

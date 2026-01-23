@@ -1,39 +1,19 @@
-﻿using ComputerStoreApplication.Helpers;
-using ComputerStoreApplication.Logic;
+﻿using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ComputerStoreApplication.Pages.PageControls;
 
 namespace ComputerStoreApplication.Pages
 {
-    public class BrowseProducts : IPage
+    internal class SearchedResults : IPage
     {
-        List<CPU> cPUs = new List<CPU>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-        public void Load(ApplicationManager appLol)
-        {
-            cPUs = appLol.GetCPUs();
-        }
-        public void RenderPage()
-        {
-            Console.Clear();
-            SetPageCommands();
-            Graphics.PageBanners.DrawBrowsePageBanner();
-            Console.SetCursorPosition(0, 10);
-            Console.WriteLine("Browse product page");
-            foreach (CPU cpu in cPUs) 
-            {
-                Console.WriteLine(cpu.Name);
-            }
-            
-
-        }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
-            //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
                 return this; //retunera samma sida igen
 
@@ -47,17 +27,54 @@ namespace ComputerStoreApplication.Pages
                     return new CustomerPage();
                 case PageControls.PageOption.AdminPage:
                     return new AdminPage();
-                case PageControls.PageOption.Browse:
-                    return this;
                 case PageControls.PageOption.Search:
-                    //
-                    return new SearchedResults();
+                    SearchResults(applicationLogic);
                     return this;
             }
             ;
             return this;
 
         }
+
+        //Basic
+        public void SearchResults(ApplicationManager appLol)
+        {
+            Console.WriteLine("Input search query, please");
+            string input = Console.ReadLine();  
+
+            var allProducts = appLol.ComputerPartShopDB.AllParts.ToList();
+            List<ComputerPart> parts = new List<ComputerPart>();
+            foreach (ComputerPart part in allProducts) 
+            {
+                if (part.Name.ToLower().Contains(input.ToLower()))
+                {
+                    parts.Add(part);
+                }
+            }
+            Console.WriteLine($"Found this many similar objects based on query results: {parts.Count}");
+            if (parts.Count > 0) 
+            {
+                foreach (ComputerPart part in parts)
+                {
+                    Console.WriteLine(part.Name);
+                }
+            }
+            Console.ReadLine();
+        }
+        public void Load(ApplicationManager appLol)
+        {
+
+        }
+
+        public void RenderPage()
+        {
+            Console.Clear();
+            SetPageCommands();
+            Graphics.PageBanners.DrawSearchedResults ();
+            Console.SetCursorPosition(0, 10);
+            Console.WriteLine("Browse product page");
+        }
+
         public void SetPageCommands()
         {
             //Specific commands per sida
@@ -65,10 +82,10 @@ namespace ComputerStoreApplication.Pages
             PageCommands = new Dictionary<ConsoleKey, PageControls.PageCommand>
             {
                 { ConsoleKey.H, PageControls.HomeCommand },
-                {ConsoleKey.C, PageControls. CustomerHomePage},
+                 {ConsoleKey.C, PageControls. CustomerHomePage},
+                { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
-                {ConsoleKey.B, PageControls.BrowseCommand},
-                {ConsoleKey.F, PageControls.Search},
+                { ConsoleKey.F, PageControls.Search },
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -79,7 +96,5 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
-
-        
     }
 }

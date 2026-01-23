@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
@@ -38,7 +39,7 @@ namespace ComputerStoreApplication.Crud_Related
 
             var relevantObjects = logic.GetComputerComponentsByType(componentToCreate);
 
-            Console.WriteLine($"You chose: {componentToCreate.GetType().ToString()}");
+            Console.WriteLine($"You chose: {componentToCreate.GetType().Name}");
             Console.WriteLine("Current components in this category;");
             if (relevantObjects != null)
             {
@@ -52,7 +53,7 @@ namespace ComputerStoreApplication.Crud_Related
                 Console.WriteLine("No component of this type yet");
             }
             Console.WriteLine("What CRUD action?");
-            if (relevantObjects != null)
+            if (relevantObjects != null || relevantObjects.Count()>0)
             {
                 foreach (var key in Commandos)
                 {
@@ -100,6 +101,128 @@ namespace ComputerStoreApplication.Crud_Related
             {
                 componentToCreate.Create(logic);
             }
+        }
+        public static void StoreProductInput(ApplicationManager logic)
+        {
+            Console.WriteLine("These are the current store products on the website");
+            var storeObjs = logic.GetStoreProducts();
+            if (storeObjs != null) 
+            {
+                foreach (var storeObj in storeObjs)
+                {
+                    Console.WriteLine($"Id: {storeObj.Id} Name: {storeObj.Name} Price: {storeObj.Price} Sale: {storeObj.Sale} Stock: {storeObj.Stock} CompId: {storeObj.ComputerPartId}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No store objects as of now");
+            }
+            Console.WriteLine("");
+            Console.WriteLine("What CRUD action?");
+            if (storeObjs != null)
+            {
+                foreach (var key in Commandos)
+                {
+                    Console.WriteLine($"[{key.Key}] to {key.Value} a product");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Only action available is to Create, by pressing [C]");
+            }
+
+            var userInputC = Console.ReadKey(true);
+            if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
+            {
+                Console.WriteLine("Some error here bud");
+                return;
+            }
+            if (userCrudValue != CRUD.Create)
+            {
+                var selectedComponent = GetStoreProductById(storeObjs.ToList());
+                switch (userCrudValue)
+                {
+                    case CRUD.Read:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Read(logic);
+                        }
+                        break;
+                    case CRUD.Update:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Update(logic);
+                        }
+                        break;
+                    case CRUD.Delete:
+                        if (selectedComponent != null)
+                        {
+                            selectedComponent.Delete(logic);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                ComputerPart part = ChooseWhatPartToMakeAStoreProductOutOf(logic);
+                StoreProduct newStoreProduct = new StoreProduct();
+                if(part != null)
+                {
+                    newStoreProduct.Create(logic, part);
+                }
+                else
+                {
+                    Console.WriteLine("error");
+                }
+               
+            }
+
+
+        }
+        public static ComputerPart ChooseWhatPartToMakeAStoreProductOutOf(ApplicationManager logic)
+        {
+            Console.WriteLine("What category?");
+            ComputerPart componentToCreate = AskWhatProductType(logic);
+
+            var relevantObjects = logic.GetComputerComponentsByType(componentToCreate);
+
+            Console.WriteLine($"You chose: {componentToCreate.GetType().Name}");
+            Console.WriteLine("Current components in this category;");
+            if (relevantObjects != null)
+            {
+                foreach (var part in relevantObjects)
+                {
+                    Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No component of this type yet");
+            }
+            Console.WriteLine("Input the Id of the object you'd like to make a product out of");
+            int choice =GeneralHelpers.StringToInt(Console.ReadLine());
+            var chosenObject = relevantObjects.FirstOrDefault(x => x.Id == choice);
+            var currentStoreObjects = logic.GetStoreProducts();
+            if (chosenObject != null) 
+            {
+                Console.WriteLine("Valid object");
+                if (currentStoreObjects != null) 
+                {
+                    Console.WriteLine("We have a refernce object");
+                    if(currentStoreObjects.Any(x => x.ComputerPartId == chosenObject.Id))
+                    {
+                        Console.WriteLine("That already exists on the store page");
+                        Console.WriteLine("Press Enter to Continue");
+                        Console.ReadLine();
+                        return null;
+                    }
+                    else
+                    {
+                        return chosenObject;
+                    }
+                }
+            }
+            return null;
         }
         public static void CategoryInput(ApplicationManager logic)
         {
@@ -179,6 +302,19 @@ namespace ComputerStoreApplication.Crud_Related
             }
         }
         static ComponentSpecification GetSpecByTypeAndId(List<ComponentSpecification> compObjs)
+        {
+            Console.WriteLine("What object (by ID) do you want to interact with?");
+            int idChoice = GeneralHelpers.StringToInt(Console.ReadLine());
+            if (compObjs.Any(x => x.Id == idChoice))
+            {
+                return compObjs.FirstOrDefault(c => c.Id == idChoice);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        static StoreProduct GetStoreProductById(List<StoreProduct> compObjs)
         {
             Console.WriteLine("What object (by ID) do you want to interact with?");
             int idChoice = GeneralHelpers.StringToInt(Console.ReadLine());

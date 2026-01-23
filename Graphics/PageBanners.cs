@@ -50,6 +50,13 @@ namespace ComputerStoreApplication.Graphics
             ConsoleColor ccolor = ConsoleColor.DarkYellow;
             DrawBanner(pageHeader, headerText, ccolor);
         }
+        internal static void DrawSearchedResults()
+        {
+            List<string> pageHeader = new List<string> { " Browse qureied products ", "  You might just find what you're looking for! " };
+            string headerText = "-!-!-!-!-!-!-!-!-!-!-!-!-!-";
+            ConsoleColor ccolor = ConsoleColor.DarkYellow;
+            DrawBanner(pageHeader, headerText, ccolor);
+        }
         internal static void DrawCustomerPage()
         {
             List<string> pageHeader = new List<string> { " Customer Page ", "  Check orders, fill out information, and other stuff " };

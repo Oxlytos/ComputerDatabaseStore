@@ -19,8 +19,10 @@ namespace ComputerStoreApplication.Pages
             AdminLogin,
             AdminCreateComponent,
             AdminCreateCategory,
+            AdminCreateStoreProduct,
             AdminEdit,
             AdminPage,
+            Search,
             Browse,
             Exit
         }
@@ -50,6 +52,10 @@ namespace ComputerStoreApplication.Pages
 
         public static readonly PageCommand AdminEdit = new(PageOption.AdminEdit, "To edit a existing product");
 
+        public static readonly PageCommand Search = new(PageOption.Search, "To search for a product");
+
         public static readonly PageCommand CustomerHomePage = new(PageOption.CustomerPage, "To view account");
+
+        public static readonly PageCommand AdminCreateStoreProduct = new(PageOption.AdminCreateStoreProduct, "To create a new store product");
     }
 }

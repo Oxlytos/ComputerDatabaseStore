@@ -22,11 +22,9 @@ namespace ComputerStoreApplication
     {
         public static void Run()
         {
-            Console.WriteLine("Make sure to fullscreen the applicaiton, then press enter");
-            Console.ReadLine();
            // FillDatabaseWithBaseInformation();
             //  SetupMenus();
-            Console.BackgroundColor = ConsoleColor.Gray;
+            
             MainSimulationLogic();
 
             Console.ReadLine();
@@ -36,14 +34,6 @@ namespace ComputerStoreApplication
            
             //Databas connection
             var db = new Logic.ComputerDBContext();
-            Brand ban = new Brand
-            {
-                Name = "Intel",
-                
-            };
-            db.BrandManufacturers.Add(ban);
-            db.SaveChanges();
-
             //Validerings hanterarer innan vi sparar saker och så
             var val = new Logic.ValidationManager();
 
@@ -56,7 +46,7 @@ namespace ComputerStoreApplication
             //Hanterar sido-logik
             var computerApplicationLogic = new Logic.ApplicationManager(service);
             //Bestäm sidofärg
-
+          
 
             while (true) 
             {
@@ -81,44 +71,6 @@ namespace ComputerStoreApplication
                 }
 
             }
-        }
-
-        static void AdminPage()
-        {
-            Console.WriteLine("Loading admin page...");
-            Console.ReadLine();
-            Console.Clear();
-            PageBanners.DrawShopBanner();
-            List<string> adminActions = new List<string> { "Register Product", "Edit Product", "Delete Product", "Add new category" };
-            adminActions = GeneralHelpers.ReturnNumberedList(adminActions);
-            var adminWindow = new Window("Admin Actions, Press 'A' to choose an action", 2, 4, adminActions);
-            adminWindow.Draw();
-
-            string userInput = Console.ReadLine();
-            if (userInput.ToLower() == "a")
-            {
-                Console.WriteLine("What action? Press the corresponding number from the action list");
-
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                switch (key.Key)
-                {
-                    case ConsoleKey.D1:
-                        Console.WriteLine("Register Product");
-                        break;
-                    case ConsoleKey.D2:
-                        Console.WriteLine("Edit product");
-                        break;
-                    case ConsoleKey.D3:
-                        Console.WriteLine("Delete a product");
-                        break;
-                    case ConsoleKey.D4:
-                        Console.WriteLine("Add a new category");
-
-                        break;
-
-                }
-            }
-
         }
         static void FillDatabaseWithBaseInformation()
         {
@@ -207,23 +159,6 @@ namespace ComputerStoreApplication
         //   db.ChipsetVendors.AddRange(chipsetVendors);
             db.SaveChanges();
             Console.WriteLine("Saved changes!");
-
-            /*    GPU rtx4070 = new GPU
-                {
-                    Name = "MSI GeForce RTX 4070 Super 12GB Ventus 2X OC",
-                    ManufacturerId = db.Manufacturers.First(m => m.Name.ToLower() == "msi").Id,
-                    VendorId = db.Vendors.First(m => m.Name.ToLower() == "nvidia").Id,
-                    MemoryTypeId = db.MemoryTypes.First(m=>m.MemoryTypeName=="GDDR6X").Id,
-                    MemorySizeGB = 12,
-                    MemorySpeed = 1980,
-                    Overclock=true,
-                    RecommendedPSUWattage=650,
-                    WattageConsumption=220
-                };*/
-
-            //  db.GPUs.Add(rtx4070);
-            //  db.SaveChanges();
-
         }
         static void SetupMenus()
         {

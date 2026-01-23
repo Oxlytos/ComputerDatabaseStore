@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Pages;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace ComputerStoreApplication.Logic
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
 
+        public List<StoreProduct> ProductsInBasket { get; set; }
+
         public ApplicationManager(ComponentService service)
         {
             //Instansiera db kontextet här EN gång
@@ -26,11 +29,16 @@ namespace ComputerStoreApplication.Logic
 
             //Startsidan blir där man kan browse:a produkter
             CurrentPage = new HomePage();
+            ProductsInBasket=new List<StoreProduct>();
             _services = service;
         }
         public void SaveChangesOnComponent()
         {
             _services.SaveChangesOnComponent();
+        }
+        public List<StoreProduct> GetStoreProducts()
+        {
+            return _services.GetStoreProducts();
         }
         public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
         {
@@ -83,6 +91,10 @@ namespace ComputerStoreApplication.Logic
         public void SaveNewComponent(ComputerPart part)
         {
             _services.SaveNew(part);
+        }
+        public void SaveNewStoreProduct(StoreProduct prodc)
+        {
+            _services.SaveNew(prodc);
         }
         public void RemoveComponent(ComputerPart part)
         {
