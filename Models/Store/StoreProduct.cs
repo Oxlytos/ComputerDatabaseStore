@@ -48,7 +48,7 @@ namespace ComputerStoreApplication.Models.Store
             Name = GeneralHelpers.SetName(80);
             //https://stackoverflow.com/questions/2344098/c-sharp-how-to-create-a-guid-value
             StoreProductId = Guid.NewGuid();
-            Console.WriteLine("Now a lil description");
+            Console.WriteLine("Now a description");
             Description =Console.ReadLine();
             Console.WriteLine("Then a price in €");
             Price = GeneralHelpers.StringToDecimal(Console.ReadLine());

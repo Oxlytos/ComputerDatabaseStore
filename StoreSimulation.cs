@@ -3,6 +3,7 @@ using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.MickesWindow;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.Pages;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +47,6 @@ namespace ComputerStoreApplication
             //Hanterar sido-logik
             var computerApplicationLogic = new Logic.ApplicationManager(service);
             //Bestäm sidofärg
-          
 
             while (true) 
             {
@@ -54,7 +54,6 @@ namespace ComputerStoreApplication
                 Console.CursorVisible = false;
                 //Visa nuvarande sida
                 computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
-
 
                 computerApplicationLogic.CurrentPage.RenderPage();
                 //Knapptryck på denna sida

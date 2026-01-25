@@ -47,6 +47,8 @@ namespace ComputerStoreApplication.Pages
                     return new AdminPage();
                 case PageControls.PageOption.Browse:
                     return new BrowseProducts();
+                case PageControls.PageOption.CustomerLogin:
+                    return new CustomerPage();
             }
             ;
             return this;
@@ -62,6 +64,7 @@ namespace ComputerStoreApplication.Pages
                  {ConsoleKey.C, PageControls. CustomerHomePage},
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
+                {ConsoleKey.L, PageControls.CustomerLogin },
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();

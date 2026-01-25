@@ -41,6 +41,9 @@ namespace ComputerStoreApplication.Pages
         public static readonly PageCommand ExitCommand =
             new(PageOption.Exit, "Exit application");
 
+        public static readonly PageCommand CustomerLogin =
+           new(PageOption.CustomerLogin, "Login as Customer");
+
         public static readonly PageCommand Admin =
             new(PageOption.AdminPage, "Login to Admin");
 

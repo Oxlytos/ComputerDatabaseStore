@@ -4,6 +4,7 @@ using ComputerStoreApplication.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComputerStoreApplication.Migrations
 {
     [DbContext(typeof(ComputerDBContext))]
-    partial class ComputerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260125155510_CustomerUpdate")]
+    partial class CustomerUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,9 +157,6 @@ namespace ComputerStoreApplication.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -513,7 +513,7 @@ namespace ComputerStoreApplication.Migrations
                     b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
                         .WithMany("ProductsInBasket")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.SetNull)
                         .IsRequired();
 
                     b.HasOne("ComputerStoreApplication.Models.Store.StoreProduct", "Product")

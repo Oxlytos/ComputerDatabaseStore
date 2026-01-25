@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Models.Store;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,6 +15,7 @@ namespace ComputerStoreApplication.Models.Customer
 
         [Required]
         [StringLength(30)]
+        //Sällan längre
         public string FirstName { get; set; }
 
         [Required]
@@ -28,10 +30,20 @@ namespace ComputerStoreApplication.Models.Customer
         [StringLength(30)]
         public string PhoneNumber { get; set; }
 
-        public int CustomerShippingInfoId { get; set; }
+        public string Password { get; private set; }
 
-        public virtual List<CustomerShippingInfo> CustomerShippingInfo { get; set; } //A customer can have multiple saved addreses, or something, ship to work?
+        public virtual ICollection<CustomerShippingInfo> CustomerShippingInfo { get; set; } 
 
-        public virtual List<CustomerOrder> Orders { get; set; }
+        public virtual ICollection<CustomerOrder> Orders { get; set; }
+
+        public virtual ICollection<BasketProduct> ProductsInBasket { get; set; } = new List<BasketProduct>();
+
+        public void CreatePassword()
+        {
+            if(Password.IsNullOrEmpty())
+            {
+                Password = Guid.NewGuid().ToString();
+            }
+        }
     }
 }

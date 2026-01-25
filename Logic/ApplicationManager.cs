@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Pages;
 using System;
@@ -20,6 +21,9 @@ namespace ComputerStoreApplication.Logic
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
 
+        public bool IsLoggedInAsCustomer { get; set; }
+
+        public bool IsLoggedInAsAdmin { get; set; }
         public List<StoreProduct> ProductsInBasket { get; set; }
 
         public ApplicationManager(ComponentService service)
@@ -31,6 +35,32 @@ namespace ComputerStoreApplication.Logic
             CurrentPage = new HomePage();
             ProductsInBasket=new List<StoreProduct>();
             _services = service;
+            IsLoggedInAsAdmin= false;
+            IsLoggedInAsCustomer= false;
+        }
+        public List<Customer> GetCustomers()
+        {
+            return _services.GetCustomers();
+        }
+        public void LoginAsAdmin()
+        {
+            _services.LoginAdmin();
+        }
+        public void LogoutAsAdmin()
+        {
+            _services.LogoutAdmin();
+        }
+        public Customer GetCustomerInfo()
+        {
+            return _services.GetCustomerInfo();
+        }
+        public void LoginAsCustomer()
+        {
+            _services.LoginCustomer();
+        }
+        public void LogoutAsCustomer()
+        {
+            _services.LogoutCustomer();
         }
         public void SaveChangesOnComponent()
         {
@@ -87,6 +117,10 @@ namespace ComputerStoreApplication.Logic
         public void SaveNewSpecification(ComponentSpecification spec)
         {
             _services.SaveNewSpecification(spec);
+        }
+        public void SaveNewCustomer(Customer cus)
+        {
+            _services.SaveNewCustomer(cus);
         }
         public void SaveNewComponent(ComputerPart part)
         {

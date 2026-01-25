@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Logic;
+using ComputerStoreApplication.Models.Customer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace ComputerStoreApplication.Pages
 {
     public class CustomerPage : IPage
     {
+        public List<Customer> CustomerList { get; set; }
+        readonly Customer currentCustomer;
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void RenderPage()
         {
@@ -16,6 +19,14 @@ namespace ComputerStoreApplication.Pages
             SetPageCommands();
             Graphics.PageBanners.DrawCustomerPage();
             Console.SetCursorPosition(0, 10);
+            if (CustomerList.Count > 0) 
+            {
+                foreach (var customer in CustomerList)
+                {
+                    Console.WriteLine("Customer" + customer.FirstName);
+                }
+            }
+          
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -29,6 +40,11 @@ namespace ComputerStoreApplication.Pages
                 //Kolla page commands metoden
                 case PageControls.PageOption.Home:
                     return new HomePage();
+                case PageControls.PageOption.CustomerLogin:
+                    AccountLogic.LoginCustomer(applicationLogic);
+                    //Login
+                    //Return this
+                    return this;
                 case PageControls.PageOption.CustomerPage:
                     return this;
                 case PageControls.PageOption.AdminPage:
@@ -63,6 +79,11 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
+            Customer cus = new Customer();
+            cus = CustomerCreator.CreateCustomer(cus);
+            cus.CreatePassword();
+            appLol.SaveNewCustomer(cus);
+            CustomerList = appLol.GetCustomers();
             Console.WriteLine("Hello");
         }
     }

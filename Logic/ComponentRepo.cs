@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using Microsoft.EntityFrameworkCore;
@@ -28,12 +29,12 @@ namespace ComputerStoreApplication.Logic
         public List<ComputerPart?> GetAllProducts()
         {
             //Cast:a alla object som ComputerPart, concat till ett lång mixad lista med objekt av samma basklass
-           return  _dbContext.CPUs.Cast<ComputerPart>()
-                .Concat(_dbContext.GPUs)
-                .Concat(_dbContext.RAMs)
-                .Concat (_dbContext.PSUs)
-                .Concat(_dbContext.Motherboards).
-                ToList();
+            return _dbContext.CPUs.Cast<ComputerPart>()
+                 .Concat(_dbContext.GPUs)
+                 .Concat(_dbContext.RAMs)
+                 .Concat(_dbContext.PSUs)
+                 .Concat(_dbContext.Motherboards).
+                 ToList();
         }
         public List<RAM> GetRAMs()
         {
@@ -55,7 +56,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.BrandManufacturers.Cast<Brand>().ToList();
         }
-        public List<CPUSocket> GetSockets() 
+        public List<CPUSocket> GetSockets()
         {
             return _dbContext.CPUSockets.Cast<CPUSocket>().ToList();
         }
@@ -92,18 +93,22 @@ namespace ComputerStoreApplication.Logic
             var vendors = GetVendors();
             var sockets = GetSockets();
             var cpuArchs = GetCPUArchitectures();
-            foreach (var cpu in cpus) 
+            foreach (var cpu in cpus)
             {
-                cpu.BrandManufacturer = man.FirstOrDefault(s=>s.Id == cpu.BrandId);
-                cpu.ChipsetVendor = vendors.FirstOrDefault(s=>s.Id==cpu.ChipsetVendorId);
+                cpu.BrandManufacturer = man.FirstOrDefault(s => s.Id == cpu.BrandId);
+                cpu.ChipsetVendor = vendors.FirstOrDefault(s => s.Id == cpu.ChipsetVendorId);
                 cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
                 cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
-                
+
             }
 
             return cpus;
         }
-       
+
+        public List<Customer> GetCustomers()
+        {
+            return _dbContext.Customers.ToList();
+        }
         public void SaveNew(StoreProduct product)
         {
             _dbContext.StoreProducts.Add(product);
@@ -117,7 +122,59 @@ namespace ComputerStoreApplication.Logic
         public void SaveNewSpecification(ComponentSpecification spec)
         {
             _dbContext.AllComponentSpecifcations.Add(spec);
-             TrySaveChanges();
+            TrySaveChanges();
+        }
+        public void AddProductToBasket(BasketProduct prod, Customer cus)
+        {
+            if (cus.ProductsInBasket.Contains(prod))
+            {
+                var thisItem = cus.ProductsInBasket.FirstOrDefault(x => x.Id == prod.Id);
+                if (thisItem != null)
+                {
+                    thisItem.Quantity++;
+                }
+            }
+            else
+            {
+                cus.ProductsInBasket.Add(prod);
+            }
+        }
+        public void RemoveSingularObjectFromBasket(BasketProduct prod, Customer cus)
+        {
+            if (cus.ProductsInBasket.Contains(prod))
+            {
+                var thisItem = cus.ProductsInBasket.FirstOrDefault(x => x.Id == prod.Id);
+                if (thisItem != null)
+                {
+                    if (thisItem.Quantity == 0 || thisItem.Quantity == 1)
+                    {
+                        RemoveFromBasket(prod, cus);
+                    }
+                }
+            }
+        }
+        public void RemoveFromBasket(BasketProduct prod, Customer cus)
+        {
+            if (cus.ProductsInBasket.Contains(prod))
+            {
+                cus.ProductsInBasket.Remove(prod);
+            }
+            else
+            {
+                Console.WriteLine("Error when trying to remove basket item");
+            }
+        }
+        public void SaveNewCustomer(Customer customer)
+        {
+            if (!_dbContext.Customers.Contains(customer))
+            {
+                _dbContext.Add(customer);
+                TrySaveChanges();
+            }
+            else
+            {
+                Console.WriteLine("Customer already exists");
+            }
         }
         public void RemoveComponent(ComputerPart part)
         {
@@ -145,7 +202,7 @@ namespace ComputerStoreApplication.Logic
             {
                 _dbContext.SaveChanges();
                 Console.WriteLine("DB Operation succesfull, press enter to continue");
-                Console.ReadLine(); 
+                Console.ReadLine();
                 return true;
             }
             catch (DbUpdateConcurrencyException ex)
@@ -153,19 +210,19 @@ namespace ComputerStoreApplication.Logic
                 Console.WriteLine($"Error when updating, {ex.Message}");
                 return false;
             }
-            catch(DbException ex)
+            catch (DbException ex)
             {
-               Console.WriteLine($"Error when trying to save, {ex.Message}");
+                Console.WriteLine($"Error when trying to save, {ex.Message}");
                 return false;
             }
         }
-        public void SaveManufacturer(Brand manufacturer) 
+        public void SaveManufacturer(Brand manufacturer)
         {
             _dbContext.BrandManufacturers.Add(manufacturer);
             Console.WriteLine("Saved manufacturer!");
             Console.ReadLine();
             _dbContext.SaveChanges();
-        
+
         }
 
     }

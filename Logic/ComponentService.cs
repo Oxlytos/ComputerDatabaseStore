@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
@@ -51,6 +52,30 @@ namespace ComputerStoreApplication.Logic
                 _ => throw new ArgumentException("Unknown specifcation category type")
             };
         }
+        public List<Customer> GetCustomers()
+        {
+            return _repo.GetCustomers();
+        }
+        public void LoginAdmin()
+        {
+
+        }
+        public void LogoutAdmin()
+        {
+
+        }
+        public Customer GetCustomerInfo()
+        {
+            return null;
+        }
+        public void LoginCustomer()
+        {
+
+        }
+        public void LogoutCustomer()
+        {
+
+        }
         public List<StoreProduct> GetStoreProducts()
         {
             return _repo.GetStoreProducts();
@@ -71,6 +96,14 @@ namespace ComputerStoreApplication.Logic
         public void RemoveComponent(ComputerPart part)
         {
             _repo.RemoveComponent(part);
+        }
+        public void  SaveNewCustomer(Customer cus)
+        {
+            _repo.SaveNewCustomer(cus);
+        }
+        public void AddProductToBasket(BasketProduct basketProduct, Customer cus)
+        {
+            _repo.AddProductToBasket(basketProduct, cus);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {

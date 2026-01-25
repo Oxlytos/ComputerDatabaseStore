@@ -4,6 +4,7 @@ using ComputerStoreApplication.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComputerStoreApplication.Migrations
 {
     [DbContext(typeof(ComputerDBContext))]
-    partial class ComputerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260125141822_CustomerStuff")]
+    partial class CustomerStuff
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,6 +83,9 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CustomerShippingInfoId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -89,10 +95,6 @@ namespace ComputerStoreApplication.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
@@ -140,32 +142,6 @@ namespace ComputerStoreApplication.Migrations
                     b.HasKey("CustomerId");
 
                     b.ToTable("CustomerShippingInfos");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.BasketProduct", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("BasketProduct");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.CustomerOrder", b =>
@@ -235,6 +211,9 @@ namespace ComputerStoreApplication.Migrations
                     b.Property<int>("ComputerPartId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -261,6 +240,8 @@ namespace ComputerStoreApplication.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ComputerPartId");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("ManufacturerId");
 
@@ -508,25 +489,6 @@ namespace ComputerStoreApplication.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.BasketProduct", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
-                        .WithMany("ProductsInBasket")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ComputerStoreApplication.Models.Store.StoreProduct", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.CustomerOrder", b =>
                 {
                     b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
@@ -557,6 +519,10 @@ namespace ComputerStoreApplication.Migrations
                         .HasForeignKey("ComputerPartId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("ComputerStoreApplication.Models.Customer.Customer", null)
+                        .WithMany("ProductsInBasket")
+                        .HasForeignKey("CustomerId");
 
                     b.HasOne("ComputerStoreApplication.Models.Vendors_Producers.Brand", "Manufacturer")
                         .WithMany("StoreProducts")

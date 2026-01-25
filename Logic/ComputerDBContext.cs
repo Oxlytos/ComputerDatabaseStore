@@ -152,6 +152,12 @@ namespace ComputerStoreApplication.Logic
                 WithMany(q=>q.StoreProducts). //Has many products in the store
                 HasForeignKey(s=>s.ManufacturerId). //FK to manufacturer info
                 OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<BasketProduct>().
+                HasOne(s=>s.Customer).
+                WithMany(c=>c.ProductsInBasket).
+                HasForeignKey(k=>k.CustomerId).
+                OnDelete(DeleteBehavior.Restrict);
         }
 
 
