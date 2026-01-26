@@ -9,22 +9,56 @@ namespace ComputerStoreApplication.Models.Customer
 {
     public class AccountLogic
     {
-
-        public static Customer LoginCustomer(ApplicationManager applol)
+        internal static int LoginCustomer(List<Customer> customers)
         {
-            
-            var customers = applol.GetCustomers();
-            foreach (var customer in customers) 
-            {
-            
-            }
-            Console.WriteLine("Email?");
-            Console.WriteLine("Password?");
-            applol.IsLoggedInAsCustomer = true;
-            //if corrrect
-            //LoggedInTrue
+                Console.WriteLine("Email?");
+                string email = Console.ReadLine();
+                var customerWithEmail = customers.FirstOrDefault(x => x.Email == email);
+                if (customerWithEmail != null)
+                {
+                    bool loggedIn = false;
+                    while (!loggedIn)
+                    {
+                        Console.WriteLine("Please provide the correct password for your account");
+                        string password = Console.ReadLine();
+                        if (password == customerWithEmail.Password)
+                        {
+                            Console.WriteLine("Logged in!");
+                            Console.WriteLine("Welcome " + customerWithEmail.FirstName + " " + customerWithEmail.SurName);
+                            Console.ReadLine();
+                            loggedIn = true;
+                            return customerWithEmail.Id;
+                        }
+                        else if (password.ToLower() == "q")
+                        {
+                            //Quit
+                            Console.WriteLine("Leaving login screen");
+                            Console.ReadLine();
+                            return 0;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Wrong password, please try again");
+                            Console.ReadLine();
+                        }
+                    }
 
-            return null;
+                }
+            else
+            {
+                Console.WriteLine("No account with that email was found");
+                Console.ReadLine();
+            }
+                //if corrrect
+                //LoggedInTrue
+
+                return 0;
+            }
+        internal static int LogoutCustomer() 
+        {
+            return 0;
         }
+     
+
     }
 }

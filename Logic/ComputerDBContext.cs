@@ -41,6 +41,8 @@ namespace ComputerStoreApplication.Logic
         //Producers
         public DbSet<Brand> BrandManufacturers { get; set; }
         public DbSet<ChipsetVendor> ChipsetVendors { get; set; }
+
+        public DbSet<BasketProduct> BasketProducts { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerComponentWebshop; Trusted_Connection=True;TrustServerCertificate=True;");
@@ -129,7 +131,7 @@ namespace ComputerStoreApplication.Logic
                 WithMany(r => r.RAMs);                      //With a internal join table
 
             modelBuilder.Entity<Customer>().
-                HasMany(C=>C.CustomerShippingInfo). //Many addresses
+                HasMany(C=>C.CustomerShippingInfos). //Many addresses
                 WithOne(C=>C.Customer). //To one customer
                 HasForeignKey(C=>C.CustomerId). //With one ID FK
                 OnDelete(DeleteBehavior.Restrict);

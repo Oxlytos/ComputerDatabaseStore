@@ -13,6 +13,8 @@ namespace ComputerStoreApplication.Pages
 {
     public class AdminPage : IPage
     {
+        public int? CurrentCustomerId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void SetPageCommands()
         {

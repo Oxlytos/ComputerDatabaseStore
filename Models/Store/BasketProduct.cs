@@ -12,10 +12,8 @@ namespace ComputerStoreApplication.Models.Store
         public int Id { get; set; }
         public int CustomerId { get; set; }
         public  Customer.Customer Customer { get; set; }
-
         public int ProductId { get; set; }
         public StoreProduct Product { get; set; }
-
         public int Quantity { get; set; }
     }
 }

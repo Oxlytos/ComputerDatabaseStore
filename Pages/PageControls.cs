@@ -16,6 +16,8 @@ namespace ComputerStoreApplication.Pages
             Home,
             CustomerLogin,
             CustomerPage,
+            CustomerLogout,
+            Checkout,
             AdminLogin,
             AdminCreateComponent,
             AdminCreateCategory,
@@ -60,5 +62,9 @@ namespace ComputerStoreApplication.Pages
         public static readonly PageCommand CustomerHomePage = new(PageOption.CustomerPage, "To view account");
 
         public static readonly PageCommand AdminCreateStoreProduct = new(PageOption.AdminCreateStoreProduct, "To create a new store product");
+
+        public static readonly PageCommand CustomerLogout = new(PageOption.CustomerLogout, "To log out (if logged in)");
+
+        public static readonly PageCommand Checkout = new(PageOption.Checkout, "To checkout and buy");
     }
 }

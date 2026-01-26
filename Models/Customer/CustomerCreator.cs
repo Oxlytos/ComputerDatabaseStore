@@ -86,7 +86,7 @@ namespace ComputerStoreApplication.Models.Customer
         internal static string RandomPhoneNumber()
         {
             string phoneNUmber = "07" + Random.Shared.Next(0, 9).ToString() + "-";
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 7; i++)
             {
                 int rando = Random.Shared.Next(0, 9);
                 phoneNUmber += rando.ToString();

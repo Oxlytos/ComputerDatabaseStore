@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Models.ComponentSpecifications;
+﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -64,21 +65,57 @@ namespace ComputerStoreApplication.Logic
         {
 
         }
-        public Customer GetCustomerInfo()
+        public Customer GetCustomerInfo(int id)
         {
-            return null;
+            var validCustomer = _repo.GetCustomers().FirstOrDefault(x=>x.Id == id);
+            if (validCustomer != null) 
+            {
+                return validCustomer;
+            }
+            else
+            {
+                return null;
+            }
+           
         }
-        public void LoginCustomer()
+        public int LoginCustomer(string email, string password)
         {
+            //Hitta customer med mail först
+            if (string.IsNullOrEmpty(email))
+            {
+                return 0;
+            }
+            var customers = _repo.GetCustomers();
+            var thisCustomer = customers.FirstOrDefault(x => x.Email == email);
+
+            if (password != thisCustomer.Password)
+            {
+                //Fel lösen
+                Console.WriteLine("Wrong password");
+                Console.ReadLine();
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine("Success!");
+                Console.ReadLine();
+                return thisCustomer.Id;
+                
+            }
 
         }
-        public void LogoutCustomer()
+        public int LogoutCustomer()
         {
-
+            var logout = AccountLogic.LogoutCustomer();
+            return logout;
         }
         public List<StoreProduct> GetStoreProducts()
         {
             return _repo.GetStoreProducts();
+        }
+        public List<BasketProduct> GetCustomerItems(int id)
+        {
+            return _repo.GetCustomerItems(id);
         }
         public void SaveNew(StoreProduct storeProduct)
         {
@@ -101,9 +138,27 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.SaveNewCustomer(cus);
         }
-        public void AddProductToBasket(BasketProduct basketProduct, Customer cus)
+        public void AddProductToBasket(StoreProduct storeProduct, Customer cus)
         {
-            _repo.AddProductToBasket(basketProduct, cus);
+            BasketProduct basketProduct = new BasketProduct
+            {
+                Customer = cus,
+                Product = storeProduct
+            };
+            Console.WriteLine("How many do you wish to add to your basket?");
+            Console.WriteLine("Max quantity is " + storeProduct.Stock);
+            int count = GeneralHelpers.StringToInt(Console.ReadLine());
+            if (count > 0 && count <= storeProduct.Stock)
+            {
+                basketProduct.Quantity = count;
+            }
+            else
+            {
+                //Utgå från att någon bara köper en sak åt gången
+                basketProduct.Quantity = 1;
+            }
+
+              _repo.AddProductToBasket(basketProduct, cus);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {

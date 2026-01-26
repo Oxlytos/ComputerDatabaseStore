@@ -35,6 +35,7 @@ namespace ComputerStoreApplication
            
             //Databas connection
             var db = new Logic.ComputerDBContext();
+
             //Validerings hanterarer innan vi sparar saker och så
             var val = new Logic.ValidationManager();
 

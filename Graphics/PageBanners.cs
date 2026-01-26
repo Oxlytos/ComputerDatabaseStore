@@ -64,5 +64,12 @@ namespace ComputerStoreApplication.Graphics
             ConsoleColor ccolor = ConsoleColor.DarkBlue;
             DrawBanner(pageHeader, headerText, ccolor);
         }
+        internal static void DrawCheckoutPage()
+        {
+            List<string> pageHeader = new List<string> { " Checkout Page ", "  Confirm basket objects, pay and get your stuff! " };
+            string headerText = "$$$$$$$$$$$$$$$$$$$$$$$";
+            ConsoleColor ccolor = ConsoleColor.DarkBlue;
+            DrawBanner(pageHeader, headerText, ccolor);
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public virtual ChipsetVendor? ChipsetVendor { get; set; } //Intel, AMD RX
 
-        //Implement later use
+        //Behövs nog inte
         public ICollection<StoreProduct> Products { get; set; } = new List<StoreProduct>();
 
         public abstract void Create(ApplicationManager lol);

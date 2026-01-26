@@ -10,8 +10,8 @@ namespace ComputerStoreApplication.Pages
 {
     public class CustomerPage : IPage
     {
-        public List<Customer> CustomerList { get; set; }
-        readonly Customer currentCustomer;
+        public int? CurrentCustomerId { get; set; }
+        Customer? CurrentCustomer { get; set; }
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void RenderPage()
         {
@@ -19,14 +19,15 @@ namespace ComputerStoreApplication.Pages
             SetPageCommands();
             Graphics.PageBanners.DrawCustomerPage();
             Console.SetCursorPosition(0, 10);
-            if (CustomerList.Count > 0) 
+            if (CurrentCustomer != null)
             {
-                foreach (var customer in CustomerList)
-                {
-                    Console.WriteLine("Customer" + customer.FirstName);
-                }
+                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
             }
-          
+            else
+            {
+                Console.WriteLine("Not logged in");
+            }
+
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -41,16 +42,18 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerLogin:
-                    AccountLogic.LoginCustomer(applicationLogic);
-                    //Login
-                    //Return this
+                    TryAndLogin(applicationLogic);
+                    return this;
+                case PageControls.PageOption.CustomerLogout:
+                    applicationLogic.LogoutAsCustomer();
                     return this;
                 case PageControls.PageOption.CustomerPage:
                     return this;
-                case PageControls.PageOption.AdminPage:
-                    return new AdminPage();
+                case PageControls.PageOption.Checkout:
+                    return new CheckoutPage();
                 case PageControls.PageOption.Browse:
                     return new BrowseProducts();
+
             }
             ;
             return this;
@@ -67,6 +70,9 @@ namespace ComputerStoreApplication.Pages
                 {ConsoleKey.C, PageControls. CustomerHomePage},
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
+                {ConsoleKey.L, PageControls.CustomerLogin },
+                {ConsoleKey.Q, PageControls.CustomerLogout },
+                {ConsoleKey.K, PageControls.Checkout }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -76,15 +82,29 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
-
+        //varje reload
         public void Load(ApplicationManager appLol)
         {
-            Customer cus = new Customer();
-            cus = CustomerCreator.CreateCustomer(cus);
-            cus.CreatePassword();
-            appLol.SaveNewCustomer(cus);
-            CustomerList = appLol.GetCustomers();
-            Console.WriteLine("Hello");
+            //kolla om inloggad
+            if (!appLol.IsLoggedInAsCustomer)
+            {
+                CurrentCustomerId = null;
+                CurrentCustomer = null;
+                //nullbara fält null, låt vara, gå vidare
+                return;
+            }
+            //om inloggad, hämta nnuvarande kund
+            CurrentCustomerId = appLol.CustomerId;
+            CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+        }
+
+        public void TryAndLogin(ApplicationManager app)
+        {
+            Console.WriteLine("Email?");
+            string email = Console.ReadLine();
+            Console.WriteLine("Password?");
+            string password = Console.ReadLine();
+            app.LoginAsCustomer(email, password);
         }
     }
 }

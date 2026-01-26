@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,23 @@ namespace ComputerStoreApplication.Pages
         List<ComputerPart> AllPartsForJoin = new List<ComputerPart>();
         List<StoreProduct> SelectedProducts = new List<StoreProduct>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+        Customer? CurrentCustomer { get; set; }
+        public int? CurrentCustomerId { get; set; }
+
         public void RenderPage()
         {
             Console.Clear();
             SetPageCommands();
             PageBanners.DrawShopBanner();
             Console.SetCursorPosition(0, 10);
+            if (CurrentCustomer != null)
+            {
+                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
+            }
+            else
+            {
+                Console.WriteLine("Not logged in");
+            }
             foreach (var product in SelectedProducts)
             {
                 Console.WriteLine($"Name: {product.Name} Price: {product.Price} On Sale?:{product.Sale} (Hidden) ProductId: {product.StoreProductId}");
@@ -78,9 +90,18 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
-            SelectedProducts = appLol.GetStoreProducts();
+            //kolla om inloggad
+            if (!appLol.IsLoggedInAsCustomer)
+            {
+                CurrentCustomerId = null;
+                CurrentCustomer = null;
+                //nullbara fält null, låt vara, gå vidare
+                return;
+            }
+            //om inloggad, hämta nnuvarande kund
+            CurrentCustomerId = appLol.CustomerId;
+            CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
             AllPartsForJoin = appLol.ComputerPartShopDB.AllParts.ToList();
-            Console.WriteLine("Hello");
         }
     }
 }

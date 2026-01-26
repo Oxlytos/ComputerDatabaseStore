@@ -16,5 +16,7 @@ namespace ComputerStoreApplication.Models.Store
 
         public int? CustomerId { get; set; }
         public virtual Customer.Customer? Customer { get; set; }
+        public int ProductId { get; set; }
+        public StoreProduct Product { get; set; }
     }
 }

@@ -20,10 +20,10 @@ namespace ComputerStoreApplication.Logic
         private readonly ComponentService _services;
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
-
-        public bool IsLoggedInAsCustomer { get; set; }
-
-        public bool IsLoggedInAsAdmin { get; set; }
+        public int CustomerId { get; set; }
+        public bool IsLoggedInAsCustomer => CustomerId != 0;
+        public int AdminId { get; set; }
+        public bool IsLoggedInAsAdmin => AdminId != 0;
         public List<StoreProduct> ProductsInBasket { get; set; }
 
         public ApplicationManager(ComponentService service)
@@ -35,8 +35,8 @@ namespace ComputerStoreApplication.Logic
             CurrentPage = new HomePage();
             ProductsInBasket=new List<StoreProduct>();
             _services = service;
-            IsLoggedInAsAdmin= false;
-            IsLoggedInAsCustomer= false;
+            CustomerId = 0;
+            AdminId = 0;
         }
         public List<Customer> GetCustomers()
         {
@@ -50,17 +50,34 @@ namespace ComputerStoreApplication.Logic
         {
             _services.LogoutAdmin();
         }
-        public Customer GetCustomerInfo()
+        public Customer GetCustomerInfo(int id)
         {
-            return _services.GetCustomerInfo();
+            return _services.GetCustomerInfo(id);
         }
-        public void LoginAsCustomer()
+        public bool LoginAsCustomer(string email, string password)
         {
-            _services.LoginCustomer();
+            Console.WriteLine("Tryna login");
+            var thisCustomerId =_services.LoginCustomer(email, password);
+            if (thisCustomerId != 0) 
+            {
+                CustomerId= thisCustomerId;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+               
         }
-        public void LogoutAsCustomer()
+        public bool LogoutAsCustomer()
         {
-            _services.LogoutCustomer();
+                Console.WriteLine("Logged out");
+                CustomerId = 0;
+                return false;
+        }
+        public void AddStoreProductToBasket(Customer cus, StoreProduct prod)
+        {
+            _services.AddProductToBasket(prod, cus);
         }
         public void SaveChangesOnComponent()
         {
@@ -69,6 +86,10 @@ namespace ComputerStoreApplication.Logic
         public List<StoreProduct> GetStoreProducts()
         {
             return _services.GetStoreProducts();
+        }
+        public List<BasketProduct> GetBasketProductsFromCustomerId(int customerId)
+        {
+            return _services.GetCustomerItems(customerId);
         }
         public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
         {
@@ -113,6 +134,10 @@ namespace ComputerStoreApplication.Logic
         public List<Models.ComputerComponents.CPU> GetCPUs()
         {
             return _services.GetCPUs();
+        }
+        public void AddProductToBasket(StoreProduct prod, Customer customer)
+        {
+            _services.AddProductToBasket(prod, customer);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {

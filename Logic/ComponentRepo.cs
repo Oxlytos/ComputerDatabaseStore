@@ -76,6 +76,11 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.RamProfiles.Cast<RamProfileFeatures>().ToList();
         }
+        public List<BasketProduct> GetCustomerItems(int id)
+        {
+            var theseObject = _dbContext.BasketProducts.Where(x=>x.CustomerId== id);
+            return theseObject.ToList();
+        }
         public List<StoreProduct> GetStoreProducts()
         {
             return _dbContext.StoreProducts.ToList();
@@ -126,18 +131,27 @@ namespace ComputerStoreApplication.Logic
         }
         public void AddProductToBasket(BasketProduct prod, Customer cus)
         {
+            if (cus == null)
+            {
+                Console.WriteLine("You need to be logged in to add to basket");
+                Console.ReadLine();
+                return;
+            }
             if (cus.ProductsInBasket.Contains(prod))
             {
                 var thisItem = cus.ProductsInBasket.FirstOrDefault(x => x.Id == prod.Id);
                 if (thisItem != null)
                 {
+                    Console.WriteLine("Increased quantity of this object by one");
                     thisItem.Quantity++;
                 }
             }
             else
             {
+                Console.WriteLine("Added to basket");
                 cus.ProductsInBasket.Add(prod);
             }
+            TrySaveChanges();
         }
         public void RemoveSingularObjectFromBasket(BasketProduct prod, Customer cus)
         {

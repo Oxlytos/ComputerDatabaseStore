@@ -32,7 +32,11 @@ namespace ComputerStoreApplication.Models.Store
 
         public decimal Price { get; set; }
 
+
         public bool Sale { get; set; }
+
+        //Visa på hemma skärm och browse att detta är produkt i extra fokus => Fast som inte är på rea
+        public bool SelectedProduct { get; set; }
 
         public int Stock {  get; set; }
 
@@ -56,13 +60,15 @@ namespace ComputerStoreApplication.Models.Store
             Sale=GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
             Console.WriteLine("How many we got in stock?");
             Stock = GeneralHelpers.StringToInt(Console.ReadLine());
+            Console.WriteLine("Is this a 'selected product' we want to show on the front page and such?");
+            SelectedProduct = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
 
             lol.SaveNewStoreProduct(this);
 
         }
         public void Read(ApplicationManager lol)
         {
-
+            //Gah
         }
         public void Update(ApplicationManager lol)
         {

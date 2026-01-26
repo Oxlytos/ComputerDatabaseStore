@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,24 @@ namespace ComputerStoreApplication.Pages
 {
     public class BrowseProducts : IPage
     {
-        List<CPU> cPUs = new List<CPU>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+
+        public int? CurrentCustomerId { get; set; }
+        Customer? CurrentCustomer { get; set; }
         public void Load(ApplicationManager appLol)
         {
-            cPUs = appLol.GetCPUs();
+            //kolla om inloggad
+            if (!appLol.IsLoggedInAsCustomer)
+            {
+                CurrentCustomerId = null;
+                CurrentCustomer = null;
+                //nullbara fält null, låt vara, gå vidare
+                return;
+            }
+            //om inloggad, hämta nnuvarande kund
+            CurrentCustomerId = appLol.CustomerId;
+            CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+
         }
         public void RenderPage()
         {
@@ -24,15 +38,19 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
             Console.WriteLine("Browse product page");
-            foreach (CPU cpu in cPUs) 
+            if (CurrentCustomer != null)
             {
-                Console.WriteLine(cpu.Name);
+                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
             }
-            
+            else
+            {
+                Console.WriteLine("Not logged in");
+            }
 
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
+            //har vi inte deras input
             //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
                 return this; //retunera samma sida igen
@@ -40,23 +58,18 @@ namespace ComputerStoreApplication.Pages
             //retunera sida beroende på sida
             switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
-                //Kolla page commands metoden
+                //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
+                case PageControls.PageOption.Checkout:
+                    return new CheckoutPage() ;
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
-                case PageControls.PageOption.AdminPage:
-                    return new AdminPage();
-                case PageControls.PageOption.Browse:
-                    return this;
                 case PageControls.PageOption.Search:
-                    //
                     return new SearchedResults();
-                    return this;
             }
             ;
             return this;
-
         }
         public void SetPageCommands()
         {
@@ -66,9 +79,11 @@ namespace ComputerStoreApplication.Pages
             {
                 { ConsoleKey.H, PageControls.HomeCommand },
                 {ConsoleKey.C, PageControls. CustomerHomePage},
-                { ConsoleKey.A, PageControls.Admin },
                 {ConsoleKey.B, PageControls.BrowseCommand},
+                {ConsoleKey.L, PageControls.CustomerLogin },
+                {ConsoleKey.Q, PageControls.CustomerLogout },
                 {ConsoleKey.F, PageControls.Search},
+                {ConsoleKey.K, PageControls.Checkout }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -79,7 +94,15 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
+        public void TryAndLogin(ApplicationManager app)
+        {
+            Console.WriteLine("Email?");
+            string email = Console.ReadLine();
+            Console.WriteLine("Password?");
+            string password = Console.ReadLine();
+            app.LoginAsCustomer(email, password);
+        }
 
-        
+
     }
 }

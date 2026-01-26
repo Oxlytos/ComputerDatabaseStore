@@ -230,7 +230,7 @@ namespace ComputerStoreApplication.Crud_Related
 
             var relevantObjects = logic.GetComponentSpecifications(specCreate);
 
-            Console.WriteLine($"You chose: {relevantObjects.GetType().ToString()}");
+            Console.WriteLine($"You chose: {specCreate.GetType().Name}");
             Console.WriteLine("Current components in this category;");
             if (relevantObjects != null)
             {

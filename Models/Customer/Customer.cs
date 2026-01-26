@@ -32,7 +32,7 @@ namespace ComputerStoreApplication.Models.Customer
 
         public string Password { get; private set; }
 
-        public virtual ICollection<CustomerShippingInfo> CustomerShippingInfo { get; set; } 
+        public virtual ICollection<CustomerShippingInfo> CustomerShippingInfos { get; set; }  = new List<CustomerShippingInfo>();
 
         public virtual ICollection<CustomerOrder> Orders { get; set; }
 
@@ -43,6 +43,41 @@ namespace ComputerStoreApplication.Models.Customer
             if(Password.IsNullOrEmpty())
             {
                 Password = Guid.NewGuid().ToString();
+            }
+        }
+        public void PrintShippingInfo()
+        {
+            var shipInfo = CustomerShippingInfos.ToList();
+            if (shipInfo.Count > 0) 
+            {
+                foreach (var ship in shipInfo)
+                {
+                    Console.WriteLine($"{ship.StreetName} {ship.PostalCode} {ship.State_Or_County_Or_Province} {ship.Country}\n");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No shipping address registered");
+            }
+            
+        }
+        public  void PrintOrders()
+        {
+            var cOrders = Orders.ToList();
+            if (cOrders.Count > 0)
+            {
+                foreach (var ord in cOrders)
+                {
+                    Console.WriteLine($"{ord.CreatedDate} {ord.Delivered}\n");
+                    foreach(var prodInOrd in ord.Products)
+                    {
+                        Console.WriteLine($"\t{prodInOrd.Product.Name} {prodInOrd.Product.Price} {prodInOrd.OrderedAmount}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No shipping address registered");
             }
         }
     }

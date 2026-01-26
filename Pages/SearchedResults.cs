@@ -1,5 +1,8 @@
-﻿using ComputerStoreApplication.Logic;
+﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
+using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +14,12 @@ namespace ComputerStoreApplication.Pages
 {
     internal class SearchedResults : IPage
     {
+
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+        Customer? CurrentCustomer { get; set; }
+
+        public int? CurrentCustomerId {get; set; }
+
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
@@ -40,29 +48,64 @@ namespace ComputerStoreApplication.Pages
         public void SearchResults(ApplicationManager appLol)
         {
             Console.WriteLine("Input search query, please");
-            string input = Console.ReadLine();  
+            string input = Console.ReadLine();
 
-            var allProducts = appLol.ComputerPartShopDB.AllParts.ToList();
-            List<ComputerPart> parts = new List<ComputerPart>();
-            foreach (ComputerPart part in allProducts) 
+            //sök
+            var allProducts = appLol.GetStoreProducts();
+            List<StoreProduct> parts = new List<StoreProduct>();
+            foreach (StoreProduct part in allProducts) 
             {
                 if (part.Name.ToLower().Contains(input.ToLower()))
                 {
                     parts.Add(part);
                 }
             }
+            //printa alla resultat
             Console.WriteLine($"Found this many similar objects based on query results: {parts.Count}");
             if (parts.Count > 0) 
             {
-                foreach (ComputerPart part in parts)
+                foreach (StoreProduct part in parts)
                 {
-                    Console.WriteLine(part.Name);
+                    Console.WriteLine(part.Id + " " + part.Name);
                 }
             }
-            Console.ReadLine();
+            Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket!");
+            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+
+            var doesItExist = parts.FirstOrDefault(x => x.Id == choice);
+            if (doesItExist != null)
+            {
+                Console.WriteLine("Exists!");
+                Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
+                bool confirmation = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+                if (confirmation) 
+                {
+                    appLol.AddProductToBasket(doesItExist,CurrentCustomer);
+                }
+                else
+                {
+                    Console.WriteLine("Quitting operation...");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Dosen't exist");
+            }
+                Console.ReadLine();
         }
         public void Load(ApplicationManager appLol)
         {
+            //kolla om inloggad
+            if (!appLol.IsLoggedInAsCustomer)
+            {
+                CurrentCustomerId = null;
+                CurrentCustomer = null;
+                //nullbara fält null, låt vara, gå vidare
+                return;
+            }
+            //om inloggad, hämta nnuvarande kund
+            CurrentCustomerId = appLol.CustomerId;
+            CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
 
         }
 
