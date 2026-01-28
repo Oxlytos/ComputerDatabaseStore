@@ -1,5 +1,7 @@
 ﻿using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.Customer;
+using ComputerStoreApplication.Models.Store;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,7 @@ namespace ComputerStoreApplication.Pages
     {
         public int? CurrentCustomerId { get; set; }
         Customer? CurrentCustomer { get; set; }
+        List<Order>? CustomerOrders { get; set; }
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public void RenderPage()
         {
@@ -22,6 +25,17 @@ namespace ComputerStoreApplication.Pages
             if (CurrentCustomer != null)
             {
                 Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
+                if (CustomerOrders != null && CustomerOrders.Any()) 
+                {
+                    foreach (var order in CustomerOrders) 
+                    {
+                        Console.WriteLine($"Order Id: {order.Id} \n Costs (Total): {order.TotalCost} Tax: {order.TaxCosts} Pre-Tax:{order.Subtotal}");
+                        foreach (var prod in order.OrderItems) 
+                        {
+                            Console.WriteLine($"\tProduct: {prod.Product.Name} Amount: {prod.Quantity} Pricer per unit: {prod.Price} ");
+                        }
+                    }
+                }
             }
             else
             {
@@ -47,7 +61,15 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.CustomerLogout:
                     applicationLogic.LogoutAsCustomer();
                     return this;
+                case PageControls.PageOption.CreateAccount:
+                    //Skapa konto
+                    CreateAccount(applicationLogic);
+                    return this;
                 case PageControls.PageOption.CustomerPage:
+                    return this;
+                case PageControls.PageOption.CustomerShippingInfo:
+                    //metod
+                    HandleShippingInfo(applicationLogic);
                     return this;
                 case PageControls.PageOption.Checkout:
                     return new CheckoutPage();
@@ -69,10 +91,11 @@ namespace ComputerStoreApplication.Pages
                 { ConsoleKey.H, PageControls.HomeCommand },
                 {ConsoleKey.C, PageControls. CustomerHomePage},
                 { ConsoleKey.B, PageControls.BrowseCommand },
-                { ConsoleKey.A, PageControls.Admin },
                 {ConsoleKey.L, PageControls.CustomerLogin },
                 {ConsoleKey.Q, PageControls.CustomerLogout },
-                {ConsoleKey.K, PageControls.Checkout }
+                {ConsoleKey.K, PageControls.Checkout },
+                {ConsoleKey.P, PageControls.CustomerShippingInfo },
+                {ConsoleKey.U, PageControls.CreateAccount }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -96,6 +119,7 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+            CustomerOrders = appLol.GetCustomerOrders(appLol.CustomerId);
         }
 
         public void TryAndLogin(ApplicationManager app)
@@ -105,6 +129,19 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine("Password?");
             string password = Console.ReadLine();
             app.LoginAsCustomer(email, password);
+        }
+        public void CreateAccount(ApplicationManager app)
+        {
+            Console.WriteLine("Email?");
+            string email = Console.ReadLine();
+            app.CreateAccount(email);
+        }
+        public void HandleShippingInfo(ApplicationManager app)
+        {
+            if (CurrentCustomer != null)
+            {
+                app.HandleCustomerShippingInfo(CurrentCustomer.Id);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -102,6 +103,7 @@ namespace ComputerStoreApplication.Crud_Related
                 componentToCreate.Create(logic);
             }
         }
+       
         public static void StoreProductInput(ApplicationManager logic)
         {
             Console.WriteLine("These are the current store products on the website");
@@ -384,6 +386,10 @@ namespace ComputerStoreApplication.Crud_Related
                         return new RamProfileFeatures();
                 }
             }
+            return null;
+        }
+        internal static CustomerShippingInfo GetCustomerShippingInfoInput()
+        {
             return null;
         }
         static void LoadBackgroundForm()

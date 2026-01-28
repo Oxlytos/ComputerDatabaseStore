@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
@@ -33,11 +34,12 @@ namespace ComputerStoreApplication.Pages
             {
                 Console.WriteLine("Not logged in");
             }
+            Console.WriteLine("Products in focus;");
+            Console.WriteLine("If you wanna add something to your basket, press 'K'!");
+            Console.WriteLine("Selected products count: " + SelectedProducts.Count);
             foreach (var product in SelectedProducts)
             {
-                Console.WriteLine($"Name: {product.Name} Price: {product.Price} On Sale?:{product.Sale} (Hidden) ProductId: {product.StoreProductId}");
-                var actualProduct = AllPartsForJoin.FirstOrDefault(X=>X.Id==product.ComputerPartId);
-                Console.WriteLine($"\t- {actualProduct.Name} ");
+                Console.WriteLine($" Id: {product.Id}\tName: {product.Name} Description: {product.Description} Price: {product.Price} On Sale?:{product.Sale} (Hidden)");
             }
             
         }
@@ -59,6 +61,12 @@ namespace ComputerStoreApplication.Pages
                     return new AdminPage();
                 case PageControls.PageOption.Browse:
                     return new BrowseProducts();
+                case PageControls.PageOption.Checkout:
+                    return new CheckoutPage();
+                case PageControls.PageOption.AddToBasket:
+                    //add to basket stuff
+                    AddSomethingToBasket(applicationLogic);
+                    return this;
                 case PageControls.PageOption.CustomerLogin:
                     return new CustomerPage();
             }
@@ -77,6 +85,8 @@ namespace ComputerStoreApplication.Pages
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 { ConsoleKey.A, PageControls.Admin },
                 {ConsoleKey.L, PageControls.CustomerLogin },
+                   {ConsoleKey.K, PageControls.Checkout },
+                   {ConsoleKey.U, PageControls.AddToBasket }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -90,6 +100,7 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
+            SelectedProducts = appLol.GetFrontPageProducts();
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -101,7 +112,31 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
-            AllPartsForJoin = appLol.ComputerPartShopDB.AllParts.ToList();
+         
+        }
+        public void AddSomethingToBasket(ApplicationManager appLo)
+        {
+            if (CurrentCustomer==null)
+            {
+                Console.WriteLine("You have to be logged in");
+                Console.ReadLine();
+                return;
+            }
+            Console.WriteLine("Please input the corresponding id of the product you wish to add to your basket");
+            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            var valid = SelectedProducts.FirstOrDefault(x => x.Id == choice);
+            if (valid != null)
+            {
+                Console.WriteLine("Working...");
+                appLo.AddProductToBasket(valid, CurrentCustomer);
+                
+            }
+            else
+            {
+                Console.WriteLine("Not valid, returning...");
+                Console.ReadLine();
+                return;
+            }
         }
     }
 }

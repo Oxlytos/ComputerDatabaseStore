@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Store
 {
-    public class OrderProduct
+    //Order items i en order
+    public class OrderItem
     {
         public int Id { get; set; }
 
         public int OrderId { get; set; }
+        public Order Order { get; set; }
 
-        public int OrderedAmount { get; set; }
-
-        public int? CustomerId { get; set; }
-        public virtual Customer.Customer? Customer { get; set; }
         public int ProductId { get; set; }
         public StoreProduct Product { get; set; }
+
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+
+     
     }
 }

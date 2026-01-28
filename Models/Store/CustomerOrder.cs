@@ -14,7 +14,7 @@ namespace ComputerStoreApplication.Models.Store
 
         public virtual Customer.Customer? Customer { get; set; }
 
-        public virtual List<OrderProduct> Products { get; set; }
+        public virtual ICollection<OrderItem> Products { get; set; } = new List<OrderItem>();
 
         public DateTime CreatedDate { get; set; }
 

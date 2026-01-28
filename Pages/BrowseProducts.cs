@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
+using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +17,12 @@ namespace ComputerStoreApplication.Pages
 
         public int? CurrentCustomerId { get; set; }
         Customer? CurrentCustomer { get; set; }
+
+        List<StoreProduct> Products { get; set; } = new List<StoreProduct>();
         public void Load(ApplicationManager appLol)
         {
             //kolla om inloggad
+            Products = appLol.GetStoreProducts();
             if (!appLol.IsLoggedInAsCustomer)
             {
                 CurrentCustomerId = null;
@@ -29,6 +33,7 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+           
 
         }
         public void RenderPage()
@@ -38,6 +43,7 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
             Console.WriteLine("Browse product page");
+            Console.WriteLine("TODO ADD 'aDD TO BASKET' ");
             if (CurrentCustomer != null)
             {
                 Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
@@ -45,6 +51,15 @@ namespace ComputerStoreApplication.Pages
             else
             {
                 Console.WriteLine("Not logged in");
+            }
+            Console.WriteLine("What's available, down below!");
+            if (Products != null || Products.Count > 0)
+            {
+                foreach (var product in Products) 
+                {
+                    Console.WriteLine($"\tId: {product.Id} Name: {product.Name} Description: {product.Description} Price: {product.Price} Sale: {product.Sale}");
+                }
+                
             }
 
         }

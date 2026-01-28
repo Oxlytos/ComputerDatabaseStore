@@ -58,7 +58,7 @@ namespace ComputerStoreApplication.Models.Customer
         {
             return 0;
         }
-     
+      
 
     }
 }

@@ -13,7 +13,6 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
     public class RamProfileFeatures : ComponentSpecification
     {
-
         public ICollection<RAM> RAMs { get; set; } = new List<RAM>();
 
         public override void Create(ApplicationManager lol)

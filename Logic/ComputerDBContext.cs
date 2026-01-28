@@ -35,14 +35,15 @@ namespace ComputerStoreApplication.Logic
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerShippingInfo> CustomerShippingInfos { get; set; }
         //Store and orders related
-        public DbSet<CustomerOrder> CustomerOrders { get; set; }    
-        public DbSet<OrderProduct> OrderedProducts { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderedProducts { get; set; }
         public DbSet<StoreProduct> StoreProducts { get; set; }
         //Producers
         public DbSet<Brand> BrandManufacturers { get; set; }
         public DbSet<ChipsetVendor> ChipsetVendors { get; set; }
-
         public DbSet<BasketProduct> BasketProducts { get; set; }
+
+        public DbSet<DeliveryProvider> DeliveryProviders { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerComponentWebshop; Trusted_Connection=True;TrustServerCertificate=True;");
@@ -131,14 +132,14 @@ namespace ComputerStoreApplication.Logic
                 WithMany(r => r.RAMs);                      //With a internal join table
 
             modelBuilder.Entity<Customer>().
-                HasMany(C=>C.CustomerShippingInfos). //Many addresses
-                WithOne(C=>C.Customer). //To one customer
-                HasForeignKey(C=>C.CustomerId). //With one ID FK
-                OnDelete(DeleteBehavior.Restrict);
+                HasMany(C=>C.CustomerShippingInfos). 
+                WithOne(C=>C.Customer).
+                HasForeignKey(C=>C.CustomerId).
+                OnDelete(DeleteBehavior.Cascade);//Ta bort alla efter en delete baserat på Id
 
             modelBuilder.Entity<Customer>().
                 HasMany(C=>C.Orders).
-                WithOne(C=>C.Customer).
+                WithOne(C=>C.OrdCustomer).
                 HasForeignKey(Q=>Q.CustomerId).
                 OnDelete(DeleteBehavior.Restrict);
 
@@ -159,6 +160,23 @@ namespace ComputerStoreApplication.Logic
                 HasOne(s=>s.Customer).
                 WithMany(c=>c.ProductsInBasket).
                 HasForeignKey(k=>k.CustomerId).
+                OnDelete(DeleteBehavior.Cascade);
+
+            //Unik basketproduct table per användare och product
+            modelBuilder.Entity<BasketProduct>().
+                HasIndex(bps =>new { bps.CustomerId, bps.ProductId }).IsUnique()
+                
+                ;
+            modelBuilder.Entity<Order>()
+                .HasMany(o=>o.OrderItems).
+                WithOne(o=>o.Order).
+                HasForeignKey(s=>s.OrderId).
+                OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(d=>d.DeliveryProvider).
+                WithMany().
+                HasForeignKey(k=>k.DeliveryProviderId).
                 OnDelete(DeleteBehavior.Restrict);
         }
 

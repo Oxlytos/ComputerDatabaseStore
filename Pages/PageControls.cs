@@ -14,10 +14,15 @@ namespace ComputerStoreApplication.Pages
        public enum PageOption
         {
             Home,
+            AddToBasket,
             CustomerLogin,
             CustomerPage,
             CustomerLogout,
+            CreateAccount,
+            CustomerShippingInfo,
             Checkout,
+            BuyCheckout,
+            AdjustCheckout,
             AdminLogin,
             AdminCreateComponent,
             AdminCreateCategory,
@@ -36,6 +41,9 @@ namespace ComputerStoreApplication.Pages
 
         public static readonly PageCommand HomeCommand =
            new(PageOption.Home, "Go to home page");
+
+        public static readonly PageCommand CustomerShippingInfo =
+        new(PageOption.CustomerShippingInfo, "To handle shipping info");
 
         public static readonly PageCommand BrowseCommand =
             new(PageOption.Browse, "Browse products");
@@ -66,5 +74,10 @@ namespace ComputerStoreApplication.Pages
         public static readonly PageCommand CustomerLogout = new(PageOption.CustomerLogout, "To log out (if logged in)");
 
         public static readonly PageCommand Checkout = new(PageOption.Checkout, "To checkout and buy");
+
+        public static readonly PageCommand BuyCheckout = new(PageOption.BuyCheckout, "To buy");
+        public static readonly PageCommand CheckoutAdjust = new(PageOption.AdjustCheckout, "To adjust something in the basket");
+        public static readonly PageCommand CreateAccount = new(PageOption.CreateAccount, "To create a customer account");
+        public static readonly PageCommand AddToBasket = new(PageOption.AddToBasket, "To start adding something to your basket");
     }
 }

@@ -571,6 +571,7 @@ namespace ComputerStoreApplication.Helpers
         }
         internal static bool YesOrNoReturnBoolean(string userINput)
         {
+            Console.WriteLine("'y' for yes, and 'n' for no");
             if (userINput.StartsWith("y") || userINput.StartsWith("Y"))
             {
                 return true;

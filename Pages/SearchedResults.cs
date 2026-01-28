@@ -53,7 +53,7 @@ namespace ComputerStoreApplication.Pages
             //sök
             var allProducts = appLol.GetStoreProducts();
             List<StoreProduct> parts = new List<StoreProduct>();
-            foreach (StoreProduct part in allProducts) 
+            foreach (StoreProduct part in allProducts)
             {
                 if (part.Name.ToLower().Contains(input.ToLower()))
                 {
@@ -62,7 +62,7 @@ namespace ComputerStoreApplication.Pages
             }
             //printa alla resultat
             Console.WriteLine($"Found this many similar objects based on query results: {parts.Count}");
-            if (parts.Count > 0) 
+            if (parts.Count > 0)
             {
                 foreach (StoreProduct part in parts)
                 {
@@ -72,26 +72,35 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket!");
             int choice = GeneralHelpers.StringToInt(Console.ReadLine());
 
-            var doesItExist = parts.FirstOrDefault(x => x.Id == choice);
-            if (doesItExist != null)
+            if (CurrentCustomer != null)
             {
-                Console.WriteLine("Exists!");
-                Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
-                bool confirmation = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
-                if (confirmation) 
+                var doesItExist = parts.FirstOrDefault(x => x.Id == choice);
+                if (doesItExist != null)
                 {
-                    appLol.AddProductToBasket(doesItExist,CurrentCustomer);
+                    Console.WriteLine("Exists!");
+                    Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
+                    bool confirmation = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+                    if (confirmation)
+                    {
+                        appLol.AddProductToBasket(doesItExist, CurrentCustomer);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Quitting operation...");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Quitting operation...");
+                    Console.WriteLine("Dosen't exist");
                 }
+                Console.ReadLine();
             }
             else
             {
-                Console.WriteLine("Dosen't exist");
-            }
+                Console.WriteLine("You can only add to basket if your logged in");
                 Console.ReadLine();
+                return;
+            }
         }
         public void Load(ApplicationManager appLol)
         {

@@ -4,6 +4,7 @@ using ComputerStoreApplication.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComputerStoreApplication.Migrations
 {
     [DbContext(typeof(ComputerDBContext))]
-    partial class ComputerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260127144522_CascadeDelteCustomerShippingInfo")]
+    partial class CascadeDelteCustomerShippingInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,15 +172,14 @@ namespace ComputerStoreApplication.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("CustomerId");
 
-                    b.HasIndex("CustomerId", "ProductId")
-                        .IsUnique();
+                    b.HasIndex("ProductId");
 
                     b.ToTable("BasketProducts");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.DeliveryProvider", b =>
+            modelBuilder.Entity("ComputerStoreApplication.Models.Store.CustomerOrder", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -185,57 +187,26 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DeliveryProviders");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.Order", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("DeliveryProviderId")
-                        .HasColumnType("int");
+                    b.Property<bool>("Delivered")
+                        .HasColumnType("bit");
 
-                    b.Property<decimal>("ShippingCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TaxCosts")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalCost")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("DeliveryProviderId");
-
-                    b.ToTable("Orders");
+                    b.ToTable("CustomerOrders");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.OrderItem", b =>
+            modelBuilder.Entity("ComputerStoreApplication.Models.Store.OrderProduct", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -243,21 +214,26 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomerOrderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("OrderedAmount")
+                        .HasColumnType("int");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("CustomerOrderId");
 
                     b.HasIndex("ProductId");
 
@@ -556,7 +532,7 @@ namespace ComputerStoreApplication.Migrations
                     b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
                         .WithMany("ProductsInBasket")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ComputerStoreApplication.Models.Store.StoreProduct", "Product")
@@ -570,32 +546,25 @@ namespace ComputerStoreApplication.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.Order", b =>
+            modelBuilder.Entity("ComputerStoreApplication.Models.Store.CustomerOrder", b =>
                 {
-                    b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "OrdCustomer")
+                    b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
                         .WithMany("Orders")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("ComputerStoreApplication.Models.Store.DeliveryProvider", "DeliveryProvider")
-                        .WithMany()
-                        .HasForeignKey("DeliveryProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DeliveryProvider");
-
-                    b.Navigation("OrdCustomer");
+                    b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.OrderItem", b =>
+            modelBuilder.Entity("ComputerStoreApplication.Models.Store.OrderProduct", b =>
                 {
-                    b.HasOne("ComputerStoreApplication.Models.Store.Order", "Order")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("ComputerStoreApplication.Models.Customer.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId");
+
+                    b.HasOne("ComputerStoreApplication.Models.Store.CustomerOrder", null)
+                        .WithMany("Products")
+                        .HasForeignKey("CustomerOrderId");
 
                     b.HasOne("ComputerStoreApplication.Models.Store.StoreProduct", "Product")
                         .WithMany()
@@ -603,7 +572,7 @@ namespace ComputerStoreApplication.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Order");
+                    b.Navigation("Customer");
 
                     b.Navigation("Product");
                 });
@@ -801,9 +770,9 @@ namespace ComputerStoreApplication.Migrations
                     b.Navigation("ProductsInBasket");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.Order", b =>
+            modelBuilder.Entity("ComputerStoreApplication.Models.Store.CustomerOrder", b =>
                 {
-                    b.Navigation("OrderItems");
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Vendors_Producers.Brand", b =>

@@ -36,6 +36,10 @@ namespace ComputerStoreApplication.Logic
                  .Concat(_dbContext.Motherboards).
                  ToList();
         }
+        public List<CustomerShippingInfo> GetAdressesOfCustomer(int customerId)
+        {
+            return _dbContext.CustomerShippingInfos.Where(x => x.CustomerId == customerId).ToList();
+        }
         public List<RAM> GetRAMs()
         {
             return _dbContext.RAMs.Cast<RAM>().ToList();
@@ -78,7 +82,7 @@ namespace ComputerStoreApplication.Logic
         }
         public List<BasketProduct> GetCustomerItems(int id)
         {
-            var theseObject = _dbContext.BasketProducts.Where(x=>x.CustomerId== id);
+            var theseObject = _dbContext.BasketProducts.Where(x => x.CustomerId == id);
             return theseObject.ToList();
         }
         public List<StoreProduct> GetStoreProducts()
@@ -114,6 +118,29 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.Customers.ToList();
         }
+        public List<Order> GetOrders()
+        {
+            return _dbContext.Orders.ToList();
+        }
+        public List<StoreProduct> GetFrontPageProducts()
+        {
+            var returnList = _dbContext.StoreProducts
+             .Where(s => s.SelectedProduct && s.Stock > 0)
+               .ToList();
+            return returnList;
+        }
+        public IQueryable<Order> GetOrdersQuired()
+        {
+            return _dbContext.Orders;
+        }
+        public IQueryable<Customer> GetCustomersQuired()
+        {
+            return _dbContext.Customers;
+        }
+        public List<DeliveryProvider> GetDeliveryServices()
+        {
+            return _dbContext.DeliveryProviders.ToList();
+        }
         public void SaveNew(StoreProduct product)
         {
             _dbContext.StoreProducts.Add(product);
@@ -129,7 +156,7 @@ namespace ComputerStoreApplication.Logic
             _dbContext.AllComponentSpecifcations.Add(spec);
             TrySaveChanges();
         }
-        public void AddProductToBasket(BasketProduct prod, Customer cus)
+        public void AddProductToBasket(int prod, int count, Customer cus)
         {
             if (cus == null)
             {
@@ -137,19 +164,41 @@ namespace ComputerStoreApplication.Logic
                 Console.ReadLine();
                 return;
             }
-            if (cus.ProductsInBasket.Contains(prod))
+            Console.WriteLine("Checking if already exists");
+            Console.ReadLine();
+
+            //kunddata
+            var trackedCustomerInfo = _dbContext.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == cus.Id);
+
+            if (trackedCustomerInfo == null) 
             {
-                var thisItem = cus.ProductsInBasket.FirstOrDefault(x => x.Id == prod.Id);
-                if (thisItem != null)
-                {
-                    Console.WriteLine("Increased quantity of this object by one");
-                    thisItem.Quantity++;
-                }
+                return;
+            }
+            var checkIfExistingProductInBasket = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(x => x.ProductId == prod);
+            Console.ReadLine();
+            if (checkIfExistingProductInBasket!=null)
+            {
+                Console.WriteLine("You already have this product in your basket");
+                Console.WriteLine("Increased quantity of this object by one");
+                checkIfExistingProductInBasket.Quantity++;
             }
             else
             {
+                var newItem = new BasketProduct
+                {
+                    CustomerId = cus.Id,
+                    ProductId = prod,
+                    Quantity =count
+                };
                 Console.WriteLine("Added to basket");
-                cus.ProductsInBasket.Add(prod);
+                cus.ProductsInBasket.Add(newItem);
+            }
+
+            //Sänk stock av store objekt antal, de håller på att köpas här
+            var storeObjects = _dbContext.StoreProducts.FirstOrDefault(x=>x.Id==prod);
+            if (storeObjects != null)
+            {
+                storeObjects.Stock -= count;
             }
             TrySaveChanges();
         }

@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace ComputerStoreApplication.Logic
 {
@@ -19,8 +20,8 @@ namespace ComputerStoreApplication.Logic
         //Vi hämtar även information direkt från databasen som vendors, gpus annat
         private readonly ComponentRepo _repo;
         private readonly ValidationManager _validation;
-        
-        public ComponentService( ComponentRepo repo, ValidationManager val)
+
+        public ComponentService(ComponentRepo repo, ValidationManager val)
         {
             _repo = repo;
         }
@@ -29,11 +30,11 @@ namespace ComputerStoreApplication.Logic
         {
             return part switch
             {
-                GPU=>_repo.GetGPUs(),
-                CPU=> _repo.GetCPUs(),
-                RAM=>_repo.GetRAMs(),
-                Motherboard =>_repo.GetMotherboards(),
-                PSU =>_repo.GetPSUs(),
+                GPU => _repo.GetGPUs(),
+                CPU => _repo.GetCPUs(),
+                RAM => _repo.GetRAMs(),
+                Motherboard => _repo.GetMotherboards(),
+                PSU => _repo.GetPSUs(),
 
 
                 _ => throw new ArgumentException("Unknown computer part type")
@@ -57,6 +58,55 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetCustomers();
         }
+        //Stort return objekt för alla display värden
+        //Kan göra ett annat objekt som bara har relevanta fält
+        //Fast det är lite knappert med tid
+        public List<Order> DisplayCurrentCustomerOrders(int customerId)
+        {
+            //alla ordrar
+            return _repo.GetOrdersQuired()
+                //från kund
+              .Where(s => s.CustomerId == customerId)
+              //inkludera alla relations till items
+              .Include(o => o.OrderItems)
+              //order items till products
+              .ThenInclude(oi => oi.Product)
+              //även deliveryprovider
+              .Include(o => o.DeliveryProvider)
+              .ToList();
+        }
+        public List<Order> GetCustomerOrders(int customerId)
+        {
+            return _repo.GetOrders().Where(s => s.CustomerId == customerId).ToList();
+        }
+        public void CreateAccount(string email)
+        {
+            bool validFormat = CustomerHelper.CheckIfEmailFormat(email);
+            if (!validFormat)
+            {
+                return;
+            }
+            bool alreadyInUse = _repo.GetCustomers().Any(o => o.Email == email);
+            if (alreadyInUse) 
+            {
+                Console.WriteLine("That email is currently already in use, use another if possible");
+                return;
+            }
+            Customer newCustomer = CustomerHelper.CreateCustomerManual(email);
+            newCustomer.CreatePassword();
+            SaveNewCustomer(newCustomer);
+            SaveChangesOnComponent();
+            Console.WriteLine("You'll find your password in the mail (db)");
+            Console.WriteLine("Now, input the password");
+            string password = Console.ReadLine();
+            if (string.IsNullOrEmpty(password)) 
+            {
+                return;
+            }
+
+            HandleCustomerShippingInfo(newCustomer.Id); 
+
+        }
         public void LoginAdmin()
         {
 
@@ -65,10 +115,14 @@ namespace ComputerStoreApplication.Logic
         {
 
         }
+        public List<StoreProduct> GetFrontPageProducts()
+        {
+            return _repo.GetFrontPageProducts();
+        }
         public Customer GetCustomerInfo(int id)
         {
-            var validCustomer = _repo.GetCustomers().FirstOrDefault(x=>x.Id == id);
-            if (validCustomer != null) 
+            var validCustomer = _repo.GetCustomers().FirstOrDefault(x => x.Id == id);
+            if (validCustomer != null)
             {
                 return validCustomer;
             }
@@ -76,7 +130,7 @@ namespace ComputerStoreApplication.Logic
             {
                 return null;
             }
-           
+
         }
         public int LoginCustomer(string email, string password)
         {
@@ -100,7 +154,7 @@ namespace ComputerStoreApplication.Logic
                 Console.WriteLine("Success!");
                 Console.ReadLine();
                 return thisCustomer.Id;
-                
+
             }
 
         }
@@ -125,40 +179,118 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.SaveNew(part);
         }
+        public List<DeliveryProvider> GetDeliveryServices()
+        {
+            return _repo.GetDeliveryServices();
+        }
+        public DeliveryProvider ChooseDeliveryProvider(List<DeliveryProvider> deliveryProviders)
+        {
+            Console.WriteLine("Which delviery provider do you want to choose? Input their corresponding Id");
+            foreach (var deliveryProvider in deliveryProviders)
+            {
+                Console.WriteLine($"Id: {deliveryProvider.Id} {deliveryProvider.Name}, cost (€): {deliveryProvider.Price}");
+            }
+            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            var valid = deliveryProviders.FirstOrDefault(x => x.Id == choice);
+            if (valid != null)
+            {
+                return valid;
+            }
+            return null;
+        }
+        public void HandleCustomerPurchase(int customerId)
+        {
+            //Customer har referens till sina basket items här från customerId
+            var customer = _repo.GetCustomersQuired().
+                Include(c => c.ProductsInBasket).
+                ThenInclude(k => k.Product).
+                Include(q => q.CustomerShippingInfos).
+                FirstOrDefault(k => k.Id == customerId);
+            if (customer == null)
+            {
+                return;
+            }
+
+            var prodIds = customer.ProductsInBasket.Select(k => k.Id).ToList();
+
+            var allProds = GetStoreProducts().Where(p => prodIds.Contains(p.Id)).ToList();
+
+            var orders = CustomerHelper.HandlePurchase(customer);
+
+            var delveryServices = GetDeliveryServices();
+
+            if (orders != null)
+            {
+                var deliveryMethod = ChooseDeliveryProvider(delveryServices);
+                orders.ApplyDelivertyMethodAndProvider(deliveryMethod);
+                orders.CalculateTotalPrice();
+                Console.WriteLine("Go ahead with purchase? Press enter then confirm");
+                bool buy = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+                if (buy)
+                {
+                    customer.ProductsInBasket.Clear();
+                    customer.Orders.Add(orders);
+                    bool sucess = _repo.TrySaveChanges();
+                }
+                else
+                {
+                    return;
+                }
+
+            }
+
+        }
+        public void HandleCustomerShippingInfo(int customerId)
+        {
+            var customer = _repo.GetCustomersQuired()
+                      .Include(c => c.CustomerShippingInfos) // make sure addresses are tracked
+                      .FirstOrDefault(x => x.Id == customerId);
+            if (customer != null)
+            {
+                CustomerHelper.HandleShippingInfo(customer.CustomerShippingInfos);
+                _repo.TrySaveChanges();
+            }
+        }
+        public void HandleCustomerBasket(int customerId)
+        {
+            var thisCustomer = _repo.GetCustomersQuired().Include(q => q.ProductsInBasket).FirstOrDefault(x => x.Id == customerId);
+            if (thisCustomer != null)
+            {
+                StoreHelper.AdjustQuantityOfBasketItems(thisCustomer.ProductsInBasket);
+                _repo.TrySaveChanges();
+            }
+        }
         public bool SaveChangesOnComponent()
         {
-                bool status = _repo.TrySaveChanges();
-                return status;
+            bool status = _repo.TrySaveChanges();
+            return status;
         }
         public void RemoveComponent(ComputerPart part)
         {
             _repo.RemoveComponent(part);
         }
-        public void  SaveNewCustomer(Customer cus)
+        public void SaveNewCustomer(Customer cus)
         {
             _repo.SaveNewCustomer(cus);
         }
         public void AddProductToBasket(StoreProduct storeProduct, Customer cus)
         {
-            BasketProduct basketProduct = new BasketProduct
-            {
-                Customer = cus,
-                Product = storeProduct
-            };
+
             Console.WriteLine("How many do you wish to add to your basket?");
             Console.WriteLine("Max quantity is " + storeProduct.Stock);
             int count = GeneralHelpers.StringToInt(Console.ReadLine());
             if (count > 0 && count <= storeProduct.Stock)
             {
-                basketProduct.Quantity = count;
+                Console.WriteLine("Valid");
             }
             else
             {
                 //Utgå från att någon bara köper en sak åt gången
-                basketProduct.Quantity = 1;
+                count = 1;
             }
+            int prodId = storeProduct.Id;
 
-              _repo.AddProductToBasket(basketProduct, cus);
+            _repo.AddProductToBasket(prodId, count, cus);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {
@@ -216,7 +348,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetCPUs();
         }
-        public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes() 
+        public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes()
         {
             return _repo.GetMemoryTypes();
         }

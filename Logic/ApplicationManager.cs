@@ -46,6 +46,18 @@ namespace ComputerStoreApplication.Logic
         {
             _services.LoginAdmin();
         }
+        public void CreateAccount(string email)
+        {
+            _services.CreateAccount(email);
+        }
+        public List<StoreProduct> GetFrontPageProducts()
+        {
+            return _services.GetFrontPageProducts();
+        }
+        public List<Order> GetCustomerOrders(int customerId)
+        {
+            return _services.DisplayCurrentCustomerOrders(customerId);
+        }
         public void LogoutAsAdmin()
         {
             _services.LogoutAdmin();
@@ -74,6 +86,18 @@ namespace ComputerStoreApplication.Logic
                 Console.WriteLine("Logged out");
                 CustomerId = 0;
                 return false;
+        }
+        public void HandleCustomerPurchase(int customerId)
+        {
+            _services.HandleCustomerPurchase(customerId);
+        }
+        public void HandleCustomerShippingInfo(int customerId)
+        {
+            _services.HandleCustomerShippingInfo(customerId);
+        }
+        public void HandleCustomerBasket(int customerId)
+        {
+            _services.HandleCustomerBasket(customerId);
         }
         public void AddStoreProductToBasket(Customer cus, StoreProduct prod)
         {

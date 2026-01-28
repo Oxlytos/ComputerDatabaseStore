@@ -35,6 +35,32 @@ namespace ComputerStoreApplication
            
             //Databas connection
             var db = new Logic.ComputerDBContext();
+            /*
+
+            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
+            {
+                Name="PostNord",
+                Price=5
+            });
+            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
+            {
+                Name = "Instabox",
+                Price = 8
+            });
+
+            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
+            {
+                Name = "Schenker",
+                Price = 6
+            });
+
+            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
+            {
+                Name = "ExpressBud",
+                Price = 12
+            });
+            db.SaveChanges();*/
+
 
             //Validerings hanterarer innan vi sparar saker och så
             var val = new Logic.ValidationManager();

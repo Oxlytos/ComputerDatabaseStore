@@ -30,7 +30,7 @@ namespace ComputerStoreApplication.Graphics
         /// </summary>
         internal static void DrawShopBanner()
         {
-            List<string> pageHeader = new List<string> { "  Oscar's Computer Store ", "  Most Things PC related :^)" };
+            List<string> pageHeader = new List<string> { "  Oscar's Computer Store ", "  Most Things PC related :^)", "Welcome!" };
             string headerText = "•ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ• •ᴗ•";
             ConsoleColor ccolor = ConsoleColor.DarkCyan;
             DrawBanner(pageHeader, headerText, ccolor);

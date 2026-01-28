@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Models.Store;
+﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Models.Store;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace ComputerStoreApplication.Models.Customer
 
         public virtual ICollection<CustomerShippingInfo> CustomerShippingInfos { get; set; }  = new List<CustomerShippingInfo>();
 
-        public virtual ICollection<CustomerOrder> Orders { get; set; }
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
         public virtual ICollection<BasketProduct> ProductsInBasket { get; set; } = new List<BasketProduct>();
 
@@ -44,6 +45,11 @@ namespace ComputerStoreApplication.Models.Customer
             {
                 Password = Guid.NewGuid().ToString();
             }
+        }
+        public CustomerShippingInfo NewAdress()
+        {
+
+            return null;
         }
         public void PrintShippingInfo()
         {
@@ -68,11 +74,6 @@ namespace ComputerStoreApplication.Models.Customer
             {
                 foreach (var ord in cOrders)
                 {
-                    Console.WriteLine($"{ord.CreatedDate} {ord.Delivered}\n");
-                    foreach(var prodInOrd in ord.Products)
-                    {
-                        Console.WriteLine($"\t{prodInOrd.Product.Name} {prodInOrd.Product.Price} {prodInOrd.OrderedAmount}");
-                    }
                 }
             }
             else

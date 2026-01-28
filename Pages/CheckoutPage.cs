@@ -41,6 +41,15 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.AdminCreateStoreProduct:
                     Crud_Related.CrudHandler.StoreProductInput(applicationLogic);
                     return this;
+                case PageControls.PageOption.BuyCheckout:
+                   applicationLogic.HandleCustomerPurchase(CurrentCustomer.Id);
+                    return new CustomerPage();
+                case PageControls.PageOption.AdjustCheckout:
+                    if (applicationLogic.IsLoggedInAsCustomer)
+                    {
+                        applicationLogic.HandleCustomerBasket(CurrentCustomer.Id);
+                    }
+                    return this;
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
@@ -67,13 +76,11 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
-            var basketProducts = appLol.GetBasketProductsFromCustomerId(CurrentCustomer.Id);
+            var basketProducts = appLol.ComputerPartShopDB.BasketProducts
+            .Include(bp => bp.Product) // Product navigation property
+            .Where(bp => bp.CustomerId == CurrentCustomerId)
+            .ToList();
             StoreProducts = appLol.GetStoreProducts();
-
-            foreach (var product in basketProducts)
-            {
-                product.Product = StoreProducts.FirstOrDefault(x => x.Id == product.ProductId);
-            }
 
             BasketProducts = basketProducts;
         }
@@ -88,7 +95,15 @@ namespace ComputerStoreApplication.Pages
             {
                 foreach (var basketItem in BasketProducts)
                 {
-                    Console.WriteLine($"Product: {basketItem.Product.Name} €: {basketItem.Product.Price} Quantity {basketItem.Quantity}");
+                    if (basketItem.Product != null)
+                    {
+                        Console.WriteLine($"Product: {basketItem.Product.Name} €: {basketItem.Product.Price} Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Product Id {basketItem.ProductId} not found. Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
+                    }
+                    
                 }
             }
             else
@@ -97,7 +112,7 @@ namespace ComputerStoreApplication.Pages
             }
            
         }
-
+        
         public void SetPageCommands()
         {
             //Specific commands per sida
@@ -108,6 +123,8 @@ namespace ComputerStoreApplication.Pages
                 {ConsoleKey.C, PageControls. CustomerHomePage},
                 {ConsoleKey.B, PageControls.BrowseCommand},
                 {ConsoleKey.F, PageControls.Search},
+                {ConsoleKey.K, PageControls.BuyCheckout },
+                {ConsoleKey.J, PageControls.CheckoutAdjust }
               
             };
             //hitta beskrivningarna
