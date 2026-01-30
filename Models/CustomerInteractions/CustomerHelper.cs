@@ -1,18 +1,21 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Models.Customer
 {
     internal class CustomerHelper
     {
         public Dictionary<ConsoleKey, CRUD> keyValuePairs;
+      
         private static readonly Dictionary<ConsoleKey, CRUD> Commandos = new()
         {
             {  ConsoleKey.C, CRUD.Create },
@@ -25,38 +28,6 @@ namespace ComputerStoreApplication.Models.Customer
             Create = ConsoleKey.C, //Skapa product
             Update = ConsoleKey.U, //Uppdatera som i att vi ändrar värden
             Delete = ConsoleKey.D, //Ta bort, duh
-        }
-        public static Customer CreateCustomerManual(string email)
-        {
-            Console.WriteLine("Firstname?");
-            string firstName = Console.ReadLine();
-
-            Console.WriteLine("Surname?");
-            string surName = Console.ReadLine();
-
-            Console.WriteLine("Phone number (exclude +46 in format '072-0702133'', include dash");
-            string phoneNumber = Console.ReadLine() ?? string.Empty;
-            Customer customer = new Customer
-            {
-                FirstName = firstName,
-                SurName = surName,
-                Email = email,
-                PhoneNumber = phoneNumber,
-            };
-            return customer;
-        }
-        public static Customer CreateCustomer(Customer currCustomer)
-        {
-            string firstName = RandomFirstName();
-            string surName = RandomSurName();
-            Customer customer = new Customer
-            {
-                FirstName = firstName,
-                SurName = surName,
-                Email = RandomEmail(firstName, surName),
-                PhoneNumber = CustomerHelper.RandomPhoneNumber(),
-            };
-            return customer;
         }
         internal static string RandomFirstName()
         {
@@ -130,11 +101,11 @@ namespace ComputerStoreApplication.Models.Customer
             }
             return phoneNUmber;
         }
-        public static void HandleDelivery(Customer cus)
+        public static void HandleDelivery(CustomerAccount cus)
         {
 
         }
-        public static Order HandlePurchase(Customer customer)
+        public static Order HandlePurchase(CustomerAccount customer)
         {
             if (customer == null)
             {
@@ -155,7 +126,7 @@ namespace ComputerStoreApplication.Models.Customer
             {
                 if (item.Quantity == 0 || item.Quantity <= 0)
                 {
-                    return null;
+                    continue;
                 }
                 if (item.Product == null)
                 {
@@ -184,16 +155,18 @@ namespace ComputerStoreApplication.Models.Customer
             bool isValid = Regex.IsMatch(emial, pattern);
             return isValid;
         }
-        public static void HandleShippingInfo(ICollection<CustomerShippingInfo> customerShippingInfos)
+
+        public static void HandleShippingInfo(ICollection<CustomerShippingInfo> customerShippingInfos, City city, LocationHolder locationHolder)
         {
-            bool allowMultipleActions = false;
-            if (customerShippingInfos.Count > 0)
+            //can only create if we have no shipping info
+            bool allowMultipleActions = customerShippingInfos.Count>0;
+            if (allowMultipleActions)
             {
                 allowMultipleActions = true;
                 Console.WriteLine("Current registered shipping infos on your account");
                 foreach (var customer in customerShippingInfos)
                 {
-                    Console.WriteLine($"{customer.StreetName}, {customer.PostalCode} {customer.State_Or_County_Or_Province}, {customer.City}, {customer.Country}");
+                    Console.WriteLine($"{customer.StreetName}, {customer.PostalCode} {customer.State_Or_County_Or_Province}, {customer.City}");
                 }
             }
             else
@@ -204,12 +177,12 @@ namespace ComputerStoreApplication.Models.Customer
             {
                 foreach (var key in Commandos)
                 {
-                    Console.WriteLine($"[{key.Key}] to {key.Value} an adress");
+                    Console.WriteLine($"[{key.Key}] to {key.Value} an address");
                 }
             }
             else
             {
-                Console.WriteLine("[C] to Create a new adress");
+                Console.WriteLine("[C] to Create a new address");
             }
 
             var userInputC = Console.ReadKey(true);
@@ -228,7 +201,7 @@ namespace ComputerStoreApplication.Models.Customer
                         case CRUD.Update:
                             if (selectedAdress != null)
                             {
-                                AdressQuestionnaire(selectedAdress);
+                                AdressQuestionnaire(selectedAdress, city, locationHolder);
                             }
                             break;
                         case CRUD.Delete:
@@ -242,13 +215,21 @@ namespace ComputerStoreApplication.Models.Customer
             }
             else
             {
-                CustomerShippingInfo newAddress = NewAdressQuestionnaire();
+                CustomerShippingInfo newAddress = NewAdressQuestionnaire(city, locationHolder);
                 customerShippingInfos.Add(newAddress);
             }
         }
+        internal static void MakeSureOfShippingInfoLocation(CustomerShippingInfo shippingInfo,  LocationHolder locationHolder)
+        {
+            if (shippingInfo.City == null)
+                shippingInfo.City = locationHolder.Cities.FirstOrDefault(c => c.Id == shippingInfo.CityId);
+
+            if (shippingInfo.City?.Country == null && shippingInfo.City != null)
+                shippingInfo.City.Country = locationHolder.Countries.FirstOrDefault(c => c.Id == shippingInfo.City.CountryId);
+        }
         internal static CustomerShippingInfo ChooseAdress(ICollection<CustomerShippingInfo> customerShippingInfos)
         {
-            Console.WriteLine("Which of these adresses? Choose by inputting the correct Id of the corresponding adress");
+            Console.WriteLine("Which of these addresses? Choose by inputting the correct Id of the corresponding address");
             foreach (var customerShippingInfo in customerShippingInfos)
             {
                 Console.WriteLine($"Id: {customerShippingInfo.Id} {customerShippingInfo.StreetName} {customerShippingInfo.PostalCode} etc");
@@ -264,14 +245,65 @@ namespace ComputerStoreApplication.Models.Customer
                 return null;
             }
         }
+        public static Country ChooseCountryQuestion(Country country, LocationHolder locationHolder)
+        {
+            bool sameCountry = false;
+            Console.WriteLine($"Use country {country.Name}, or change?");
+            sameCountry = GeneralHelpers.YesOrNoReturnBoolean();
+            if (sameCountry)
+            {
+                return country;
+            }
+            else
+            {
+                return GeneralHelpers.ChooseOrCreateCountry(locationHolder.Countries);
+            }
+        }
+        public static City ChooseCityQuestion(City city, LocationHolder locationHolder)
+        {
+            Console.WriteLine($"Use city {city.Name}, or change?");
+            bool sameCity = GeneralHelpers.YesOrNoReturnBoolean();
+            if (sameCity)
+            {
+                return city;
+            }
+            else
+            {
+                return GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, city.Country);
+            }
+        }
+        public static void EditCustomerAccount(CustomerAccount accountToBeEdited)
+        {
+            Console.WriteLine("Firstname? Leave empty for no change");
+            string fname = Console.ReadLine();
+            if (!string.IsNullOrEmpty(fname))
+            {
+                accountToBeEdited.FirstName = fname;
+            }
+            Console.WriteLine("Surname? Leave empty for no change");
+            string sname = Console.ReadLine();
+            if (!string.IsNullOrEmpty(sname))
+            {
+                accountToBeEdited.SurName = sname;
+            }
+            Console.WriteLine("Email? Leave empty for no change");
+            string email = Console.ReadLine();
+            if (!string.IsNullOrEmpty(email))
+            {
+                accountToBeEdited.Email = email;
+            }
 
-        internal static void AdressQuestionnaire(CustomerShippingInfo customerShippingInfo)
+            Console.WriteLine("Phone number? Leave empty for no change");
+            string phonenumber = Console.ReadLine();
+            if (!string.IsNullOrEmpty(phonenumber))
+            {
+                accountToBeEdited.PhoneNumber = phonenumber;
+            }
+        }
+        internal static void AdressQuestionnaire(CustomerShippingInfo customerShippingInfo, City city, LocationHolder locationHolder)
         {
             Console.WriteLine("Streetname?");
             customerShippingInfo.StreetName = Console.ReadLine();
-
-            Console.WriteLine("City?");
-            customerShippingInfo.City = Console.ReadLine();
 
             Console.WriteLine("Postal code?");
             customerShippingInfo.PostalCode = GeneralHelpers.StringToInt(Console.ReadLine());
@@ -279,17 +311,19 @@ namespace ComputerStoreApplication.Models.Customer
             Console.WriteLine("Province/State?");
             customerShippingInfo.State_Or_County_Or_Province = Console.ReadLine();
 
-            Console.WriteLine("Country?");
-            customerShippingInfo.Country = Console.ReadLine();
+            Country chosenCountry = ChooseCountryQuestion(city.Country,locationHolder);
+            City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
 
+            customerShippingInfo.City = chosenCity;
+            customerShippingInfo.CityId = chosenCity.Id;
+            Console.WriteLine("Updated address");
         }
-        internal static CustomerShippingInfo NewAdressQuestionnaire()
+        internal static CustomerShippingInfo NewAdressQuestionnaire(City city,LocationHolder locationHolder)
         {
+            Country chosenCountry = ChooseCountryQuestion(city.Country, locationHolder);
+            City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
             Console.WriteLine("Streetname?");
             string street = Console.ReadLine();
-
-            Console.WriteLine("City?");
-            string city = Console.ReadLine();
 
             Console.WriteLine("Postal code?");
             int postal = GeneralHelpers.StringToInt(Console.ReadLine());
@@ -297,16 +331,15 @@ namespace ComputerStoreApplication.Models.Customer
             Console.WriteLine("Province/State?");
             string province = Console.ReadLine();
 
-            Console.WriteLine("Country?");
-            string country = Console.ReadLine();
             CustomerShippingInfo customerShippingInfo = new CustomerShippingInfo
             {
+                City = chosenCity,
+                CityId = chosenCity.Id,
                 StreetName = street,
-                City = city,
                 PostalCode = postal,
-                State_Or_County_Or_Province = province,
-                Country = country
+                State_Or_County_Or_Province = province
             };
+            Console.WriteLine("Saved new address");
             return customerShippingInfo;
 
         }

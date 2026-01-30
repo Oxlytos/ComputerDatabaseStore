@@ -1,4 +1,5 @@
-﻿using ComputerStoreApplication.Models.ComponentSpecifications;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -85,9 +86,32 @@ namespace ComputerStoreApplication.Logic
             var theseObject = _dbContext.BasketProducts.Where(x => x.CustomerId == id);
             return theseObject.ToList();
         }
+        public void AddCountry(Country country)
+        {
+            _dbContext.Countries.Add(country);
+        }
+        public void AddCity(City city)
+        {
+            _dbContext.Cities.Add(city);
+        }
+        public List<City> GetCities()
+        {
+            return _dbContext.Cities.ToList();
+        }
+        public List<Country> GetCountries()
+        {
+            return _dbContext.Countries.ToList();
+        }
+        public List<BasketProduct> GetCustomerItemsForBasket(int customerId)
+        {
+            return _dbContext.BasketProducts
+                .Include(bp => bp.Product)      // Include the Product navigation property
+                .Where(bp => bp.CustomerId == customerId)
+                .ToList();                      // Return as a List<BasketProduct>
+        }
         public List<StoreProduct> GetStoreProducts()
         {
-            return _dbContext.StoreProducts.ToList();
+            return _dbContext.StoreProducts.Include(z=>z.Manufacturer).Include(k=>k.ComputerPart).ThenInclude(p=>p.BrandManufacturer).ToList();
         }
         public List<GPU> GetGPUs()
         {
@@ -114,7 +138,7 @@ namespace ComputerStoreApplication.Logic
             return cpus;
         }
 
-        public List<Customer> GetCustomers()
+        public List<CustomerAccount> GetCustomers()
         {
             return _dbContext.Customers.ToList();
         }
@@ -124,22 +148,32 @@ namespace ComputerStoreApplication.Logic
         }
         public List<StoreProduct> GetFrontPageProducts()
         {
+
             var returnList = _dbContext.StoreProducts
              .Where(s => s.SelectedProduct && s.Stock > 0)
                .ToList();
-            return returnList;
+            if(returnList.Count > 0)
+            {
+                return returnList;
+            }
+            return null;
+           
         }
         public IQueryable<Order> GetOrdersQuired()
         {
             return _dbContext.Orders;
         }
-        public IQueryable<Customer> GetCustomersQuired()
+        public IQueryable<CustomerAccount> GetCustomersQuired()
         {
             return _dbContext.Customers;
         }
         public List<DeliveryProvider> GetDeliveryServices()
         {
             return _dbContext.DeliveryProviders.ToList();
+        }
+        public List<PaymentMethod> GetPayrmentMethods()
+        {
+            return _dbContext.PaymentMethods.ToList();
         }
         public void SaveNew(StoreProduct product)
         {
@@ -156,7 +190,11 @@ namespace ComputerStoreApplication.Logic
             _dbContext.AllComponentSpecifcations.Add(spec);
             TrySaveChanges();
         }
-        public void AddProductToBasket(int prod, int count, Customer cus)
+        public List<AdminAccount> GetAdmins()
+        {
+            return _dbContext.Admins.ToList();
+        }
+        public void AddProductToBasket(int prod, int count, CustomerAccount cus)
         {
             if (cus == null)
             {
@@ -202,7 +240,7 @@ namespace ComputerStoreApplication.Logic
             }
             TrySaveChanges();
         }
-        public void RemoveSingularObjectFromBasket(BasketProduct prod, Customer cus)
+        public void RemoveSingularObjectFromBasket(BasketProduct prod, CustomerAccount cus)
         {
             if (cus.ProductsInBasket.Contains(prod))
             {
@@ -216,7 +254,7 @@ namespace ComputerStoreApplication.Logic
                 }
             }
         }
-        public void RemoveFromBasket(BasketProduct prod, Customer cus)
+        public void RemoveFromBasket(BasketProduct prod, CustomerAccount cus)
         {
             if (cus.ProductsInBasket.Contains(prod))
             {
@@ -227,7 +265,7 @@ namespace ComputerStoreApplication.Logic
                 Console.WriteLine("Error when trying to remove basket item");
             }
         }
-        public void SaveNewCustomer(Customer customer)
+        public void SaveNewCustomer(CustomerAccount customer)
         {
             if (!_dbContext.Customers.Contains(customer))
             {

@@ -1,9 +1,11 @@
-﻿using ComputerStoreApplication.Graphics;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.MickesWindow;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
+using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.Pages;
 using Microsoft.EntityFrameworkCore;
@@ -35,42 +37,12 @@ namespace ComputerStoreApplication
            
             //Databas connection
             var db = new Logic.ComputerDBContext();
-            /*
-
-            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
-            {
-                Name="PostNord",
-                Price=5
-            });
-            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
-            {
-                Name = "Instabox",
-                Price = 8
-            });
-
-            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
-            {
-                Name = "Schenker",
-                Price = 6
-            });
-
-            db.DeliveryProviders.Add(new Models.Store.DeliveryProvider
-            {
-                Name = "ExpressBud",
-                Price = 12
-            });
-            db.SaveChanges();*/
-
-
             //Validerings hanterarer innan vi sparar saker och så
             var val = new Logic.ValidationManager();
-
             //Repon som ringer db och sparar till den
             var rep = new Logic.ComponentRepo(db);
-
             //Komponenten som hanterar olika services/API kallelser
             var service = new Logic.ComponentService(rep, val);
-
             //Hanterar sido-logik
             var computerApplicationLogic = new Logic.ApplicationManager(service);
             //Bestäm sidofärg

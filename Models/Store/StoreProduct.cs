@@ -38,7 +38,7 @@ namespace ComputerStoreApplication.Models.Store
         //Visa på hemma skärm och browse att detta är produkt i extra fokus => Fast som inte är på rea
         public bool SelectedProduct { get; set; }
 
-        public int Stock {  get; set; }
+        public int Stock { get; set; }
 
         public void Create(ApplicationManager lol, ComputerPart part)
         {
@@ -48,7 +48,7 @@ namespace ComputerStoreApplication.Models.Store
             {
                 ManufacturerId = part.BrandId;
             }
-            var manufacturers= lol.GetManufacturers();
+            var manufacturers = lol.GetManufacturers();
             StoreProduct prod = new StoreProduct();
             prod = StandardFillOutQuestionnaire(manufacturers);
             lol.SaveNewStoreProduct(this);
@@ -56,7 +56,16 @@ namespace ComputerStoreApplication.Models.Store
         }
         public void Read(ApplicationManager lol)
         {
-            //Gah
+            var manufactures = lol.GetManufacturers();
+
+            Console.WriteLine($"Product name: {this.Name}");
+            Console.WriteLine($"Description : {this.Description}");
+            Console.WriteLine($"Price : {this.Price}€");
+            if(this.ComputerPart != null)
+            {
+                this.ComputerPart.Read(lol);
+            }
+            
         }
         public void Update(ApplicationManager lol)
         {
@@ -64,9 +73,9 @@ namespace ComputerStoreApplication.Models.Store
             StandardFillOutQuestionnaire(manufacturers);
             lol.SaveChangesOnComponent();
         }
-        public void Delete(ApplicationManager lol) 
+        public void Delete(ApplicationManager lol)
         {
-        
+
         }
         internal StoreProduct StandardFillOutQuestionnaire(List<Brand> manufacturers)
         {
@@ -79,11 +88,11 @@ namespace ComputerStoreApplication.Models.Store
             Price = GeneralHelpers.StringToDecimal(Console.ReadLine());
             Manufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
             Console.WriteLine("Is it one sale?");
-            Sale = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            Sale = GeneralHelpers.YesOrNoReturnBoolean();
             Console.WriteLine("How many we got in stock?");
             Stock = GeneralHelpers.StringToInt(Console.ReadLine());
             Console.WriteLine("Is this a 'selected product' we want to show on the front page and such?");
-            SelectedProduct = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            SelectedProduct = GeneralHelpers.YesOrNoReturnBoolean();
             return this;
         }
     }

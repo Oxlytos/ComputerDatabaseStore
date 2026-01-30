@@ -4,6 +4,7 @@ using ComputerStoreApplication.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ComputerStoreApplication.Migrations
 {
     [DbContext(typeof(ComputerDBContext))]
-    partial class ComputerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260129114235_PaymentSet")]
+    partial class PaymentSet
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,8 +161,15 @@ namespace ComputerStoreApplication.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CityId")
-                        .HasColumnType("int");
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
@@ -178,8 +188,6 @@ namespace ComputerStoreApplication.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CityId");
 
                     b.HasIndex("CustomerId");
 
@@ -211,51 +219,6 @@ namespace ComputerStoreApplication.Migrations
                         .IsUnique();
 
                     b.ToTable("BasketProducts");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.City", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CountryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CountryId");
-
-                    b.HasIndex("Name", "CountryId")
-                        .IsUnique()
-                        .HasFilter("[CountryId] IS NOT NULL");
-
-                    b.ToTable("Cities");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.Country", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.DeliveryProvider", b =>
@@ -292,20 +255,14 @@ namespace ComputerStoreApplication.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DeliveryProviderId")
+                    b.Property<int>("DeliveryProviderId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentMethodId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShippingAdressId")
+                    b.Property<int>("PaymentMethodId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("ShippingCost")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ShippingInfoId")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");
@@ -323,8 +280,6 @@ namespace ComputerStoreApplication.Migrations
                     b.HasIndex("DeliveryProviderId");
 
                     b.HasIndex("PaymentMethodId");
-
-                    b.HasIndex("ShippingInfoId");
 
                     b.ToTable("Orders");
                 });
@@ -654,19 +609,11 @@ namespace ComputerStoreApplication.Migrations
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Customer.CustomerShippingInfo", b =>
                 {
-                    b.HasOne("ComputerStoreApplication.Models.Store.City", "City")
-                        .WithMany("CustomerShippingInfos")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ComputerStoreApplication.Account.CustomerAccount", "Customer")
                         .WithMany("CustomerShippingInfos")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("City");
 
                     b.Navigation("Customer");
                 });
@@ -690,16 +637,6 @@ namespace ComputerStoreApplication.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.City", b =>
-                {
-                    b.HasOne("ComputerStoreApplication.Models.Store.Country", "Country")
-                        .WithMany("Cities")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Country");
-                });
-
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.Order", b =>
                 {
                     b.HasOne("ComputerStoreApplication.Account.CustomerAccount", "OrdCustomer")
@@ -711,16 +648,12 @@ namespace ComputerStoreApplication.Migrations
                     b.HasOne("ComputerStoreApplication.Models.Store.DeliveryProvider", "DeliveryProvider")
                         .WithMany()
                         .HasForeignKey("DeliveryProviderId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("ComputerStoreApplication.Models.Store.PaymentMethod", "PaymentMethod")
                         .WithMany()
                         .HasForeignKey("PaymentMethodId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("ComputerStoreApplication.Models.Customer.CustomerShippingInfo", "ShippingInfo")
-                        .WithMany()
-                        .HasForeignKey("ShippingInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -729,8 +662,6 @@ namespace ComputerStoreApplication.Migrations
                     b.Navigation("OrdCustomer");
 
                     b.Navigation("PaymentMethod");
-
-                    b.Navigation("ShippingInfo");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.OrderItem", b =>
@@ -943,16 +874,6 @@ namespace ComputerStoreApplication.Migrations
             modelBuilder.Entity("ComputerStoreApplication.Models.ComputerComponents.ComputerPart", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.City", b =>
-                {
-                    b.Navigation("CustomerShippingInfos");
-                });
-
-            modelBuilder.Entity("ComputerStoreApplication.Models.Store.Country", b =>
-                {
-                    b.Navigation("Cities");
                 });
 
             modelBuilder.Entity("ComputerStoreApplication.Models.Store.Order", b =>

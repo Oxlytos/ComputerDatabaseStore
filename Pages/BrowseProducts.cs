@@ -1,7 +1,8 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
-using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,14 @@ namespace ComputerStoreApplication.Pages
     public class BrowseProducts : IPage
     {
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-
+        public int? AdminId { get; set; }
+        public AdminAccount? Admin { get; set; }
         public int? CurrentCustomerId { get; set; }
-        Customer? CurrentCustomer { get; set; }
+        CustomerAccount? CurrentCustomer { get; set; }
 
         List<StoreProduct> Products { get; set; } = new List<StoreProduct>();
+
+        StoreProduct Product { get; set; }
         public void Load(ApplicationManager appLol)
         {
             //kolla om inloggad
@@ -42,25 +46,44 @@ namespace ComputerStoreApplication.Pages
             SetPageCommands();
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
-            Console.WriteLine("Browse product page");
-            Console.WriteLine("TODO ADD 'aDD TO BASKET' ");
-            if (CurrentCustomer != null)
-            {
-                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
-            }
-            else
-            {
-                Console.WriteLine("Not logged in");
-            }
+            DrawAccountProfile();
             Console.WriteLine("What's available, down below!");
+            Console.WriteLine("Press 'A' to add to basket!");
             if (Products != null || Products.Count > 0)
             {
                 foreach (var product in Products) 
                 {
-                    Console.WriteLine($"\tId: {product.Id} Name: {product.Name} Description: {product.Description} Price: {product.Price} Sale: {product.Sale}");
+                    if (product.Stock > 0)
+                    {
+                        Console.WriteLine(
+                        $"Id: {product.Id}\n" +
+                        $"Name: {product.Name}\n" +
+                        $"Description: {product.Description}\n" +
+                        $"Price: {product.Price}€\n" +
+                        $"On sale: {product.Sale}\n" +
+                        $"Stock: {product.Stock}\n"
+                        );
+
+                    }
+
                 }
                 
             }
+
+        }
+        public void DrawAccountProfile()
+        {
+            List<string> tesList = new List<string>();
+            if (CurrentCustomer != null)
+            {
+                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
+            }
+            else
+            {
+                tesList.Add("Not Loggedin");
+            }
+            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            Console.SetCursorPosition(0, 15);
 
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
@@ -80,6 +103,10 @@ namespace ComputerStoreApplication.Pages
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
+                case PageControls.PageOption.ViewObject:
+                    CheckoutObject(applicationLogic);
+                    //Produktvy och lägg kanske till i basket
+                    return this;
                 case PageControls.PageOption.Search:
                     return new SearchedResults();
             }
@@ -94,11 +121,13 @@ namespace ComputerStoreApplication.Pages
             {
                 { ConsoleKey.H, PageControls.HomeCommand },
                 {ConsoleKey.C, PageControls. CustomerHomePage},
+                {ConsoleKey.A, PageControls.AddToBasket },
                 {ConsoleKey.B, PageControls.BrowseCommand},
                 {ConsoleKey.L, PageControls.CustomerLogin },
                 {ConsoleKey.Q, PageControls.CustomerLogout },
                 {ConsoleKey.F, PageControls.Search},
-                {ConsoleKey.K, PageControls.Checkout }
+                {ConsoleKey.K, PageControls.Checkout },
+                {ConsoleKey.V, PageControls.ViewObject }
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -108,6 +137,33 @@ namespace ComputerStoreApplication.Pages
             {
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
+        }
+        public void CheckoutObject(ApplicationManager app)
+        {
+            Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
+            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            var validObject = Products.FirstOrDefault(s=>s.Id== choice);
+            if (validObject != null) 
+            {
+               bool yes =  StoreHelper.ViewProduct(validObject, app);
+                if (yes && CurrentCustomer!=null) 
+                {
+                    app.AddProductToBasket(validObject,CurrentCustomer);
+                }
+                if (CurrentCustomer == null)
+                {
+                    Console.WriteLine("You need to be logged in to add to basket");
+                    Console.ReadLine();
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Quitting operation");
+                    Console.ReadLine();
+                    return;
+                }
+            }
+          
         }
         public void TryAndLogin(ApplicationManager app)
         {

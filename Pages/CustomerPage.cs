@@ -1,47 +1,97 @@
-﻿using ComputerStoreApplication.Logic;
-using ComputerStoreApplication.Models.Customer;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ComputerStoreApplication.Helpers;
 using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Pages
 {
     public class CustomerPage : IPage
     {
+        public int? AdminId { get; set; }
         public int? CurrentCustomerId { get; set; }
-        Customer? CurrentCustomer { get; set; }
-        List<Order>? CustomerOrders { get; set; }
+        CustomerAccount? CurrentCustomer { get; set; }
+        List<Order>? CustomerOrders { get; set; } = new List<Order>();
+
+        public List<Country> Countries { get; set; } = new List<Country>();
+        public List<City> Cities { get; set; } = new List<City>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+        private List<Order> orders = new List<Order>();
         public void RenderPage()
         {
             Console.Clear();
             SetPageCommands();
             Graphics.PageBanners.DrawCustomerPage();
-            Console.SetCursorPosition(0, 10);
+
+            DrawAccountProfile();
+
+            PrintOrders();
+
+        }
+        public void PrintOrders()
+        {
+            Console.SetCursorPosition(0, 10); // start printing
+
+            if (orders == null || !orders.Any())
+            {
+                Console.WriteLine("No orders found :(");
+                return;
+            }
+
+            // Use DisplayHelpers to prepare display objects
+            var displayOrders = orders
+                .Select(o => DisplayHelpers.ToDisplay(o, Cities, Countries))
+                .ToList();
+
+            foreach (var order in orders) // orders is EF Order list
+            {
+                Console.WriteLine($"--- Order ID: {order.Id} ---");
+                Console.WriteLine($"Creation Date: {order.CreationDate}");
+                Console.WriteLine($"Subtotal: {order.Subtotal:N2} kr");
+                Console.WriteLine($"Total Cost: {order.TotalCost:N2} kr");
+                Console.WriteLine($"Shipping Cost: {order.ShippingCost:N2} kr");
+                Console.WriteLine($"Tax Costs: {order.TaxCosts:N2} kr");
+                Console.WriteLine($"Delivery Provider: {order.DeliveryProvider?.Name ?? "N/A"}");
+                Console.WriteLine($"Payment Method: {order.PaymentMethod?.Name ?? "N/A"}");
+
+                // Access shipping info directly
+                if (order.ShippingInfo != null)
+                {
+                    Console.WriteLine($"--- Shipping Info ---");
+                    Console.WriteLine($"Street: {order.ShippingInfo.StreetName}");
+                    Console.WriteLine($"Postal Code: {order.ShippingInfo.PostalCode}");
+                    Console.WriteLine($"City: {order.ShippingInfo.City?.Name ?? "N/A"}");
+                    Console.WriteLine($"Country: {order.ShippingInfo.City?.Country?.Name ?? "N/A"}");
+                }
+                else
+                {
+                    Console.WriteLine("No shipping info available for this order.");
+                }
+
+                Console.WriteLine();
+            }
+            Console.WriteLine(); // spacing between orders
+            }
+
+        public void DrawAccountProfile()
+        {
+            List<string> tesList = new List<string>();
             if (CurrentCustomer != null)
             {
-                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
-                if (CustomerOrders != null && CustomerOrders.Any()) 
-                {
-                    foreach (var order in CustomerOrders) 
-                    {
-                        Console.WriteLine($"Order Id: {order.Id} \n Costs (Total): {order.TotalCost} Tax: {order.TaxCosts} Pre-Tax:{order.Subtotal}");
-                        foreach (var prod in order.OrderItems) 
-                        {
-                            Console.WriteLine($"\tProduct: {prod.Product.Name} Amount: {prod.Quantity} Pricer per unit: {prod.Price} ");
-                        }
-                    }
-                }
+                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
             }
             else
             {
-                Console.WriteLine("Not logged in");
+                tesList.Add("Not Loggedin");
             }
-
+            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            Console.SetCursorPosition(0, 10);
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -108,22 +158,44 @@ namespace ComputerStoreApplication.Pages
         //varje reload
         public void Load(ApplicationManager appLol)
         {
-            //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
                 CurrentCustomerId = null;
                 CurrentCustomer = null;
-                //nullbara fält null, låt vara, gå vidare
+                orders.Clear();
                 return;
             }
-            //om inloggad, hämta nnuvarande kund
+
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
-            CustomerOrders = appLol.GetCustomerOrders(appLol.CustomerId);
+
+            Countries = appLol.ComputerPartShopDB.Countries.ToList();
+            Cities = appLol.ComputerPartShopDB.Cities.Include(c => c.Country).ToList();
+            Console.WriteLine($"CustomerId: {appLol.CustomerId}");
+            var anyOrders = appLol.ComputerPartShopDB.Orders.ToList();
+            Console.WriteLine($"Total orders in DB: {anyOrders.Count}");
+            // DEBUG: check if CustomerId is valid
+            Console.WriteLine($"Loading orders for Customer ID: {appLol.CustomerId}");
+
+            orders = appLol.ComputerPartShopDB.Orders
+              .AsNoTracking()
+              .Include(o => o.OrderItems)
+                  .ThenInclude(oi => oi.Product)
+              .Include(o => o.ShippingInfo)
+                  .ThenInclude(s => s.City)
+                      .ThenInclude(c => c.Country)
+              .Include(o => o.DeliveryProvider)
+              .Include(o => o.PaymentMethod)
+              .Where(o => o.CustomerId == appLol.CustomerId)
+              .ToList();
+
+      
         }
+
 
         public void TryAndLogin(ApplicationManager app)
         {
+            Console.SetCursorPosition(0, 20);
             Console.WriteLine("Email?");
             string email = Console.ReadLine();
             Console.WriteLine("Password?");
@@ -140,6 +212,7 @@ namespace ComputerStoreApplication.Pages
         {
             if (CurrentCustomer != null)
             {
+                Console.Clear();
                 app.HandleCustomerShippingInfo(CurrentCustomer.Id);
             }
         }

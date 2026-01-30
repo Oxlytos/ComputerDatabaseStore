@@ -33,6 +33,43 @@ namespace ComputerStoreApplication.Crud_Related
             Update = ConsoleKey.U, //Uppdatera som i att vi ändrar värden
             Delete = ConsoleKey.D, //Ta bort, duh
         }
+        public static void AddNewBrand(ApplicationManager logic)
+        {
+            Console.Clear();
+            Console.WriteLine("Current brands");
+            var brands = logic.GetManufacturers();
+            foreach (var brand in brands)
+            {
+                Console.WriteLine($"{brand.Name}");
+            }
+            Console.WriteLine("Add new brand?");
+            bool yes = GeneralHelpers.YesOrNoReturnBoolean();
+            if (yes) 
+            {
+                Console.WriteLine("Name?");
+                string name = Console.ReadLine();
+                if (string.IsNullOrEmpty(name)) 
+                {
+                    Console.WriteLine("Can't be empty, returning");
+                    Console.ReadLine();
+                    return;
+                }
+                Brand newBrand = new Brand
+                {
+                    Name = name,
+                };
+                var currentBrands = logic.GetManufacturers();
+                var valid = currentBrands.FirstOrDefault(x => x.Name == newBrand.Name);
+                if (valid == null)
+                {
+                    Console.WriteLine("Adding new brand!");
+                    logic.ComputerPartShopDB.Add(newBrand);
+                    logic.ComputerPartShopDB.SaveChanges();
+                    Console.ReadLine();
+                }
+
+            }
+        }
         //Vill vi skiippa och printa tråkiga fälts med ID och annat för användaren
         public static void ComponentInput(ApplicationManager logic)
         {

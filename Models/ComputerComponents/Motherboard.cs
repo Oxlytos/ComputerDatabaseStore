@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -47,14 +48,14 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             CPUSocket socket = GeneralHelpers.ChooseCPUSocket(sockets);
             CPUArchitecture arch = GeneralHelpers.ChooseCPUArch(archs);
 
-            Console.WriteLine("Overclockable? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool overclock = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            Console.WriteLine("Overclockable?\"");
+            bool overclock = GeneralHelpers.YesOrNoReturnBoolean();
             Console.WriteLine("Bluetooth? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool bluetooth = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool bluetooth = GeneralHelpers.YesOrNoReturnBoolean();
             Console.WriteLine("Wifi? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool wifi = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool wifi = GeneralHelpers.YesOrNoReturnBoolean();
             Console.WriteLine("Soundcard? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool soundCard = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool soundCard = GeneralHelpers.YesOrNoReturnBoolean();
 
             Motherboard motherboard = new Motherboard
             {
@@ -75,13 +76,25 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public override void Read(ApplicationManager lol)
         {
+            var motherboard = lol.ComputerPartShopDB.AllParts.OfType<Motherboard>().
+              Include(ch => ch.MemoryType).
+              Include(ch=>ch.ChipsetVendor).
+              Include(ch=>ch.CPUSocketArchitecture).
+              Include(ch => ch.CPUSocket).
+              Include(ch => ch.BrandManufacturer).
+              FirstOrDefault(x => x.Id == this.Id);
+            if (motherboard == null)
+            {
+                Console.WriteLine("Some error, returning");
+                return;
+            }
             //Hämta alla properties
-            var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.Name}");
+            var propertiers = motherboard.GetType().GetProperties();
+            Console.WriteLine($"More technical info {this.Name}");
             foreach (var prop in propertiers)
             {
                 //Hämta value på denna property i loopen
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(motherboard);
                 string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
                 if (!skips.Contains(prop.Name))
                 {
@@ -109,8 +122,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     }
                 }
             }
-            Console.WriteLine("Press Enter to Continue");
-            Console.ReadLine();
         }
 
         public override void Update(ApplicationManager lol)
@@ -201,7 +212,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Delete(ApplicationManager lo)
         {
             Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean();
             if (userAnswer)
             {
                 // Checka här om det går att ta bort på riktigt

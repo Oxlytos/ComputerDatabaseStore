@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,84 @@ namespace ComputerStoreApplication.Helpers
             }
             Console.ReadLine();
             return null;
+        }
+      
+        public static Country ChooseOrCreateCountry(List<Country> countries)
+        {
+            while (true)
+            {
+
+          
+            if (countries.Any())
+            {
+                Console.WriteLine("Please choose a country from the list, input the corresponding Id. To register a new country, input 0");
+                foreach (var item in countries)
+                {
+                    Console.WriteLine($"Id: {item.Id} Name: {item.Name}\n");
+                }
+                int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+                if (choice == 0)
+                {
+                    Country country = CreateCountry();
+                        return country;
+                }
+                var validCountry = countries.FirstOrDefault(x => x.Id == choice);
+                if (validCountry != null)
+                {
+                    return validCountry;
+                }
+            }
+            else
+            {
+                    // empty list o countries, create
+                    Console.WriteLine("No countries registered yet. Please create one.");
+                    Country newCountry = CreateCountry();
+                    return newCountry;
+                }
+            }
+
+        }
+        public static Country CreateCountry()
+        {
+            //Invalid input, continue trying to create until there's something
+            while (true)
+            {
+                Console.WriteLine("Please input the name for your country (Like Sweden, France etc)");
+                string country = Console.ReadLine();
+                if (!string.IsNullOrEmpty(country))
+                {
+                    return new Country { Name = country };
+                } ;
+                Console.WriteLine("Country name cannot be empty. Try again.\n");
+            }
+        }
+        public static City ChooseOrCreateCity(List<City> cities, Country country)
+        {
+            var relevantCitiesBasedOnCountry = cities.Where(c=>c.CountryId==country.Id).ToList();   
+            if (relevantCitiesBasedOnCountry.Any())
+            {
+                Console.WriteLine("Please choose a city, input the corresponding Id");
+                foreach (var item in cities)
+                {
+                    Console.WriteLine($"Id: {item.Id} Name: {item.Name}\n");
+                }
+                int cityChoice = GeneralHelpers.StringToInt(Console.ReadLine());
+                var validCity = cities.FirstOrDefault(x => x.Id == cityChoice);
+                if (validCity != null)
+                {
+                    return validCity;
+                }
+            }
+            while (true)
+            {
+                Console.WriteLine($"Please enter the name for the city in county {country.Name}");
+                string name = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    return new City { Name = name, Country=country, CountryId=country.Id };
+                }
+                Console.WriteLine("Please input a name");
+            }
         }
         internal static List<string> AllCategoriesFoundAsStrings(List<Type> types, bool numbered)
         {
@@ -371,85 +450,81 @@ namespace ComputerStoreApplication.Helpers
                     Console.WriteLine($"This RAM has registered {currentFeatues.First().Name} as their profile, leaving function");
                     return currentFeatues;
                 }
-                Console.WriteLine("Done? Affirm by pressing 'y' for yes, 'n' for no\n");
-                done = YesOrNoReturnBoolean(Console.ReadLine());
+                Console.WriteLine("Done?");
+                done = YesOrNoReturnBoolean();
             }
             return currentFeatues;
         }
 
         internal static ChipsetVendor ChooseVendor(List<ChipsetVendor> vendors)
         {
-            Console.WriteLine("Which vendor? Choose by inputting an int");
-            foreach (ChipsetVendor v in vendors)
+            while (true)
             {
-                Console.WriteLine($"ID: {v.Id} Name: {v.Name}");
-            }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = vendors.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
+                Console.WriteLine("Which vendor? Choose by inputting an int");
+                foreach (ChipsetVendor v in vendors)
+                {
+                    Console.WriteLine($"ID: {v.Id} Name: {v.Name}");
+                }
+                if (Int32.TryParse(Console.ReadLine(), out int choice))
+                {
+                    var hit = vendors.FirstOrDefault(v => v.Id == choice);
+                    return hit;
+                }
+                Console.WriteLine("Invalid input");
             }
         }
         internal static Brand ChooseManufacturer(List<Brand> manufacturers)
         {
-            Console.WriteLine("Which manufacturer? Choose by inputting an int");
-            foreach (Brand m in manufacturers)
+            while (true)
             {
-                Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
-            }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = manufacturers.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
+                Console.WriteLine("Which manufacturer? Choose by inputting an int");
+                foreach (Brand m in manufacturers)
+                {
+                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+                }
+                if (Int32.TryParse(Console.ReadLine(), out int choice))
+                {
+                    var hit = manufacturers.FirstOrDefault(v => v.Id == choice);
+                    return hit;
+                }
+                Console.WriteLine("Invalid input");
             }
         }
         internal static EnergyClass ChooseEnergyClass(List<EnergyClass> classes)
         {
-            Console.WriteLine("Which class? Choose by inputting an int");
-            foreach (EnergyClass m in classes)
+            while (true)
             {
-                Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+
+                Console.WriteLine("Which class? Choose by inputting an int");
+                foreach (EnergyClass m in classes)
+                {
+                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+                }
+                if (Int32.TryParse(Console.ReadLine(), out int choice))
+                {
+                    var hit = classes.FirstOrDefault(v => v.Id == choice);
+                    return hit;
+                }
+                Console.WriteLine("Invalid input");
             }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = classes.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
-            }
-            return null;
         }
         internal static CPUSocket ChooseCPUSocket(List<CPUSocket> cPUSockets)
         {
-            Console.WriteLine("Which socket? Choose by inputting an int");
-            foreach (CPUSocket m in cPUSockets)
+            while (true)
             {
-                Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+                Console.WriteLine("Which socket? Choose by inputting an int");
+                foreach (CPUSocket m in cPUSockets)
+                {
+                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+                }
+                if (Int32.TryParse(Console.ReadLine(), out int choice))
+                {
+                    var hit = cPUSockets.FirstOrDefault(v => v.Id == choice);
+                    return hit;
+                }
+                Console.WriteLine("Invalid input");
             }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = cPUSockets.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
-            }
-            return null;
+         
         }
         internal static string SetName(int maxLength)
         {
@@ -472,20 +547,20 @@ namespace ComputerStoreApplication.Helpers
         }
         internal static CPUArchitecture ChooseCPUArch(List<CPUArchitecture> archs)
         {
-            Console.WriteLine("Which CPU arch? Choose by inputting an int");
-            foreach (CPUArchitecture m in archs)
+            while (true)
             {
-                Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
-            }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = archs.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
+
+                Console.WriteLine("Which CPU arch? Choose by inputting an int");
+                foreach (CPUArchitecture m in archs)
+                {
+                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
+                }
+                if (Int32.TryParse(Console.ReadLine(), out int choice))
+                {
+                    var hit = archs.FirstOrDefault(v => v.Id == choice);
+                    return hit;
+                }
+                Console.WriteLine("Invalid input");
             }
         }
         internal static object TryAndUpdateValueOnObject(PropertyInfo thisProperty)
@@ -524,7 +599,7 @@ namespace ComputerStoreApplication.Helpers
             return null;
         }
 
-
+        //try and find property fields 
         internal static string FindSuitablePropertyByString(List<PropertyInfo> props, string name)
         {
             var foundProperty = props.FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
@@ -537,6 +612,7 @@ namespace ComputerStoreApplication.Helpers
                 return null;
             }
         }
+        //returning wihtout ? underlyting type
         internal static string GetTypeNameFromNullablePropertyField(Type type)
         {
             if (Nullable.GetUnderlyingType(type) != null)
@@ -550,40 +626,45 @@ namespace ComputerStoreApplication.Helpers
         }
         internal static int StringToInt(string userInput)
         {
-            if (Int32.TryParse(userInput, out int intVal))
+            while (true)
             {
-                return intVal;
+                if (Int32.TryParse(userInput, out int intVal))
+                {
+                    return intVal;
+                }
+                Console.WriteLine("Invalid input");
             }
-            //Borde lägga till någon throw error här
-            return 0;
+          
         }
         internal static decimal StringToDecimal(string userInput)
         {
-            if (decimal.TryParse(userInput, out decimal decimalValue))
+            while (true)
             {
-                return decimalValue;
-            }
-            else
-            {
-                Console.WriteLine("Error");
-                return 0;
+                if (decimal.TryParse(userInput, out decimal decimalValue))
+                {
+                    return decimalValue;
+                }
+                Console.WriteLine("Invalid input");
             }
         }
-        internal static bool YesOrNoReturnBoolean(string userINput)
+          
+        internal static bool YesOrNoReturnBoolean()
         {
-            Console.WriteLine("'y' for yes, and 'n' for no");
-            if (userINput.StartsWith("y") || userINput.StartsWith("Y"))
+            while (true)
             {
-                return true;
+                Console.WriteLine("'y' for yes, and 'n' for no");
+                string userINput = Console.ReadLine();
+                if (userINput.StartsWith("y") || userINput.StartsWith("Y"))
+                {
+                    return true;
+                }
+                else if (userINput.StartsWith("n") || userINput.StartsWith("N"))
+                {
+                    return false;
+                }
+                Console.WriteLine("Invalid input");
             }
-            else if (userINput.StartsWith("n") || userINput.StartsWith("N"))
-            {
-                return false;
-            }
-            else
-            {
-                return false;
-            }
+           
         }
 
     }

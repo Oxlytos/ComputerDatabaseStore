@@ -1,4 +1,6 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Models.Customer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +14,10 @@ namespace ComputerStoreApplication.Models.Store
         public int Id { get; set; }
 
         public int CustomerId { get; set; }
-        public Customer.Customer OrdCustomer { get; set; }
+        public CustomerAccount OrdCustomer { get; set; }
+
+        public int ShippingInfoId { get; set; }
+        public CustomerShippingInfo ShippingInfo { get; set; }
 
         public DateTime CreationDate { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
@@ -20,26 +25,51 @@ namespace ComputerStoreApplication.Models.Store
         public decimal ShippingCost { get; set; }
 
         public decimal TaxCosts { get; set; }
-        Decimal TaxRate = 0.25m;
+        
+        internal Decimal TaxRate = 0.25m;
+
+        internal Decimal DisplayTaxRatePercent;
         public Decimal Subtotal {  get; set; }
         public Decimal TotalCost { get; private set; }
 
-        public int DeliveryProviderId  { get; set; }
+        public int? DeliveryProviderId  { get; set; }
         public DeliveryProvider DeliveryProvider { get; set; }
 
-        public void ChooseDeliveryProvider(List<DeliveryProvider> deliveryProviders)
+        public int? PaymentMethodId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+
+      
+        public void ChoosePaymentMethod(List<PaymentMethod> paymentMethods)
         {
             Console.WriteLine("Which delviery provider do you want to choose? Input their corresponding Id");
-            foreach (var deliveryProvider in deliveryProviders)
+            foreach (var paymentService in paymentMethods)
             {
-                Console.WriteLine($"Id: {deliveryProvider.Id} {deliveryProvider.Name}, cost (€): {deliveryProvider.Price}");
+                Console.WriteLine($"Id: {paymentService.Id} {paymentService.Name}");
             }
             int choice = GeneralHelpers.StringToInt(Console.ReadLine());
-            var valid = deliveryProviders.FirstOrDefault(x => x.Id == choice);
-            if (valid != null) 
+            var valid = paymentMethods.FirstOrDefault(x => x.Id == choice);
+            if (valid != null)
             {
-                ApplyDelivertyMethodAndProvider(valid);
-
+                Console.WriteLine("Great, you'll get the invoice the following day");
+                PaymentMethodId = valid.Id;
+                PaymentMethod = valid;
+            }
+        }
+        public void ApplyAdress(List<CustomerShippingInfo> Adresses)
+        {
+            Console.WriteLine("Which address to ship to?");
+            foreach (var customerShippingInfo in Adresses)
+            {
+                Console.WriteLine($"{customerShippingInfo.Id} {customerShippingInfo.StreetName} {customerShippingInfo.PostalCode} {customerShippingInfo.City.Name}");
+            }
+        }
+        public void ApplyPayMethod(PaymentMethod payservice)
+        {
+            if (payservice != null)
+            {
+                //Postnord, instabox kostnader
+                PaymentMethodId = payservice.Id;
+                PaymentMethod = payservice;
             }
         }
         public void ApplyDelivertyMethodAndProvider(DeliveryProvider deliveryProvider)
@@ -57,13 +87,19 @@ namespace ComputerStoreApplication.Models.Store
         {
             //Innan skatt
             Subtotal = OrderItems.Sum(s => s.Quantity * s.Price);
-            Console.WriteLine($"Subtotal is {Subtotal}");
-            //25% moms ungefär som i Sverige
-
             TotalCost = Subtotal + ShippingCost;
+            TaxCosts = TotalCost - (TotalCost / (1 + TaxRate));
+            Console.WriteLine("====================================");
+            Console.WriteLine($"Subtotal is {Subtotal-TaxCosts} (Pre-tax)");
+            Console.WriteLine($"Cost for delivery by provider {ShippingCost}");
             Console.WriteLine($"Total costs is: {TotalCost}");
-            TaxCosts = TotalCost - (TotalCost / (1+TaxRate));
-            Console.WriteLine($"({TaxRate} tax which is {TaxCosts})");
+            decimal displayTaxRate = TaxRate;
+            displayTaxRate *= 100;
+            Console.WriteLine($"({displayTaxRate}% tax which is {TaxCosts})");
+            Console.WriteLine($"Payment method: {PaymentMethod.Name}");
+            Console.WriteLine($"Delivery service: {DeliveryProvider.Name}");
+            Console.WriteLine($"Delivering to {ShippingInfo.StreetName} {ShippingInfo.PostalCode} {ShippingInfo.City.Name} {ShippingInfo.City.Country.Name}");
+            Console.WriteLine("====================================");
         }
     }
 }

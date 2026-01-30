@@ -1,7 +1,8 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
-using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
@@ -14,9 +15,9 @@ namespace ComputerStoreApplication.Pages
 {
     internal class SearchedResults : IPage
     {
-
+        public int? AdminId { get; set; }
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-        Customer? CurrentCustomer { get; set; }
+        CustomerAccount? CurrentCustomer { get; set; }
 
         public int? CurrentCustomerId {get; set; }
 
@@ -79,7 +80,7 @@ namespace ComputerStoreApplication.Pages
                 {
                     Console.WriteLine("Exists!");
                     Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
-                    bool confirmation = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+                    bool confirmation = GeneralHelpers.YesOrNoReturnBoolean();
                     if (confirmation)
                     {
                         appLol.AddProductToBasket(doesItExist, CurrentCustomer);
@@ -102,6 +103,20 @@ namespace ComputerStoreApplication.Pages
                 return;
             }
         }
+        public void DrawAccountProfile()
+        {
+            List<string> tesList = new List<string>();
+            if (CurrentCustomer != null)
+            {
+                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
+            }
+            else
+            {
+                tesList.Add("Not Loggedin");
+            }
+            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            Console.SetCursorPosition(0, 10);
+        }
         public void Load(ApplicationManager appLol)
         {
             //kolla om inloggad
@@ -123,8 +138,7 @@ namespace ComputerStoreApplication.Pages
             Console.Clear();
             SetPageCommands();
             Graphics.PageBanners.DrawSearchedResults ();
-            Console.SetCursorPosition(0, 10);
-            Console.WriteLine("Browse product page");
+            DrawAccountProfile();
         }
 
         public void SetPageCommands()

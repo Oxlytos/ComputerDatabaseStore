@@ -1,15 +1,16 @@
-﻿using ComputerStoreApplication.Logic;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ComputerStoreApplication.Models.Customer
+namespace ComputerStoreApplication.Models.Account
 {
     public class AccountLogic
     {
-        internal static int LoginCustomer(List<Customer> customers)
+        internal static int LoginCustomer(List<CustomerAccount> customers)
         {
                 Console.WriteLine("Email?");
                 string email = Console.ReadLine();
@@ -58,6 +59,7 @@ namespace ComputerStoreApplication.Models.Customer
         {
             return 0;
         }
+
       
 
     }

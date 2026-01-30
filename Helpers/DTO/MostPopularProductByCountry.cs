@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ComputerStoreApplication.Helpers.DTO
+{
+    public class MostPopularProductByCountry
+    {
+        public string CountryName { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public int OrdersCount { get; set; }
+    }
+}

@@ -1,7 +1,7 @@
-﻿using ComputerStoreApplication.Helpers;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
-using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Pages;
 using System;
@@ -18,10 +18,12 @@ namespace ComputerStoreApplication.Logic
     public class ApplicationManager : IDisposable
     {
         private readonly ComponentService _services;
+        public DapperHelper Dapper {  get; private set; }
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
         public int CustomerId { get; set; }
         public bool IsLoggedInAsCustomer => CustomerId != 0;
+
         public int AdminId { get; set; }
         public bool IsLoggedInAsAdmin => AdminId != 0;
         public List<StoreProduct> ProductsInBasket { get; set; }
@@ -30,21 +32,46 @@ namespace ComputerStoreApplication.Logic
         {
             //Instansiera db kontextet här EN gång
             ComputerPartShopDB = new ComputerDBContext();
+            Dapper = new DapperHelper(ComputerPartShopDB);
 
             //Startsidan blir där man kan browse:a produkter
             CurrentPage = new HomePage();
-            ProductsInBasket=new List<StoreProduct>();
+            ProductsInBasket = new List<StoreProduct>();
             _services = service;
             CustomerId = 0;
             AdminId = 0;
         }
-        public List<Customer> GetCustomers()
+        public void EditCustomerProfile()
+        {
+            _services.EditCustomerProfile();
+        }
+        public List<CustomerAccount> GetCustomers()
         {
             return _services.GetCustomers();
         }
-        public void LoginAsAdmin()
+        public bool LoginAsAdmin(string username, string password)
         {
-            _services.LoginAdmin();
+            if (IsLoggedInAsCustomer) 
+            {
+                Console.WriteLine("Can't login as a admin while logged in as a customer");
+                Console.ReadLine();
+                return false;
+            }
+            Console.WriteLine("Trying to login as admin");
+            var adminId = _services.LoginAdmin(username, password);
+            if (adminId != 0)
+            {
+                Console.WriteLine("Success");
+                AdminId = adminId;
+                Console.ReadLine();
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("Wrong credentials, returning");
+                Console.ReadLine();
+                return false;
+            }
         }
         public void CreateAccount(string email)
         {
@@ -58,34 +85,47 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.DisplayCurrentCustomerOrders(customerId);
         }
-        public void LogoutAsAdmin()
+
+        public bool LogoutAsAdmin()
         {
-            _services.LogoutAdmin();
+            Console.WriteLine("Logged out");
+            AdminId = 0;
+            return false;
         }
-        public Customer GetCustomerInfo(int id)
+        public AdminAccount GetAdminInfo(int id)
+        {
+            return _services.GetAdminInfo(id);
+        }
+        public CustomerAccount GetCustomerInfo(int id)
         {
             return _services.GetCustomerInfo(id);
         }
         public bool LoginAsCustomer(string email, string password)
         {
-            Console.WriteLine("Tryna login");
-            var thisCustomerId =_services.LoginCustomer(email, password);
-            if (thisCustomerId != 0) 
+            if (IsLoggedInAsAdmin)
             {
-                CustomerId= thisCustomerId;
+                Console.WriteLine("Can't login as customer while in admin login");
+                Console.ReadLine();
+                return false ;
+            }
+            Console.WriteLine("Tryna login");
+            var thisCustomerId = _services.LoginCustomer(email, password);
+            if (thisCustomerId != 0)
+            {
+                CustomerId = thisCustomerId;
                 return true;
             }
             else
             {
                 return false;
             }
-               
+
         }
         public bool LogoutAsCustomer()
         {
-                Console.WriteLine("Logged out");
-                CustomerId = 0;
-                return false;
+            Console.WriteLine("Logged out");
+            CustomerId = 0;
+            return false;
         }
         public void HandleCustomerPurchase(int customerId)
         {
@@ -95,11 +135,11 @@ namespace ComputerStoreApplication.Logic
         {
             _services.HandleCustomerShippingInfo(customerId);
         }
-        public void HandleCustomerBasket(int customerId)
+        public List<BasketProduct> HandleCustomerBasket(int customerId)
         {
-            _services.HandleCustomerBasket(customerId);
+            return _services.HandleCustomerBasket(customerId);
         }
-        public void AddStoreProductToBasket(Customer cus, StoreProduct prod)
+        public void AddStoreProductToBasket(CustomerAccount cus, StoreProduct prod)
         {
             _services.AddProductToBasket(prod, cus);
         }
@@ -159,7 +199,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetCPUs();
         }
-        public void AddProductToBasket(StoreProduct prod, Customer customer)
+        public void AddProductToBasket(StoreProduct prod, CustomerAccount customer)
         {
             _services.AddProductToBasket(prod, customer);
         }
@@ -167,7 +207,7 @@ namespace ComputerStoreApplication.Logic
         {
             _services.SaveNewSpecification(spec);
         }
-        public void SaveNewCustomer(Customer cus)
+        public void SaveNewCustomer(CustomerAccount cus)
         {
             _services.SaveNewCustomer(cus);
         }
@@ -195,6 +235,6 @@ namespace ComputerStoreApplication.Logic
         {
             _services.SaveGPU(gPU);
         }
-        public void Dispose() { }   
+        public void Dispose() { }
     }
 }

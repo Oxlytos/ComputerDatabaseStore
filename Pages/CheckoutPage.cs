@@ -1,6 +1,7 @@
-﻿using ComputerStoreApplication.Logic;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
-using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -15,8 +16,8 @@ namespace ComputerStoreApplication.Pages
     internal class CheckoutPage : IPage
     {
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-
-        Customer? CurrentCustomer { get; set; }
+        public int? AdminId { get; set; }
+        CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
 
         List<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
@@ -42,12 +43,39 @@ namespace ComputerStoreApplication.Pages
                     Crud_Related.CrudHandler.StoreProductInput(applicationLogic);
                     return this;
                 case PageControls.PageOption.BuyCheckout:
-                   applicationLogic.HandleCustomerPurchase(CurrentCustomer.Id);
-                    return new CustomerPage();
+                    if (BasketProducts.Any())
+                    {
+                        applicationLogic.HandleCustomerPurchase(CurrentCustomer.Id);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Basket empty, returning");
+                        Console.ReadLine();
+                    }
+                        return new CustomerPage();
                 case PageControls.PageOption.AdjustCheckout:
                     if (applicationLogic.IsLoggedInAsCustomer)
                     {
-                        applicationLogic.HandleCustomerBasket(CurrentCustomer.Id);
+                        //Mismatch between page loading and updating logic
+                        //Calc needs to be done here, or else numbers wont update
+                        BasketProduct bask;
+                        if (BasketProducts.Count == 1)
+                            bask = BasketProducts.First();
+                        else
+                            bask = StoreHelper.ChooseWhichBasketItem(BasketProducts);
+
+                        if (bask != null)
+                        {
+                            StoreHelper.AdjustQuantityOfBasketItems(bask);
+                            if (bask.Quantity == 0||bask.Quantity<0)
+                            {
+                                Console.WriteLine("Removing product, it has a quantity of 0");
+                                CurrentCustomer.ProductsInBasket.Remove(bask);
+                                applicationLogic.ComputerPartShopDB.Remove(bask);
+                                Console.ReadLine() ;
+                            }
+                            applicationLogic.ComputerPartShopDB.SaveChanges();
+                        }
                     }
                     return this;
                 case PageControls.PageOption.Home:
@@ -89,8 +117,7 @@ namespace ComputerStoreApplication.Pages
         {
             Graphics.PageBanners.DrawCheckoutPage();
             SetPageCommands();
-            Console.SetCursorPosition(0, 10);
-            Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
+            DrawAccountProfile();
             if (BasketProducts.Count > 0) 
             {
                 foreach (var basketItem in BasketProducts)
@@ -112,7 +139,23 @@ namespace ComputerStoreApplication.Pages
             }
            
         }
-        
+        public void DrawAccountProfile()
+        {
+
+            List<string> tesList = new List<string>();
+            if (CurrentCustomer != null)
+            {
+                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email);
+            }
+            else
+            {
+                tesList.Add("Not Loggedin");
+            }
+            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            Console.SetCursorPosition(0, 10);
+
+        }
+
         public void SetPageCommands()
         {
             //Specific commands per sida

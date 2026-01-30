@@ -1,8 +1,8 @@
-﻿using ComputerStoreApplication.Graphics;
+﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
-using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,8 @@ namespace ComputerStoreApplication.Pages
         List<ComputerPart> AllPartsForJoin = new List<ComputerPart>();
         List<StoreProduct> SelectedProducts = new List<StoreProduct>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-        Customer? CurrentCustomer { get; set; }
+        public int? AdminId { get; set; }
+        CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
 
         public void RenderPage()
@@ -25,23 +26,50 @@ namespace ComputerStoreApplication.Pages
             Console.Clear();
             SetPageCommands();
             PageBanners.DrawShopBanner();
-            Console.SetCursorPosition(0, 10);
+            
+            DrawAccountProfile();
+          
+            Console.WriteLine("Products in focus;");
+            Console.WriteLine($"Press {GetKeyFor(PageControls.PageOption.AddToBasket)} to add to basket");
+            int left = 2;
+            int top = 18;
+            int spacing = 35;
+
+            for (int i = 0; i < SelectedProducts.Count; i++)
+            {
+                var product = SelectedProducts[i];
+                var rows = new List<string>
+                {
+                    $"Id: {product.Id}".PadRight(20),
+                    product.Name.PadRight(20),
+                    $"Price: {product.Price} €".PadRight(20),
+                    (product.Sale ? "ON SALE!" : "(Not on sale)").PadRight(20)
+                };
+                var window = new MickesWindow.Window(
+                   $"Offer {i + 1}",
+                   left + (i * spacing),
+                   top,
+                   rows
+               );
+
+                window.Draw();
+
+            }
+
+        }
+        public void DrawAccountProfile()
+        {
+            List<string> tesList = new List<string>();
             if (CurrentCustomer != null)
             {
-                Console.WriteLine($"Logged in as {CurrentCustomer.FirstName} {CurrentCustomer.SurName}");
+                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " +CurrentCustomer.ProductsInBasket.Count);
             }
             else
             {
-                Console.WriteLine("Not logged in");
+                tesList.Add("Not Loggedin");
             }
-            Console.WriteLine("Products in focus;");
-            Console.WriteLine("If you wanna add something to your basket, press 'K'!");
-            Console.WriteLine("Selected products count: " + SelectedProducts.Count);
-            foreach (var product in SelectedProducts)
-            {
-                Console.WriteLine($" Id: {product.Id}\tName: {product.Name} Description: {product.Description} Price: {product.Price} On Sale?:{product.Sale} (Hidden)");
-            }
-            
+            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            Console.SetCursorPosition(0, 15);
         }
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -100,7 +128,8 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
-            SelectedProducts = appLol.GetFrontPageProducts();
+            //Random 3 objects every load
+            SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Guid.NewGuid()).Take(5).ToList(); ;
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -137,6 +166,12 @@ namespace ComputerStoreApplication.Pages
                 Console.ReadLine();
                 return;
             }
+        }
+        public ConsoleKey? GetKeyFor(PageControls.PageOption option)
+        {
+            return PageCommands
+                .FirstOrDefault(p => p.Value.PageCommandOptionInteraction == option)
+                .Key;
         }
     }
 }

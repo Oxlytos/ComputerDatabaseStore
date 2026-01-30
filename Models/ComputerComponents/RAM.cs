@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -21,28 +22,27 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public decimal MemorySpeed { get; set; }
 
-        public ICollection<RamProfileFeatures> SupportedRamProfiles = new List<RamProfileFeatures>();
+        public virtual ICollection<RamProfileFeatures> SupportedRamProfiles { get; set; }
         public RAM() { }
 
         public override void Create(ApplicationManager lol)
         {
             var manufacturers = lol.GetManufacturers();
             var ramProfiles = lol.GetRamProfileFeatures();
-
+            var memTypes = lol.GetMemoryTypes();
             Console.WriteLine("Name of the RAM collection?");
             string ramName = Console.ReadLine();
 
+
             Brand manufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
             List<RamProfileFeatures> features = GeneralHelpers.ChooseProfileFeatures(ramProfiles);
+            MemoryType whatMemoryType = GeneralHelpers.ChooseMemoryType(memTypes);
 
             Console.WriteLine("GBs per stick?");
             int gbs = GeneralHelpers.StringToInt(Console.ReadLine());
 
             Console.WriteLine("Memory Speed (MHz)?");
             decimal memSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
-
-            Console.WriteLine("How many we got in stock of this Ram collection?");
-            int stock = GeneralHelpers.StringToInt(Console.ReadLine());
 
             RAM newRam = new RAM
             {
@@ -51,21 +51,36 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                 SupportedRamProfiles = features,
                 MemorySizePerStick = gbs,
                 MemorySpeed = memSpeed,
+                MemoryType = whatMemoryType,
 
             };
-
             lol.SaveNewComponent(newRam);
         }
 
         public override void Read(ApplicationManager lol)
         {
+            var memStick = lol.ComputerPartShopDB.AllParts.OfType<RAM>()
+            .Include(r => r.SupportedRamProfiles)
+            .Include(r => r.BrandManufacturer)
+            .Include(r => r.MemoryType)
+            .Include(r => r.ChipsetVendor) 
+            .FirstOrDefault(x => x.Id == this.Id);
+            if (memStick == null)
+            {
+                Console.WriteLine("Some error here, returning");
+                return;
+            }
             //Hämta alla properties
-            var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.Name}");
+            var propertiers = memStick.GetType().GetProperties();
+            Console.WriteLine($"More technical info {this.Name}");
             foreach (var prop in propertiers)
             {
                 //Hämta value på denna property i loopen
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(memStick);
+                if (value == null)
+                {
+                    continue;
+                }
                 string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
                 if (!skips.Contains(prop.Name))
                 {
@@ -73,21 +88,24 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     switch (value)
                     {
                         case Brand m:
-                            Console.WriteLine($"-  {prop.Name} : {m.Name}");
+                            Console.WriteLine($"- {prop.Name} : {m.Name}");
                             break;
-                        case ChipsetVendor v:
-                            Console.WriteLine($"- {prop.Name} : {v.Name}");
+                        case MemoryType m:
+                            Console.WriteLine($"- {prop.Name} : {m.Name}");
                             break;
+                        case ChipsetVendor cV:
+                            continue;
                         case CPUArchitecture c:
-                            Console.WriteLine($"-  {prop.Name} : {c.Name}");
+                            Console.WriteLine($"- {prop.Name} : {c.Name}");
                             break;
                         case CPUSocket cs:
                             Console.WriteLine($"- {prop.Name} : {cs.Name}");
                             break;
-                        case RamProfileFeatures rs:
-                            foreach (var f in rs.Name)
+                        case IEnumerable<RamProfileFeatures> profiles:
+                            Console.WriteLine($"- {prop.Name}:");
+                            foreach (var profile in profiles)
                             {
-                                Console.WriteLine($"- {prop.Name} : {rs.Name} : {f.ToString()}");
+                                Console.WriteLine($"    - {profile.Name}");
                             }
                             break;
                         default:
@@ -174,7 +192,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Delete(ApplicationManager lo)
         {
             Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean();
             if (userAnswer)
             {
                 // Checka här om det går att ta bort på riktigt

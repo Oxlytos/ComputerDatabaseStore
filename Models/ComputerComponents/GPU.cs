@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -50,8 +51,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine("GPU frequency (MHz)?");
             decimal freqSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
 
-            Console.WriteLine("Overclockable? Type (Y) for yes, (N) for no, then press 'Enter'\"");
-            bool overclock = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            Console.WriteLine("Overclockable?");
+            bool overclock = GeneralHelpers.YesOrNoReturnBoolean();
 
             Console.WriteLine("Recommended PSU Wattage?");
             int psuPower = GeneralHelpers.StringToInt(Console.ReadLine());
@@ -83,12 +84,24 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Read(ApplicationManager lol)
         {
             //Hämta alla properties
-            var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.Name}");
+            var thisGpu = lol.ComputerPartShopDB.AllParts.OfType<GPU>().
+                Include(ch => ch.MemoryType).
+                Include(ch=>ch.ChipsetVendor).
+                Include(ch=>ch.BrandManufacturer).
+                FirstOrDefault(x => x.Id == this.Id);
+            if (thisGpu == null)
+            {
+                Console.WriteLine("Error, returning");
+                Console.ReadLine();
+                return;
+            }
+            //Hämta alla properties
+            var propertiers = thisGpu.GetType().GetProperties();
+            Console.WriteLine($"More technical info {this.Name}");
             foreach (var prop in propertiers)
             {
                 //Hämta value på denna property i loopen
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(thisGpu);
                 string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
                 if (!skips.Contains(prop.Name))
                 {
@@ -110,7 +123,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     }
                 }
             }
-            Console.ReadLine();
         }
 
         public override void Update(ApplicationManager lol)
@@ -186,7 +198,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Delete(ApplicationManager lo)
         {
             Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean();
             if (userAnswer)
             {
                 // Checka här om det går att ta bort på riktigt

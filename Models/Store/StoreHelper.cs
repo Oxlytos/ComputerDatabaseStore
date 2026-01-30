@@ -1,4 +1,5 @@
 ﻿using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Migrations;
 using System;
 using System.Collections.Generic;
@@ -24,19 +25,37 @@ namespace ComputerStoreApplication.Models.Store
             Decrease = ConsoleKey.O,
             Increase = ConsoleKey.I
         }
-        internal static void AdjustQuantityOfBasketItems(ICollection<BasketProduct> basketProducts)
+        internal static bool ViewProduct(StoreProduct product, ApplicationManager app)
+        {
+            Console.WriteLine("Some info on this product;");
+            Console.WriteLine();
+            Console.WriteLine("========================================================");
+            product.Read(app);
+            Console.WriteLine("========================================================");
+            Console.ReadLine();
+            Console.WriteLine("Add to basket?");
+            return GeneralHelpers.YesOrNoReturnBoolean();
+        }
+        internal static BasketProduct ChooseWhichBasketItem(ICollection<BasketProduct> basketProducts)
         {
             Console.WriteLine("Which product? Choose by inputting the correct Id");
             int? choice = GeneralHelpers.StringToInt(Console.ReadLine());
-            if (!choice.HasValue) 
+            if (!choice.HasValue)
             {
-                return;
+                return null;
             }
             var thisProd = basketProducts.FirstOrDefault(x => x.Id == choice);
             if (thisProd == null)
             {
-                return;
+                return null;
             }
+            else
+            {
+                return thisProd;
+            }
+        }
+        internal static void AdjustQuantityOfBasketItems(BasketProduct basketProducts)
+        {
             foreach (var key in Commandos)
             {
 
@@ -52,17 +71,14 @@ namespace ComputerStoreApplication.Models.Store
             switch (userCrudValue)
             {
                 case CRUD.Increase:
-                    thisProd.Quantity++;
+                    basketProducts.Quantity++;
                     break;
                 case CRUD.Decrease:
-                    thisProd.Quantity--;
-                    if (thisProd.Quantity == 0 || thisProd.Quantity < 0)
-                    {
-                        basketProducts.Remove(thisProd);
-                    }
+                    basketProducts.Quantity--;
                     break;
+               
                 case CRUD.Remove:
-                        basketProducts.Remove(thisProd);
+                    basketProducts.Quantity = 0;
                     break;
             }
         }

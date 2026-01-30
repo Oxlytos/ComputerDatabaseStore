@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
@@ -63,11 +64,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine("Clock speed (GHz)?");
             decimal clockSpeed = GeneralHelpers.StringToDecimal(Console.ReadLine());
 
-            Console.WriteLine("Overclockable? Type (Y) for yes, (N) for no, then press 'Enter'");
-            bool overclockable = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
-
-            Console.WriteLine("How many we got in stock of this new CPU?");
-            int stock = GeneralHelpers.StringToInt(Console.ReadLine());
+            Console.WriteLine("Overclockable?");
+            bool overclockable = GeneralHelpers.YesOrNoReturnBoolean();
 
             Console.WriteLine("How much CPU cache?");
             decimal cach = GeneralHelpers.StringToDecimal(Console.ReadLine());
@@ -98,12 +96,28 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Read(ApplicationManager lo)
         {
             //Hämta alla properties
-            var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.Name}");
+            var thisCpu = lo.ComputerPartShopDB.AllParts.OfType<CPU>()
+                .Include(ch => ch.ChipsetVendor).
+                Include(ch => ch.BrandManufacturer).
+                Include(ch => ch.CPUArchitecture)
+                .Include(ch => ch.SocketType).
+                FirstOrDefault(x=>x.Id==this.Id);
+            if(thisCpu == null)
+            {
+                Console.WriteLine("Error, returning");
+                Console.ReadLine();
+                return;
+            }
+            var propertiers = thisCpu.GetType().GetProperties();
+            Console.WriteLine($"More technical info {this.Name}");
             foreach (var prop in propertiers)
             {
                 //Hämta value på denna property i loopen
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(thisCpu);
+                if (value == null)
+                {
+                    continue;
+                }
                 string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
                 if (!skips.Contains(prop.Name))
                 {
@@ -117,7 +131,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                             Console.WriteLine($"- {prop.Name} : {v.Name}");
                             break;
                         case CPUArchitecture c:
-                            Console.WriteLine($"-  {prop.Name} : {c.Name}");
+                            Console.WriteLine($"- {prop.Name} : {c.Name}");
                             break;
                         case CPUSocket cs:
                             Console.WriteLine($"- {prop.Name} : {cs.Name}");
@@ -128,8 +142,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     }
                 }
             }
-            Console.WriteLine("Press Enter to Continue");
-            Console.ReadLine();
         }
 
         public override void Update(ApplicationManager lol)
@@ -211,8 +223,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public override void Delete(ApplicationManager lo)
         {
-            Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            Console.WriteLine($"Do you really want to delete this {this.Name}?");
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean();
             if (userAnswer)
             {
                 // Checka här om det går att ta bort på riktigt

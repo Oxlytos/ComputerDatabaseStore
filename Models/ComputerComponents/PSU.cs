@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,8 +35,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             decimal watt = GeneralHelpers.StringToDecimal(Console.ReadLine());
             EnergyClass eClass = GeneralHelpers.ChooseEnergyClass(energyClasses);
 
-            Console.WriteLine("How many we got in stock of this new CPU?");
-            int stock = GeneralHelpers.StringToInt(Console.ReadLine());
 
             PSU newPsu = new PSU
             {
@@ -49,13 +48,26 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public override void Read(ApplicationManager lol)
         {
+            var battery = lol.ComputerPartShopDB.AllParts.OfType<PSU>().
+            Include(ch => ch.ChipsetVendor).
+             Include(ch => ch.BrandManufacturer).
+              Include(ch => ch.EnergyClass).
+            Include(ch => ch.BrandManufacturer).
+            FirstOrDefault(x => x.Id == this.Id);
+            if (battery == null)
+            {
+                Console.WriteLine("Some error, returning");
+                return;
+            }
             //Hämta alla properties
-            var propertiers = this.GetType().GetProperties();
-            Console.WriteLine($"Info on this {this.Name}");
+            var propertiers = battery.GetType().GetProperties();
+            Console.WriteLine($"More technical info {battery.Name}");
             foreach (var prop in propertiers)
             {
+                if (prop.Name == nameof(PSU.ChipsetVendor))
+                    continue;
                 //Hämta value på denna property i loopen
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(battery);
                 string[] skips = GeneralHelpers.SkippablePropertiesInPrints();
                 if (!skips.Contains(prop.Name))
                 {
@@ -66,8 +78,8 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                             Console.WriteLine($"{prop.Name} : {m.Name}");
                             break;
                         case ChipsetVendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
-                            break;
+                            Console.WriteLine();
+                            continue;
                         case EnergyClass e:
                             Console.WriteLine($"{prop.Name} : {e.Name}");
                             break;
@@ -77,7 +89,6 @@ namespace ComputerStoreApplication.Models.ComputerComponents
                     }
                 }
             }
-            Console.ReadLine();
         }
 
         public override void Update(ApplicationManager lol)
@@ -152,7 +163,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         public override void Delete(ApplicationManager lo)
         {
             Console.WriteLine($"Do you really want to delete this {this.Name}? Affirm by inputting 'y' for yes, 'n' for no");
-            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean(Console.ReadLine());
+            bool userAnswer = GeneralHelpers.YesOrNoReturnBoolean();
             if (userAnswer)
             {
                 // Checka här om det går att ta bort på riktigt
