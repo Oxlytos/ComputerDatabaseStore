@@ -13,7 +13,7 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
     public class RamProfileFeatures : ComponentSpecification
     {
-        public ICollection<RAM> RAMs { get; set; } = new List<RAM>();
+        //public ICollection<RAM> RAMs { get; set; } = new List<RAM>();
 
         public override void Create(ApplicationManager lol)
         {
@@ -48,9 +48,7 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
                         case Brand m:
                             Console.WriteLine($"{prop.Name} : {m.Name}");
                             break;
-                        case ChipsetVendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
-                            break;
+                
                         case MemoryType c:
                             Console.WriteLine($"{prop.Name} : {c.Name}");
                             break;

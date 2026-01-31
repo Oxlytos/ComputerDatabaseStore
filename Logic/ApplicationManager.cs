@@ -18,7 +18,7 @@ namespace ComputerStoreApplication.Logic
     public class ApplicationManager : IDisposable
     {
         private readonly ComponentService _services;
-        public DapperHelper Dapper {  get; private set; }
+        public DapperService Dapper {  get; private set; }
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
         public int CustomerId { get; set; }
@@ -26,17 +26,17 @@ namespace ComputerStoreApplication.Logic
 
         public int AdminId { get; set; }
         public bool IsLoggedInAsAdmin => AdminId != 0;
-        public List<StoreProduct> ProductsInBasket { get; set; }
+        public List<ComputerPart> ProductsInBasket { get; set; }
 
         public ApplicationManager(ComponentService service)
         {
             //Instansiera db kontextet här EN gång
             ComputerPartShopDB = new ComputerDBContext();
-            Dapper = new DapperHelper(ComputerPartShopDB);
+            Dapper = new DapperService(ComputerPartShopDB);
 
             //Startsidan blir där man kan browse:a produkter
             CurrentPage = new HomePage();
-            ProductsInBasket = new List<StoreProduct>();
+            ProductsInBasket = new List<ComputerPart>();
             _services = service;
             CustomerId = 0;
             AdminId = 0;
@@ -77,7 +77,7 @@ namespace ComputerStoreApplication.Logic
         {
             _services.CreateAccount(email);
         }
-        public List<StoreProduct> GetFrontPageProducts()
+        public List<ComputerPart> GetFrontPageProducts()
         {
             return _services.GetFrontPageProducts();
         }
@@ -108,7 +108,7 @@ namespace ComputerStoreApplication.Logic
                 Console.ReadLine();
                 return false ;
             }
-            Console.WriteLine("Tryna login");
+            Console.WriteLine("Login attempt started");
             var thisCustomerId = _services.LoginCustomer(email, password);
             if (thisCustomerId != 0)
             {
@@ -139,7 +139,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.HandleCustomerBasket(customerId);
         }
-        public void AddStoreProductToBasket(CustomerAccount cus, StoreProduct prod)
+        public void AddStoreProductToBasket(CustomerAccount cus, ComputerPart prod)
         {
             _services.AddProductToBasket(prod, cus);
         }
@@ -147,7 +147,7 @@ namespace ComputerStoreApplication.Logic
         {
             _services.SaveChangesOnComponent();
         }
-        public List<StoreProduct> GetStoreProducts()
+        public List<ComputerPart> GetStoreProducts()
         {
             return _services.GetStoreProducts();
         }
@@ -155,17 +155,21 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetCustomerItems(customerId);
         }
-        public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
+        //public IEnumerable<ComputerPart> GetComputerComponentsByType(ComputerPart type)
+        //{
+        //    return _services.GetObjectsOfTheSameType(type);
+        //}
+        //public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
+        //{
+        //    return _services.GetVendors();
+        //}
+        public List<ComputerPart> GetComputerParts()
         {
-            return _services.GetObjectsOfTheSameType(type);
+            return ComputerPartShopDB.CompuerProducts.ToList();
         }
-        public IEnumerable<ComponentSpecification> GetComponentSpecifications(ComponentSpecification spec)
+        public List<ComponentCategory> GetCategories()
         {
-            return _services.GetSpecsOTheSameType(spec);
-        }
-        public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
-        {
-            return _services.GetVendors();
+            return ComputerPartShopDB.ComponentCategories.ToList();
         }
         public List<Models.Vendors_Producers.Brand> GetManufacturers()
         {
@@ -191,6 +195,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetMemoryTypes();
         }
+        /*
         public List<Models.ComputerComponents.GPU> GetGPUs()
         {
             return _services.GetGPUs();
@@ -198,8 +203,8 @@ namespace ComputerStoreApplication.Logic
         public List<Models.ComputerComponents.CPU> GetCPUs()
         {
             return _services.GetCPUs();
-        }
-        public void AddProductToBasket(StoreProduct prod, CustomerAccount customer)
+        }*/
+        public void AddProductToBasket(ComputerPart prod, CustomerAccount customer)
         {
             _services.AddProductToBasket(prod, customer);
         }
@@ -215,7 +220,7 @@ namespace ComputerStoreApplication.Logic
         {
             _services.SaveNew(part);
         }
-        public void SaveNewStoreProduct(StoreProduct prodc)
+        public void SaveNewStoreProduct(ComputerPart prodc)
         {
             _services.SaveNew(prodc);
         }
@@ -227,6 +232,7 @@ namespace ComputerStoreApplication.Logic
         {
             _services.RemoveComponentSpecifications(speec);
         }
+        /*
         public void SaveCPU(CPU cPU)
         {
             _services.SaveCPU(cPU);
@@ -234,7 +240,7 @@ namespace ComputerStoreApplication.Logic
         public void SaveGPU(GPU gPU)
         {
             _services.SaveGPU(gPU);
-        }
+        }*/
         public void Dispose() { }
     }
 }

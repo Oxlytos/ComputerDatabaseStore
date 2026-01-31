@@ -26,6 +26,7 @@ namespace ComputerStoreApplication.Pages
         public void RenderPage()
         {
             Console.Clear();
+            ConsoleHelper.ResetConsole();
             SetPageCommands();
             Graphics.PageBanners.DrawCustomerPage();
 
@@ -180,7 +181,7 @@ namespace ComputerStoreApplication.Pages
             orders = appLol.ComputerPartShopDB.Orders
               .AsNoTracking()
               .Include(o => o.OrderItems)
-                  .ThenInclude(oi => oi.Product)
+                  .ThenInclude(oi => oi.ComputerPart)
               .Include(o => o.ShippingInfo)
                   .ThenInclude(s => s.City)
                       .ThenInclude(c => c.Country)

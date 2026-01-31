@@ -128,9 +128,9 @@ namespace ComputerStoreApplication.Models.Customer
                 {
                     continue;
                 }
-                if (item.Product == null)
+                if (item.ComputerPart == null)
                 {
-                    Console.WriteLine($"Item {item} {item.ProductId} failed to load, skipping");
+                    Console.WriteLine($"Item {item} {item.ComputerPartId} failed to load, skipping");
                     continue;
                 }
 
@@ -138,9 +138,9 @@ namespace ComputerStoreApplication.Models.Customer
                     (
                         new OrderItem
                         {
-                            ProductId = item.ProductId,
+                            ComputerPartId = item.ComputerPartId,
                             Quantity = item.Quantity,
-                            Price = item.Product.Price,
+                            Price = item.ComputerPart.Price,
                         }
                     );
 
@@ -234,7 +234,7 @@ namespace ComputerStoreApplication.Models.Customer
             {
                 Console.WriteLine($"Id: {customerShippingInfo.Id} {customerShippingInfo.StreetName} {customerShippingInfo.PostalCode} etc");
             }
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var validAdress = customerShippingInfos.FirstOrDefault(x => x.Id == choice);
             if (validAdress != null)
             {
@@ -306,7 +306,7 @@ namespace ComputerStoreApplication.Models.Customer
             customerShippingInfo.StreetName = Console.ReadLine();
 
             Console.WriteLine("Postal code?");
-            customerShippingInfo.PostalCode = GeneralHelpers.StringToInt(Console.ReadLine());
+            customerShippingInfo.PostalCode = GeneralHelpers.StringToInt();
 
             Console.WriteLine("Province/State?");
             customerShippingInfo.State_Or_County_Or_Province = Console.ReadLine();
@@ -326,7 +326,7 @@ namespace ComputerStoreApplication.Models.Customer
             string street = Console.ReadLine();
 
             Console.WriteLine("Postal code?");
-            int postal = GeneralHelpers.StringToInt(Console.ReadLine());
+            int postal = GeneralHelpers.StringToInt();
 
             Console.WriteLine("Province/State?");
             string province = Console.ReadLine();

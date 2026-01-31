@@ -31,5 +31,17 @@ namespace ComputerStoreApplication.Helpers
         {
             Console.WriteLine();
         }
+        public static void ResetConsole()
+        {
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+
+            // Optional: shrink buffer to window size
+            try
+            {
+                Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
+            }
+            catch { }
+        }
     }
 }

@@ -20,9 +20,9 @@ namespace ComputerStoreApplication.Pages
         public int? CurrentCustomerId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
 
-        List<StoreProduct> Products { get; set; } = new List<StoreProduct>();
+        List<ComputerPart> Products { get; set; } = new List<ComputerPart>();
 
-        StoreProduct Product { get; set; }
+        ComputerPart Product { get; set; }
         public void Load(ApplicationManager appLol)
         {
             //kolla om inloggad
@@ -57,11 +57,7 @@ namespace ComputerStoreApplication.Pages
                     {
                         Console.WriteLine(
                         $"Id: {product.Id}\n" +
-                        $"Name: {product.Name}\n" +
-                        $"Description: {product.Description}\n" +
-                        $"Price: {product.Price}€\n" +
-                        $"On sale: {product.Sale}\n" +
-                        $"Stock: {product.Stock}\n"
+                        $"Name: {product.Name}\n"
                         );
 
                     }
@@ -99,12 +95,15 @@ namespace ComputerStoreApplication.Pages
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
                 case PageControls.PageOption.Checkout:
                     return new CheckoutPage() ;
+                case PageControls.PageOption.ViewObject:
+                    CheckoutObject(applicationLogic);
+                    return new CheckoutPage();
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
-                case PageControls.PageOption.ViewObject:
-                    CheckoutObject(applicationLogic);
+                case PageControls.PageOption.AddToBasket:
+                    return this;
                     //Produktvy och lägg kanske till i basket
                     return this;
                 case PageControls.PageOption.Search:
@@ -141,7 +140,7 @@ namespace ComputerStoreApplication.Pages
         public void CheckoutObject(ApplicationManager app)
         {
             Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var validObject = Products.FirstOrDefault(s=>s.Id== choice);
             if (validObject != null) 
             {

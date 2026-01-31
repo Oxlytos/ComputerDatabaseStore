@@ -16,7 +16,7 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
         //From this
         //https://en.wikipedia.org/wiki/80_Plus
 
-        public ICollection<PSU> PSUs { get; set; } = new List<PSU>();
+        //public ICollection<PSU> PSUs { get; set; } = new List<PSU>();
 
         public override void Create(ApplicationManager lol)
         {
@@ -50,9 +50,6 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
                     {
                         case Brand m:
                             Console.WriteLine($"{prop.Name} : {m.Name}");
-                            break;
-                        case ChipsetVendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
                             break;
                         case MemoryType c:
                             Console.WriteLine($"{prop.Name} : {c.Name}");

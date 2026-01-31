@@ -24,13 +24,8 @@ namespace ComputerStoreApplication.Pages
             BuyCheckout,
             AdjustCheckout,
             AdminLogin,
-            AdminLogout,
-            AdminCreateComponent,
-            AdminCreateCategory,
-            AdminAddNewBrand,
-            AdminEditCustomer,
-            AdminCreateStoreProduct,
-            AdminEditCustomerProfile,
+            AdminCreate,
+            AdminSetSelected,
             AdminEdit,
             AdminPage,
             Search,
@@ -61,33 +56,25 @@ namespace ComputerStoreApplication.Pages
 
         public static readonly PageCommand Admin =
             new(PageOption.AdminPage, "Acess admin site");
-        public static readonly PageCommand AdminEditCustomerProfile = new(PageOption.AdminEditCustomerProfile, "To edit customer profile");
-        public static readonly PageCommand AdminLogin = new(PageOption.AdminLogin, "To login as admin");
+   
+        public static readonly PageCommand AdminLogin = new(PageOption.AdminLogin, "To Login/Out as admin");
+        public static readonly PageCommand AdminCreate = new(PageOption.AdminCreate, "To create, update, delete products or customers");
 
-        public static readonly PageCommand AdminLogout = new(PageOption.AdminLogout, "To logout as admin");
-
-        public static readonly PageCommand AdminCreateProduct =
-           new(PageOption.AdminCreateComponent, "To register a new product");
-
-        public static readonly PageCommand AdminCreateCategory =
-           new(PageOption.AdminCreateCategory, "To register a component specification");
 
         public static readonly PageCommand ViewObject = new(PageOption.ViewObject, "To view a desired product");
 
         public static readonly PageCommand AdminEdit = new(PageOption.AdminEdit, "To edit a existing product");
 
-        public static readonly PageCommand AddNewBrand = new(PageOption.AdminAddNewBrand, "To edit a new brand");
 
         public static readonly PageCommand Search = new(PageOption.Search, "To search for a product");
 
         public static readonly PageCommand CustomerHomePage = new(PageOption.CustomerPage, "To view account");
 
-        public static readonly PageCommand AdminCreateStoreProduct = new(PageOption.AdminCreateStoreProduct, "To create a new store product");
 
         public static readonly PageCommand CustomerLogout = new(PageOption.CustomerLogout, "To log out (if logged in)");
+        public static readonly PageCommand AdminSetSelected = new(PageOption.AdminSetSelected, "To mark a product as selected");
 
         public static readonly PageCommand Checkout = new(PageOption.Checkout, "To checkout and buy");
-        public static readonly PageCommand AdminEditCustomer = new(PageOption.AdminEditCustomer, "To edit a customers profile");
         public static readonly PageCommand BuyCheckout = new(PageOption.BuyCheckout, "To buy");
         public static readonly PageCommand CheckoutAdjust = new(PageOption.AdjustCheckout, "To adjust something in the basket");
         public static readonly PageCommand CreateAccount = new(PageOption.CreateAccount, "To create a customer account");

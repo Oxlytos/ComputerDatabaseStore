@@ -9,10 +9,12 @@ namespace ComputerStoreApplication.Account
     public class AdminAccount : AccountBase
     {
         public string UserName { get; set; }
+       
         public void ChangeOwnPassword(string passWord)
         {
-            SetPassword(passWord);
+            base.SetPassword(passWord);
         }
-        
+      
+
     }
 }

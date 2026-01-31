@@ -19,6 +19,5 @@ namespace ComputerStoreApplication.Models.Vendors_Producers
         //Manufacturers have products they sell, MSI has GPUs, Corsair has Ram sticks (RIP) and Intel CPUs, but they're all 
         //contextually Computer Parts (of different types)
         public ICollection<ComputerPart> Products { get; set; } = new List<ComputerPart>();
-        public ICollection<StoreProduct> StoreProducts { get; set; } = new List<StoreProduct>();
     }
 }

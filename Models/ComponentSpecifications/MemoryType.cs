@@ -13,9 +13,9 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
     public class MemoryType : ComponentSpecification
     {
-        public ICollection<RAM> RAMs { get; set; } = new List<RAM>();
-        public ICollection<Motherboard> Motherboards { get; set;} = new List<Motherboard>();
-        public ICollection<GPU> GPUs { get; set; } = new List<GPU>();
+        //public ICollection<RAM> RAMs { get; set; } = new List<RAM>();
+        //public ICollection<Motherboard> Motherboards { get; set;} = new List<Motherboard>();
+        //public ICollection<GPU> GPUs { get; set; } = new List<GPU>();
 
         public override void Create(ApplicationManager lol)
         {
@@ -51,9 +51,7 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
                         case Brand m:
                             Console.WriteLine($"{prop.Name} : {m.Name}");
                             break;
-                        case ChipsetVendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
-                            break;
+                    
                         case MemoryType c:
                             Console.WriteLine($"{prop.Name} : {c.Name}");
                             break;

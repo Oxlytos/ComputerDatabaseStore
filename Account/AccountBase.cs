@@ -23,7 +23,7 @@ namespace ComputerStoreApplication.Account
         public string SurName { get; set; }
 
         [Required]
-        [StringLength(256)]
+        [StringLength(128)]
         public string Email { get; set; }
 
         [Required]
@@ -44,5 +44,6 @@ namespace ComputerStoreApplication.Account
         {
             Password = password;
         }
+        
     }
 }

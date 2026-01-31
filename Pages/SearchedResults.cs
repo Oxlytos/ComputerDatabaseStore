@@ -53,8 +53,8 @@ namespace ComputerStoreApplication.Pages
 
             //sök
             var allProducts = appLol.GetStoreProducts();
-            List<StoreProduct> parts = new List<StoreProduct>();
-            foreach (StoreProduct part in allProducts)
+            List<ComputerPart> parts = new List<ComputerPart>();
+            foreach (ComputerPart part in allProducts)
             {
                 if (part.Name.ToLower().Contains(input.ToLower()))
                 {
@@ -65,13 +65,13 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine($"Found this many similar objects based on query results: {parts.Count}");
             if (parts.Count > 0)
             {
-                foreach (StoreProduct part in parts)
+                foreach (ComputerPart part in parts)
                 {
-                    Console.WriteLine(part.Id + " " + part.Name);
+                    Console.WriteLine($"Id: {part.Id} Name: {part.Name}");
                 }
             }
             Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket!");
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
 
             if (CurrentCustomer != null)
             {
@@ -136,6 +136,7 @@ namespace ComputerStoreApplication.Pages
         public void RenderPage()
         {
             Console.Clear();
+            ConsoleHelper.ResetConsole();
             SetPageCommands();
             Graphics.PageBanners.DrawSearchedResults ();
             DrawAccountProfile();

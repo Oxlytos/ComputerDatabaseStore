@@ -41,6 +41,10 @@ namespace ComputerStoreApplication.Account
             customer.CreatePassword();
             return customer;
         }
+        public void Read()
+        {
+            //Print customer statistics
+        }
         public static CustomerAccount CreateCustomer(CustomerAccount currCustomer)
         {
             string firstName = CustomerHelper.RandomFirstName();
@@ -55,33 +59,38 @@ namespace ComputerStoreApplication.Account
             customer.CreatePassword();
             return customer;
         }
-        public static void EditCustomerAccount(CustomerAccount accountToBeEdited)
+        public CustomerAccount EditCustomerAccount()
         {
             Console.WriteLine("Firstname? Leave empty for no change");
             string fname = Console.ReadLine();
             if (!string.IsNullOrEmpty(fname))
             {
-                accountToBeEdited.FirstName = fname;
+                FirstName = fname;
             }
             Console.WriteLine("Surname? Leave empty for no change");
             string sname=Console.ReadLine();
             if (!string.IsNullOrEmpty(sname))
             {
-                accountToBeEdited.SurName = sname;
+                SurName = sname;
             }
             Console.WriteLine("Email? Leave empty for no change");
             string email = Console.ReadLine();
             if (!string.IsNullOrEmpty(email))
             {
-                accountToBeEdited.Email = email;
+                Email = email;
             }
 
-            Console.WriteLine("Phonenumber? Leave empty for no change");
+            Console.WriteLine("Phone number? Leave empty for no change");
             string phonenumber = Console.ReadLine();
             if (!string.IsNullOrEmpty(phonenumber))
             {
-                accountToBeEdited.PhoneNumber = phonenumber;
+                PhoneNumber = phonenumber;
             }
+            return this;
+        }
+        public void ChangePassword(string newPassword)
+        {
+            base.SetPassword(newPassword);
         }
         public void PrintShippingInfo()
         {

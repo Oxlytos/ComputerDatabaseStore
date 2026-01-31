@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace ComputerStoreApplication.Logic
 {
-    public class DapperHelper
+    public class DapperService
     {
         readonly string _connstring;
-        public DapperHelper(ComputerDBContext dBContext)
+        public DapperService(ComputerDBContext dBContext)
         {
             _connstring = dBContext.Database.GetConnectionString();
         }
@@ -26,9 +26,9 @@ namespace ComputerStoreApplication.Logic
             connection.OpenAsync().Wait();
 
             string sql = @"--Räkna unika orders per category
-            SELECT 
+            SELECT TOP 3
                 Category,
-                COUNT(DISTINCT o.Id) AS OrdersCount
+                COUNT(o.Id) AS OrdersCount
             FROM (
                 SELECT ap.Id,
                     CASE --Switch case fast sql
@@ -56,10 +56,10 @@ namespace ComputerStoreApplication.Logic
             using var connection = GetConnection();
             connection.OpenAsync().Wait();
 
-            var sql = @"SELECT
+            var sql = @"SELECT TOP 3
                 co.Name AS CountryName,
                 ap.Name AS ProductName,
-                COUNT(DISTINCT o.Id) AS OrdersCount
+                COUNT(o.Id) AS OrdersCount
             FROM Orders o
             JOIN CustomerShippingInfos csi ON o.ShippingInfoId = csi.Id
             JOIN Cities ci ON csi.CityId = ci.Id
@@ -78,7 +78,7 @@ namespace ComputerStoreApplication.Logic
             using var connection = GetConnection();
             connection.OpenAsync().Wait();
 
-            var sql = @"Select
+            var sql = @"Select TOP 3
             co.Name as CountryName,
             Sum(o.TotalCost) as TotalSpent
         From Orders o
@@ -105,7 +105,7 @@ namespace ComputerStoreApplication.Logic
                     FROM Orders
                     ORDER BY TotalCost DESC
                 )
-                SELECT 
+                SELECT TOP 3
                     o.Id AS OrderId,
                     o.CustomerId,
                     c.FirstName + ' ' + c.SurName AS CustomerName,
@@ -135,7 +135,7 @@ namespace ComputerStoreApplication.Logic
             using var connection = GetConnection();
             connection.OpenAsync().Wait();
 
-            string sql = @"SELECT 
+            string sql = @"SELECT TOP 1
 	            cp.Id AS ComponentId, 
 	            cp.Name AS ComponentName, 
 	            COUNT(DISTINCT o.Id) AS OrdersCount
@@ -152,6 +152,21 @@ namespace ComputerStoreApplication.Logic
 
             var result = await connection.QueryAsync<ComponentOrderCount>(sql);
             return result.ToList();
+        }
+        public async Task<decimal> GetTotalRevenue()
+        {
+            using var connection = GetConnection();
+            connection.OpenAsync().Wait();
+
+            var sql = @"
+             SELECT 
+        SUM(oi.Quantity * sp.Price) AS TotalRevenue
+        FROM Orders o
+        Join OrderedProducts oi ON o.Id = oi.OrderId
+        Join StoreProducts sp ON oi.ProductId = sp.Id;";
+
+            var totalRevenue = await connection.ExecuteScalarAsync<decimal>(sql);
+            return totalRevenue;
         }
     }
 }

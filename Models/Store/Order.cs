@@ -46,7 +46,7 @@ namespace ComputerStoreApplication.Models.Store
             {
                 Console.WriteLine($"Id: {paymentService.Id} {paymentService.Name}");
             }
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var valid = paymentMethods.FirstOrDefault(x => x.Id == choice);
             if (valid != null)
             {

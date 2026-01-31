@@ -21,28 +21,27 @@ namespace ComputerStoreApplication.Logic
         //Validera så att sakerna vi lägger till inte redan finns eller är konstigt strukturerat
         //Vi hämtar även information direkt från databasen som vendors, gpus annat
         private readonly ComponentRepo _repo;
-        private readonly ValidationManager _validation;
 
-        public ComponentService(ComponentRepo repo, ValidationManager val)
+        public ComponentService(ComponentRepo repo)
         {
             _repo = repo;
         }
         //Fältet var static, kan inte vara om det ska connectad till resten
-        public IEnumerable<ComputerPart> GetObjectsOfTheSameType(ComputerPart part)
-        {
-            return part switch
-            {
-                GPU => _repo.GetGPUs(),
-                CPU => _repo.GetCPUs(),
-                RAM => _repo.GetRAMs(),
-                Motherboard => _repo.GetMotherboards(),
-                PSU => _repo.GetPSUs(),
+        //public IEnumerable<ComputerPart> GetObjectsOfTheSameType(ComputerPart part)
+        //{
+        //    return part switch
+        //    {
+        //        GPU => _repo.GetGPUs(),
+        //        CPU => _repo.GetCPUs(),
+        //        RAM => _repo.GetRAMs(),
+        //        Motherboard => _repo.GetMotherboards(),
+        //        PSU => _repo.GetPSUs(),
 
 
-                _ => throw new ArgumentException("Unknown computer part type")
+        //        _ => throw new ArgumentException("Unknown computer part type")
 
-            };
-        }
+        //    };
+        //}
         public IEnumerable<ComponentSpecification> GetSpecsOTheSameType(ComponentSpecification spec)
         {
             return spec switch
@@ -64,7 +63,7 @@ namespace ComputerStoreApplication.Logic
             {
                 Console.WriteLine($"{customer.Id} {customer.FirstName} {customer.SurName} {customer.PhoneNumber} {customer.Email}");
             }
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var validCustomer = customers.FirstOrDefault(x => x.Id == choice);
             if (validCustomer == null)
             {
@@ -100,7 +99,7 @@ namespace ComputerStoreApplication.Logic
               //inkludera alla relations till items
               .Include(o => o.OrderItems)
               //order items till products
-              .ThenInclude(oi => oi.Product)
+              .ThenInclude(oi => oi.ComputerPart)
               //även deliveryprovider
               .Include(o => o.DeliveryProvider)
               .ToList();
@@ -160,7 +159,7 @@ namespace ComputerStoreApplication.Logic
         {
             return 0;
         }
-        public List<StoreProduct> GetFrontPageProducts()
+        public List<ComputerPart> GetFrontPageProducts()
         {
             return _repo.GetFrontPageProducts();
         }
@@ -204,6 +203,12 @@ namespace ComputerStoreApplication.Logic
             }
             var customers = _repo.GetCustomers();
             var thisCustomer = customers.FirstOrDefault(x => x.Email == email);
+            if (thisCustomer==null)
+            {
+                Console.WriteLine("Coldn't find a account with that mail");
+                Console.ReadLine();
+                return 0;
+            }
 
             if (password != thisCustomer.Password)
             {
@@ -226,7 +231,7 @@ namespace ComputerStoreApplication.Logic
             var logout = AccountLogic.LogoutCustomer();
             return logout;
         }
-        public List<StoreProduct> GetStoreProducts()
+        public List<ComputerPart> GetStoreProducts()
         {
             return _repo.GetStoreProducts();
         }
@@ -234,10 +239,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetCustomerItems(id);
         }
-        public void SaveNew(StoreProduct storeProduct)
-        {
-            _repo.SaveNew(storeProduct);
-        }
+     
         public void SaveNew(ComputerPart part)
         {
             _repo.SaveNew(part);
@@ -257,7 +259,7 @@ namespace ComputerStoreApplication.Logic
             {
                 Console.WriteLine($"Id: {payService.Id} {payService.Name}");
             }
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var valid = paymentMethods.FirstOrDefault(x => x.Id == choice);
             if (valid != null)
             {
@@ -272,7 +274,7 @@ namespace ComputerStoreApplication.Logic
             {
                 Console.WriteLine($"Id: {deliveryProvider.Id} {deliveryProvider.Name}, cost (€): {deliveryProvider.Price}");
             }
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
             var valid = deliveryProviders.FirstOrDefault(x => x.Id == choice);
             if (valid != null)
             {
@@ -285,14 +287,14 @@ namespace ComputerStoreApplication.Logic
             //Customer har referens till sina basket items här från customerId
             var customer = _repo.GetCustomersQuired().
                 Include(c => c.ProductsInBasket).
-                ThenInclude(k => k.Product).
+                ThenInclude(k => k.ComputerPart).
                 Include(q => q.CustomerShippingInfos).
                 FirstOrDefault(k => k.Id == customerId);
             if (customer == null)
             {
                 return;
             }
-            if (customer.CustomerShippingInfos == null) 
+            if (customer.CustomerShippingInfos == null||customer.CustomerShippingInfos.Count==0) 
             {
                 Console.WriteLine("You need to register an adress to your account");
                 Console.ReadLine();
@@ -453,7 +455,7 @@ namespace ComputerStoreApplication.Logic
         {
             var thisCustomer = _repo.GetCustomersQuired()
                 .Include(q => q.ProductsInBasket)
-                .ThenInclude(bp => bp.Product)
+                .ThenInclude(bp => bp.ComputerPart)
                 .FirstOrDefault(x => x.Id == customerId);
 
             if (thisCustomer == null) return new List<BasketProduct>();
@@ -485,15 +487,27 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.SaveNewCustomer(cus);
         }
-        public void AddProductToBasket(StoreProduct storeProduct, CustomerAccount cus)
+        public void AddProductToBasket(ComputerPart storeProduct, CustomerAccount cus)
         {
 
             Console.WriteLine("How many do you wish to add to your basket?");
             Console.WriteLine("Max quantity is " + storeProduct.Stock);
-            int count = GeneralHelpers.StringToInt(Console.ReadLine());
+            int count = GeneralHelpers.StringToInt();
             if (count > 0 && count <= storeProduct.Stock)
             {
                 Console.WriteLine("Valid");
+            }
+            else if(count> storeProduct.Stock)
+            {
+                Console.WriteLine("Can't order that many!");
+                Console.ReadLine();
+                return;
+            }
+            else if (count == 0)
+            {
+                Console.WriteLine("Can't order 0!");
+                Console.ReadLine();
+                return;
             }
             else
             {
@@ -512,25 +526,23 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.RemoveSpec(spec);
         }
-        public void SaveCPU(CPU newCPU)
-        {
-            //Validate lol
-            _validation.Validate("huh");
-            _repo.SaveNewCPU(newCPU);
-        }
-        public void SaveGPU(GPU gpu)
-        {
-            _repo.SaveNewGPU(gpu);
-        }
+        //public void SaveCPU(CPU newCPU)
+        //{
+        //    //Validate lol
+        //    _repo.SaveNewCPU(newCPU);
+        //}
+        //public void SaveGPU(GPU gpu)
+        //{
+        //    _repo.SaveNewGPU(gpu);
+        //}
         public void SaveManufacturer(Models.Vendors_Producers.Brand newMan)
         {
-            _validation.Validate("huh");
             _repo.SaveManufacturer(newMan);
         }
-        public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
-        {
-            return _repo.GetVendors();
-        }
+        //public List<Models.Vendors_Producers.ChipsetVendor> GetVendors()
+        //{
+        //    return _repo.GetVendors();
+        //}
         public List<Models.Vendors_Producers.Brand> GetManufacturers()
         {
             return _repo.GetManufacturers();
@@ -552,14 +564,14 @@ namespace ComputerStoreApplication.Logic
             return _repo.GetRamProfileFeatures();
         }
 
-        public List<Models.ComputerComponents.GPU> GetGPUs()
-        {
-            return _repo.GetGPUs();
-        }
-        public List<Models.ComputerComponents.CPU> GetCPUs()
-        {
-            return _repo.GetCPUs();
-        }
+        //public List<Models.ComputerComponents.GPU> GetGPUs()
+        //{
+        //    return _repo.GetGPUs();
+        //}
+        //public List<Models.ComputerComponents.CPU> GetCPUs()
+        //{
+        //    return _repo.GetCPUs();
+        //}
         public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes()
         {
             return _repo.GetMemoryTypes();

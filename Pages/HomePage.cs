@@ -15,7 +15,7 @@ namespace ComputerStoreApplication.Pages
     public class HomePage : IPage
     {
         List<ComputerPart> AllPartsForJoin = new List<ComputerPart>();
-        List<StoreProduct> SelectedProducts = new List<StoreProduct>();
+        List<ComputerPart>? SelectedProducts = new List<ComputerPart>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
         public int? AdminId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
@@ -24,6 +24,7 @@ namespace ComputerStoreApplication.Pages
         public void RenderPage()
         {
             Console.Clear();
+            ConsoleHelper.ResetConsole();
             SetPageCommands();
             PageBanners.DrawShopBanner();
             
@@ -129,7 +130,11 @@ namespace ComputerStoreApplication.Pages
         public void Load(ApplicationManager appLol)
         {
             //Random 3 objects every load
-            SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Guid.NewGuid()).Take(5).ToList(); ;
+            if (SelectedProducts != null)
+            {
+                //SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Guid.NewGuid()).Take(5).ToList(); ;
+            }
+     
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -152,7 +157,13 @@ namespace ComputerStoreApplication.Pages
                 return;
             }
             Console.WriteLine("Please input the corresponding id of the product you wish to add to your basket");
-            int choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int choice = GeneralHelpers.StringToInt();
+            if (choice == 0)
+            {
+                Console.WriteLine("Invalid, returning");
+                Console.ReadLine();
+                return;
+            }
             var valid = SelectedProducts.FirstOrDefault(x => x.Id == choice);
             if (valid != null)
             {

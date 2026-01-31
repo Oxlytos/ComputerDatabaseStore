@@ -27,6 +27,7 @@ namespace ComputerStoreApplication.Logic
             _dbContext = dBContext;
         }
         //APU kallelser här nästan
+        /*
         public List<ComputerPart?> GetAllProducts()
         {
             //Cast:a alla object som ComputerPart, concat till ett lång mixad lista med objekt av samma basklass
@@ -36,27 +37,23 @@ namespace ComputerStoreApplication.Logic
                  .Concat(_dbContext.PSUs)
                  .Concat(_dbContext.Motherboards).
                  ToList();
-        }
+        }*/
         public List<CustomerShippingInfo> GetAdressesOfCustomer(int customerId)
         {
             return _dbContext.CustomerShippingInfos.Where(x => x.CustomerId == customerId).ToList();
         }
-        public List<RAM> GetRAMs()
-        {
-            return _dbContext.RAMs.Cast<RAM>().ToList();
-        }
-        public List<Motherboard> GetMotherboards()
-        {
-            return _dbContext.Motherboards.Cast<Motherboard>().ToList();
-        }
-        public List<PSU> GetPSUs()
-        {
-            return _dbContext.PSUs.Cast<PSU>().ToList();
-        }
-        public List<ChipsetVendor> GetVendors()
-        {
-            return _dbContext.ChipsetVendors.Cast<ChipsetVendor>().ToList();
-        }
+        //public List<RAM> GetRAMs()
+        //{
+        //    return _dbContext.RAMs.Cast<RAM>().ToList();
+        //}
+        //public List<Motherboard> GetMotherboards()
+        //{
+        //    return _dbContext.Motherboards.Cast<Motherboard>().ToList();
+        //}
+        //public List<PSU> GetPSUs()
+        //{
+        //    return _dbContext.PSUs.Cast<PSU>().ToList();
+        //}
         public List<Brand> GetManufacturers()
         {
             return _dbContext.BrandManufacturers.Cast<Brand>().ToList();
@@ -105,38 +102,38 @@ namespace ComputerStoreApplication.Logic
         public List<BasketProduct> GetCustomerItemsForBasket(int customerId)
         {
             return _dbContext.BasketProducts
-                .Include(bp => bp.Product)      // Include the Product navigation property
+                .Include(bp => bp.ComputerPart)      // Include the Product navigation property
                 .Where(bp => bp.CustomerId == customerId)
                 .ToList();                      // Return as a List<BasketProduct>
         }
-        public List<StoreProduct> GetStoreProducts()
+        public List<ComputerPart> GetStoreProducts()
         {
-            return _dbContext.StoreProducts.Include(z=>z.Manufacturer).Include(k=>k.ComputerPart).ThenInclude(p=>p.BrandManufacturer).ToList();
+            return _dbContext.CompuerProducts.Include(z=>z.BrandManufacturer).Include(k=>k.ComponentCategory).ToList();
         }
-        public List<GPU> GetGPUs()
-        {
-            return _dbContext.GPUs.ToList();
-        }
-        public List<CPU> GetCPUs()
-        {
-            var cpus = _dbContext.CPUs.ToList();
+        //public List<GPU> GetGPUs()
+        //{
+        //    return _dbContext.GPUs.ToList();
+        //}
+        //public List<CPU> GetCPUs()
+        //{
+        //    var cpus = _dbContext.CPUs.ToList();
 
-            //Koppla ihop virtuella proprterties här
-            var man = GetManufacturers();
-            var vendors = GetVendors();
-            var sockets = GetSockets();
-            var cpuArchs = GetCPUArchitectures();
-            foreach (var cpu in cpus)
-            {
-                cpu.BrandManufacturer = man.FirstOrDefault(s => s.Id == cpu.BrandId);
-                cpu.ChipsetVendor = vendors.FirstOrDefault(s => s.Id == cpu.ChipsetVendorId);
-                cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
-                cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
+        //    //Koppla ihop virtuella proprterties här
+        //    var man = GetManufacturers();
+        //    var vendors = GetVendors();
+        //    var sockets = GetSockets();
+        //    var cpuArchs = GetCPUArchitectures();
+        //    foreach (var cpu in cpus)
+        //    {
+        //        cpu.BrandManufacturer = man.FirstOrDefault(s => s.Id == cpu.BrandId);
+        //        cpu.ChipsetVendor = vendors.FirstOrDefault(s => s.Id == cpu.ChipsetVendorId);
+        //        cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
+        //        cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
 
-            }
+        //    }
 
-            return cpus;
-        }
+        //    return cpus;
+        //}
 
         public List<CustomerAccount> GetCustomers()
         {
@@ -146,10 +143,10 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.Orders.ToList();
         }
-        public List<StoreProduct> GetFrontPageProducts()
+        public List<ComputerPart> GetFrontPageProducts()
         {
 
-            var returnList = _dbContext.StoreProducts
+            var returnList = _dbContext.CompuerProducts
              .Where(s => s.SelectedProduct && s.Stock > 0)
                .ToList();
             if(returnList.Count > 0)
@@ -175,14 +172,10 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.PaymentMethods.ToList();
         }
-        public void SaveNew(StoreProduct product)
-        {
-            _dbContext.StoreProducts.Add(product);
-            TrySaveChanges();
-        }
+      
         public void SaveNew(ComputerPart part)
         {
-            _dbContext.AllParts.Add(part);
+            _dbContext.CompuerProducts.Add(part);
             TrySaveChanges();
         }
         public void SaveNewSpecification(ComponentSpecification spec)
@@ -212,20 +205,20 @@ namespace ComputerStoreApplication.Logic
             {
                 return;
             }
-            var checkIfExistingProductInBasket = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(x => x.ProductId == prod);
+            var checkIfExistingProductInBasket = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(x => x.ComputerPartId == prod);
             Console.ReadLine();
             if (checkIfExistingProductInBasket!=null)
             {
                 Console.WriteLine("You already have this product in your basket");
-                Console.WriteLine("Increased quantity of this object by one");
-                checkIfExistingProductInBasket.Quantity++;
+                Console.WriteLine("Increased quantity by previous input amount");
+                count += checkIfExistingProductInBasket.Quantity;
             }
             else
             {
                 var newItem = new BasketProduct
                 {
                     CustomerId = cus.Id,
-                    ProductId = prod,
+                    ComputerPartId = prod,
                     Quantity =count
                 };
                 Console.WriteLine("Added to basket");
@@ -233,10 +226,15 @@ namespace ComputerStoreApplication.Logic
             }
 
             //Sänk stock av store objekt antal, de håller på att köpas här
-            var storeObjects = _dbContext.StoreProducts.FirstOrDefault(x=>x.Id==prod);
+            var storeObjects = _dbContext.CompuerProducts.FirstOrDefault(x=>x.Id==prod);
             if (storeObjects != null)
             {
                 storeObjects.Stock -= count;
+                if(storeObjects.Stock < 0)
+                {
+                    storeObjects.SelectedProduct = false;
+                     storeObjects.Stock = 0;
+                }
             }
             TrySaveChanges();
         }
@@ -287,16 +285,16 @@ namespace ComputerStoreApplication.Logic
             _dbContext.Remove(spec);
             TrySaveChanges();
         }
-        public void SaveNewCPU(CPU cpu)
-        {
-            _dbContext.CPUs.Add(cpu);
-            TrySaveChanges();
-        }
-        public void SaveNewGPU(GPU gpu)
-        {
-            _dbContext.GPUs.Add(gpu);
-            TrySaveChanges();
-        }
+        //public void SaveNewCPU(CPU cpu)
+        //{
+        //    _dbContext.CPUs.Add(cpu);
+        //    TrySaveChanges();
+        //}
+        //public void SaveNewGPU(GPU gpu)
+        //{
+        //    _dbContext.GPUs.Add(gpu);
+        //    TrySaveChanges();
+        //}
         public bool TrySaveChanges()
         {
             try

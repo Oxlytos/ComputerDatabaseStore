@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Graphics;
+using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
@@ -21,7 +22,7 @@ namespace ComputerStoreApplication.Pages
         public int? CurrentCustomerId { get; set; }
 
         List<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
-        List<StoreProduct> StoreProducts { get; set; }
+        List<ComputerPart> ComputerParts { get; set; }
 
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -33,15 +34,6 @@ namespace ComputerStoreApplication.Pages
             switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
-                case PageControls.PageOption.AdminCreateComponent:
-                    Crud_Related.CrudHandler.ComponentInput(applicationLogic);
-                    return this; //This blir denna sida
-                case PageControls.PageOption.AdminCreateCategory:
-                    Crud_Related.CrudHandler.CategoryInput(applicationLogic);
-                    return this;
-                case PageControls.PageOption.AdminCreateStoreProduct:
-                    Crud_Related.CrudHandler.StoreProductInput(applicationLogic);
-                    return this;
                 case PageControls.PageOption.BuyCheckout:
                     if (BasketProducts.Any())
                     {
@@ -105,10 +97,10 @@ namespace ComputerStoreApplication.Pages
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
             var basketProducts = appLol.ComputerPartShopDB.BasketProducts
-            .Include(bp => bp.Product) // Product navigation property
+            .Include(bp => bp.ComputerPart) // Product navigation property
             .Where(bp => bp.CustomerId == CurrentCustomerId)
             .ToList();
-            StoreProducts = appLol.GetStoreProducts();
+            ComputerParts = appLol.GetStoreProducts();
 
             BasketProducts = basketProducts;
         }
@@ -116,19 +108,20 @@ namespace ComputerStoreApplication.Pages
         public void RenderPage()
         {
             Graphics.PageBanners.DrawCheckoutPage();
+            ConsoleHelper.ResetConsole();
             SetPageCommands();
             DrawAccountProfile();
             if (BasketProducts.Count > 0) 
             {
                 foreach (var basketItem in BasketProducts)
                 {
-                    if (basketItem.Product != null)
+                    if (basketItem.ComputerPart != null)
                     {
-                        Console.WriteLine($"Product: {basketItem.Product.Name} €: {basketItem.Product.Price} Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
+                        Console.WriteLine($"Product: {basketItem.ComputerPart.Name} €: {basketItem.ComputerPart.Price} Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
                     }
                     else
                     {
-                        Console.WriteLine($"Product Id {basketItem.ProductId} not found. Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
+                        Console.WriteLine($"Product Id {basketItem.ComputerPartId} not found. Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
                     }
                     
                 }

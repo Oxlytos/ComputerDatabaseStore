@@ -14,9 +14,9 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
 {
     public class CPUArchitecture : ComponentSpecification
     {
-        public ICollection<CPU> CPUs { get; set; } = new List<CPU>();
+        //public ICollection<CPU> CPUs { get; set; } = new List<CPU>();
 
-        public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
+        //public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
 
         public override void Create(ApplicationManager lol)
         {
@@ -51,9 +51,6 @@ namespace ComputerStoreApplication.Models.ComponentSpecifications
                     {
                         case Brand m:
                             Console.WriteLine($"{prop.Name} : {m.Name}");
-                            break;
-                        case ChipsetVendor v:
-                            Console.WriteLine($"{prop.Name} : {v.Name}");
                             break;
                         case MemoryType c:
                             Console.WriteLine($"{prop.Name} : {c.Name}");

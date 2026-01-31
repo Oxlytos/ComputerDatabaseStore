@@ -6,6 +6,7 @@ using ComputerStoreApplication.Helpers.DTO;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,27 +23,25 @@ namespace ComputerStoreApplication.Pages
         public int? AdminId {get; set;}
 
         public AdminAccount? AdminAccount {get; set;}
+     
         public int? CurrentCustomerId {get; set;}
-
-        private List<ComponentOrderCount> mostPopularOrders = new List<ComponentOrderCount>();
-        private List<CategoryOrderCount> mostpopularCaetgory = new List<CategoryOrderCount>();
-        private List<MostExpensiveOrders> mostExpensiveOrders = new List<MostExpensiveOrders>();
-
+        public CustomerAccount? CustomerAccount { get; set; }
+        //private List<StoreProduct> products = new List<StoreProduct>();
+        //private List<ComponentOrderCount> mostPopularOrders = new List<ComponentOrderCount>();
+        //private List<CategoryOrderCount> mostpopularCaetgory = new List<CategoryOrderCount>();
+        //private List<MostExpensiveOrders> mostExpensiveOrders = new List<MostExpensiveOrders>();
+        //private List<MostPopularProductByCountry> mostPopularProductByCountries = new List<MostPopularProductByCountry>();
+        //private List<CountrySpending> countrySpendings = new List<CountrySpending>();
+        private decimal totalRevenue;
         public void SetPageCommands()
         {
-            //Specific commands per sida
-            //Sparar kommandon till tangenter på sidor
+            //Specific commands per page
             PageCommands = new Dictionary<ConsoleKey, PageControls.PageCommand>
             {
-                { ConsoleKey.H, PageControls.HomeCommand },
+                { ConsoleKey.H, PageControls.HomeCommand }, 
                 { ConsoleKey.A, PageControls.Admin },
-                {ConsoleKey.K, PageControls.AdminLogin },
-                {ConsoleKey.I, PageControls.AdminLogout },
-                {ConsoleKey.N, PageControls.AdminCreateProduct },
-                {ConsoleKey.M, PageControls.AdminCreateCategory },
-                {ConsoleKey.P, PageControls.AdminCreateStoreProduct },
-                { ConsoleKey.C, PageControls.AdminEditCustomerProfile},
-                {ConsoleKey.B, PageControls.AddNewBrand },
+                {ConsoleKey.L, PageControls.AdminLogin },
+                {ConsoleKey.C, PageControls.AdminCreate },
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -62,25 +61,7 @@ namespace ComputerStoreApplication.Pages
             Console.SetCursorPosition(0, 15);
             if (AdminAccount != null)
             {
-                ConsoleHelper.WriteCentered("Popular orders");
-                ConsoleHelper.WriteCenteredEmptyLine();
-                foreach(var prod in mostPopularOrders)
-                {
-                    ConsoleHelper.WriteCentered($"{prod.ComponentName} appeared in {prod.OrdersCount} orders");
-                }
-                ConsoleHelper.WriteCenteredEmptyLine();
-                ConsoleHelper.WriteCentered("Most popular categories");
-                ConsoleHelper.WriteCenteredEmptyLine();
-                foreach (var cat in mostpopularCaetgory)
-                {
-                    ConsoleHelper.WriteCentered($"{cat.Category} has {cat.OrdersCount} active orders");
-                }
-                ConsoleHelper.WriteCentered("Most expensive orders");
-                ConsoleHelper.WriteCenteredEmptyLine();
-                foreach (var expen in mostExpensiveOrders)
-                {
-                    ConsoleHelper.WriteCentered($"Product {expen.ProductName} was orded by {expen.CustomerName}, which went for {expen.TotalCost}€");
-                }
+              
             }
             else
             {
@@ -95,9 +76,13 @@ namespace ComputerStoreApplication.Pages
             {
                 tesList.AddRange(AdminAccount.UserName, AdminAccount.FirstName, AdminAccount.SurName, AdminAccount.PhoneNumber);
             }
+            if (CustomerAccount != null)
+            {
+                tesList.AddRange(CustomerAccount.FirstName, CustomerAccount.SurName, CustomerAccount.PhoneNumber, "Admin Operations not available ");
+            }
             else
             {
-                tesList.AddRange("Not Loggedin", "Admin Operations not available");
+                tesList.AddRange("Not lgged in as Admin", "Admin Operations not available");
             }
             PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
@@ -113,33 +98,23 @@ namespace ComputerStoreApplication.Pages
             switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
-                case PageControls.PageOption.AdminAddNewBrand:
+                case PageControls.PageOption.AdminCreate:
                     if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    Crud_Related.CrudHandler.AddNewBrand(applicationLogic);
+                    Console.Clear();
+                    CrudHandler.ChooseCategory(applicationLogic);
+                    applicationLogic.SaveChangesOnComponent();
                     return this; //This blir denna sida
-                case PageControls.PageOption.AdminCreateComponent:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    Crud_Related.CrudHandler.ComponentInput(applicationLogic);
-                    return this; //This blir denna sida
-                case PageControls.PageOption.AdminCreateCategory:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    Crud_Related.CrudHandler.CategoryInput(applicationLogic);
-                    return this;
-                case PageControls.PageOption.AdminCreateStoreProduct:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    Crud_Related.CrudHandler.StoreProductInput(applicationLogic);
-                    return this;
-                case PageControls.PageOption.AdminEditCustomerProfile:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    applicationLogic.EditCustomerProfile();
-                    return this;
                 case PageControls.PageOption.AdminLogin:
-                    LoginAdmin(applicationLogic);
-                    return this;
-                case PageControls.PageOption.AdminLogout:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
-                    LogoutAdmin(applicationLogic);
-                    return this;
+                    Console.SetCursorPosition(0, 15);
+                    if (!applicationLogic.IsLoggedInAsAdmin)
+                    {
+                        LoginAdmin(applicationLogic);
+                    }
+                    else if (applicationLogic.IsLoggedInAsAdmin)
+                    {
+                        LogoutAdmin(applicationLogic);
+                    }
+                        return this;
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
@@ -184,17 +159,27 @@ namespace ComputerStoreApplication.Pages
                 //nullbara fält null, låt vara, gå vidare
                 return;
             }
-            GetStats(appLol);
            
-            //om inloggad, hämta nnuvarande admin
             AdminId = appLol.AdminId;
             AdminAccount = appLol.GetAdminInfo(appLol.AdminId);
         }
+        public void AdminAction(ApplicationManager logic)
+        {
+            Console.WriteLine("Choose what action to peform on a category");
+            Console.WriteLine("Register a product to storage");
+            Console.WriteLine("Create a new store product");
+            Console.WriteLine("");
+            Console.ReadLine();
+            Console.WriteLine("What CRUD action?");
+        }
         public async Task GetStats(ApplicationManager app)
         {
-            mostPopularOrders = await app.Dapper.GetMostPopularOrders();
-            mostpopularCaetgory = await app.Dapper.GetMostPopularCategories();
-            mostExpensiveOrders = await app.Dapper.GetMostExpensiveOrders();
+            //mostPopularOrders = await app.Dapper.GetMostPopularOrders();
+            //mostpopularCaetgory = await app.Dapper.GetMostPopularCategories();
+            //mostExpensiveOrders = await app.Dapper.GetMostExpensiveOrders();
+            //mostPopularProductByCountries = await app.Dapper.GetMostPopularProductByCountry();
+            //countrySpendings = await app.Dapper.GetCountryWithTheMostSpending();
+            //totalRevenue = await app.Dapper.GetTotalRevenue();
         }
     }
 }

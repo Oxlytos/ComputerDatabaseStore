@@ -1,6 +1,6 @@
 ﻿using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
-using ComputerStoreApplication.Migrations;
+using ComputerStoreApplication.Models.ComputerComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,12 +25,12 @@ namespace ComputerStoreApplication.Models.Store
             Decrease = ConsoleKey.O,
             Increase = ConsoleKey.I
         }
-        internal static bool ViewProduct(StoreProduct product, ApplicationManager app)
+        internal static bool ViewProduct(ComputerPart product, ApplicationManager app)
         {
             Console.WriteLine("Some info on this product;");
             Console.WriteLine();
             Console.WriteLine("========================================================");
-            product.Read(app);
+            //product.Read();
             Console.WriteLine("========================================================");
             Console.ReadLine();
             Console.WriteLine("Add to basket?");
@@ -39,7 +39,7 @@ namespace ComputerStoreApplication.Models.Store
         internal static BasketProduct ChooseWhichBasketItem(ICollection<BasketProduct> basketProducts)
         {
             Console.WriteLine("Which product? Choose by inputting the correct Id");
-            int? choice = GeneralHelpers.StringToInt(Console.ReadLine());
+            int? choice = GeneralHelpers.StringToInt();
             if (!choice.HasValue)
             {
                 return null;
