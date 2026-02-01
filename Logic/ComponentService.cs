@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Models.Account;
+using ComputerStoreApplication.Crud_Related;
 
 namespace ComputerStoreApplication.Logic
 {
@@ -115,7 +116,7 @@ namespace ComputerStoreApplication.Logic
             {
                 return;
             }
-            bool alreadyInUse = _repo.GetCustomers().Any(o => o.Email == email);
+            bool alreadyInUse = _repo.GetCustomers().Any(o => o.Email.ToLower() == email.ToLower());
             if (alreadyInUse)
             {
                 Console.WriteLine("That email is currently already in use, use another if possible");
@@ -123,17 +124,18 @@ namespace ComputerStoreApplication.Logic
             }
             CustomerAccount newCustomer = CustomerAccount.CreateCustomerManual(email);
             newCustomer.CreatePassword();
-            SaveNewCustomer(newCustomer);
-            SaveChangesOnComponent();
             Console.WriteLine("You'll find your password in the mail (db)");
-            Console.WriteLine("Now, input the password");
-            string password = Console.ReadLine();
-            if (string.IsNullOrEmpty(password))
-            {
-                return;
-            }
+            SaveNewCustomer(newCustomer);
+            _ = MongoConnection.CustomerRegistration(email, newCustomer.Id);
+            //SaveChangesOnComponent();
 
-            HandleCustomerShippingInfo(newCustomer.Id);
+            //Console.WriteLine("Now, input the password");
+            //string password = Console.ReadLine();
+            //if (string.IsNullOrEmpty(password))
+            //{
+            //    return;
+            //}
+            //HandleCustomerShippingInfo(newCustomer.Id);
 
         }
         public int LoginAdmin(string username, string password)
@@ -335,6 +337,7 @@ namespace ComputerStoreApplication.Logic
                     customer.ProductsInBasket.Clear();
                     customer.Orders.Add(orders);
                     bool sucess = _repo.TrySaveChanges();
+                    _ = MongoConnection.CustomerPurchase(customerId, orders.TotalCost);
                 }
                 else
                 {
@@ -365,7 +368,7 @@ namespace ComputerStoreApplication.Logic
             {
                 return; // No customer, just return, how'd they get here
             }
-            if (customer.CustomerShippingInfos != null||customer.CustomerShippingInfos.Count==0)
+            if (customer.CustomerShippingInfos != null||customer.CustomerShippingInfos.Count!=0)
             {
                 Console.WriteLine("Found these addresses");
                 foreach (var address in customer.CustomerShippingInfos)
@@ -390,6 +393,7 @@ namespace ComputerStoreApplication.Logic
                     var toUpdate = CustomerHelper.ChooseAdress(customer.CustomerShippingInfos);
                     if (toUpdate != null)
                     {
+                        CrudCreatorHelper.UpdateAddress(toUpdate, locationHolder);
                         CustomerHelper.AdressQuestionnaire(toUpdate, toUpdate.City, locationHolder);
                         _repo.TrySaveChanges();
                         Console.WriteLine("Address updated!");
@@ -415,41 +419,41 @@ namespace ComputerStoreApplication.Logic
         }
         private void AddNewAddress(CustomerAccount customer, LocationHolder holder)
         {
-            // Choose a countr
-            Country chosenCountry = holder.Countries.Any() //if thre's any
-                ? CustomerHelper.ChooseCountryQuestion(holder.Countries.First(), holder) //choose one
-                : GeneralHelpers.ChooseOrCreateCountry(holder.Countries); //else create one
+            //// Choose a countr
+            //Country chosenCountry = holder.Countries.Any() //if thre's any
+            //    ? CustomerHelper.ChooseCountryQuestion(holder.Countries.First(), holder) //choose one
+            //    : GeneralHelpers.ChooseOrCreateCountry(holder.Countries); //else create one
 
-            //if its new
-            //new one have a id of 0
-            if (chosenCountry.Id == 0)
-            {
-                _repo.AddCountry(chosenCountry);
-                _repo.TrySaveChanges();
-                chosenCountry = _repo.GetCountries().First(c => c.Name == chosenCountry.Name);
-            }
+            ////if its new
+            ////new one have a id of 0
+            //if (chosenCountry.Id == 0)
+            //{
+            //    _repo.AddCountry(chosenCountry);
+            //    _repo.TrySaveChanges();
+            //    chosenCountry = _repo.GetCountries().First(c => c.Name == chosenCountry.Name);
+            //}
 
-            // Choose city, like country, by a city is in  acountry
-            City chosenCity = holder.Cities.Any(c => c.CountryId == chosenCountry.Id) //same country
-                ? CustomerHelper.ChooseCityQuestion(holder.Cities.First(c => c.CountryId == chosenCountry.Id), holder) //choose one of abailable cities
-                : GeneralHelpers.ChooseOrCreateCity(holder.Cities, chosenCountry); //or create a new one
-            //new city
-            //add it
-            if (chosenCity.Id == 0)
-            {
-                chosenCity.Country = chosenCountry;
-                chosenCity.CountryId = chosenCountry.Id;
-                _repo.AddCity(chosenCity);
-                _repo.TrySaveChanges();
-                holder.Cities.Add(chosenCity);
-            }
+            //// Choose city, like country, by a city is in  acountry
+            //City chosenCity = holder.Cities.Any(c => c.CountryId == chosenCountry.Id) //same country
+            //    ? CustomerHelper.ChooseCityQuestion(holder.Cities.First(c => c.CountryId == chosenCountry.Id), holder) //choose one of abailable cities
+            //    : GeneralHelpers.ChooseOrCreateCity(holder.Cities, chosenCountry); //or create a new one
+            ////new city
+            ////add it
+            //if (chosenCity.Id == 0)
+            //{
+            //    chosenCity.Country = chosenCountry;
+            //    chosenCity.CountryId = chosenCountry.Id;
+            //    _repo.AddCity(chosenCity);
+            //    _repo.TrySaveChanges();
+            //    holder.Cities.Add(chosenCity);
+            //}
 
-            //we've created at least one city and country
-            // Add address
-            var newAddress = CustomerHelper.NewAdressQuestionnaire(chosenCity, holder);
-            customer.CustomerShippingInfos.Add(newAddress);
-            _repo.TrySaveChanges();
-            Console.WriteLine("New address added!");
+            ////we've created at least one city and country
+            //// Add address
+            //var newAddress = CustomerHelper.NewAdressQuestionnaire(chosenCity, holder);
+            //customer.CustomerShippingInfos.Add(newAddress);
+            //_repo.TrySaveChanges();
+            //Console.WriteLine("New address added!");
         }
         public List<BasketProduct> HandleCustomerBasket(int customerId)
         {
@@ -467,7 +471,10 @@ namespace ComputerStoreApplication.Logic
                 bask = StoreHelper.ChooseWhichBasketItem(thisCustomer.ProductsInBasket);
 
             if (bask != null)
-                StoreHelper.AdjustQuantityOfBasketItems(bask);
+            {
+                //StoreHelper.AdjustQuantityOfBasketItems(bask);
+            }
+          
 
             _repo.TrySaveChanges();
 
@@ -576,5 +583,7 @@ namespace ComputerStoreApplication.Logic
         {
             return _repo.GetMemoryTypes();
         }
+
+       
     }
 }

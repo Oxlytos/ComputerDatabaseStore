@@ -70,9 +70,9 @@ namespace ComputerStoreApplication.Pages
                     Console.WriteLine($"Id: {part.Id} Name: {part.Name}");
                 }
             }
-            Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket!");
-            int choice = GeneralHelpers.StringToInt();
-
+            Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket, or 0 to return");
+            int choice = GeneralHelpers.ReturnValidIntOrNone();
+            if(choice == 0) {return; }
             if (CurrentCustomer != null)
             {
                 var doesItExist = parts.FirstOrDefault(x => x.Id == choice);

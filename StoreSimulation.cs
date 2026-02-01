@@ -1,6 +1,7 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.MickesWindow;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
@@ -10,6 +11,8 @@ using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.Pages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -23,19 +26,35 @@ namespace ComputerStoreApplication
 {
     internal class StoreSimulation
     {
-        public static void Run()
+        public static async Task Run()
         {
-          //  FillDatabaseWithBaseInformation();
-            //  SetupMenus();
-            
-            MainSimulationLogic();
+            const string connectionUri = "mongodb+srv://oscardbuser:Oscar1234@cluster0.pb6h2cm.mongodb.net/?appName=Cluster0";
+            var settings = MongoClientSettings.FromConnectionString(connectionUri);
+            // Set the ServerApi field of the settings object to set the version of the Stable API on the client
+            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            // Create a new client and connect to the server
+            var client = new MongoClient(settings);
+            // Send a ping to confirm a successful connection
+            try
+            {
+                var result = client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+                Console.WriteLine("Pinged your deployment. You successfully connected to MongoDB!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            Console.ReadLine();
+            //For when empty
+            //  FillDatabaseWithBaseInformation();
+
+            await MainSimulationLogic();
 
             Console.ReadLine();
         }
-        private static void MainSimulationLogic() 
+        private static async Task MainSimulationLogic() 
         {
-           
-            //Databas connection
+            //Database connection
             var db = new Logic.ComputerDBContext();
 
             //var admin = new AdminAccount
@@ -49,36 +68,35 @@ namespace ComputerStoreApplication
             //admin.ChangeOwnPassword("1234");
             //db.Add(admin);
             //db.SaveChanges();
-            //Validerings hanterarer innan vi sparar saker och så
-            //Repon som ringer db och sparar till den
-            var rep = new Logic.ComponentRepo(db);
-            //Komponenten som hanterar olika services/API kallelser
-            var service = new Logic.ComponentService(rep);
-            //Hanterar sido-logik
-            var computerApplicationLogic = new Logic.ApplicationManager(service);
-            //Bestäm sidofärg
 
+            //Repo often returns basic queries and ToLists()
+            var rep = new Logic.ComponentRepo(db);
+            //Call service and do basic data handling
+            var service = new Logic.ComponentService(rep);
+
+            var mongo = new MongoConnection();
+           
+            //Application logic follows between pages, and carries db context which is the main component
+            var computerApplicationLogic = new Logic.ApplicationManager(service, mongo);
             while (true) 
             {
                 Console.Clear();
                 Console.CursorVisible = false;
-                //Visa nuvarande sida
+                //Render current choosen page => Which changes later
+                //At default load up home page
                 computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
-
+                //Render X page on and on again until application closses
                 computerApplicationLogic.CurrentPage.RenderPage();
-                //Knapptryck på denna sida
+                //Key press on a site => Different actions/methods
                 ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
-
-                //Gör X sak på sida genom HandleUserInput
-            
+                //Handle input
                 var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
 
-                //Existerar sidan, byt till den, gör dens funktioner sedan
+                //Do thing on page if there's a command for it
                 if (actionOnPage != null)
                 {
                     computerApplicationLogic.CurrentPage = actionOnPage;
                 }
-
             }
         }
         static void FillDatabaseWithBaseInformation()

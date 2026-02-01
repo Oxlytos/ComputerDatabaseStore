@@ -19,10 +19,8 @@ namespace ComputerStoreApplication.Pages
         public AdminAccount? Admin { get; set; }
         public int? CurrentCustomerId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
-
         List<ComputerPart> Products { get; set; } = new List<ComputerPart>();
 
-        ComputerPart Product { get; set; }
         public void Load(ApplicationManager appLol)
         {
             //kolla om inloggad
@@ -47,8 +45,7 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
             DrawAccountProfile();
-            Console.WriteLine("What's available, down below!");
-            Console.WriteLine("Press 'A' to add to basket!");
+            Console.WriteLine("Our wide cataloge of things, down below!");
             if (Products != null || Products.Count > 0)
             {
                 foreach (var product in Products) 
@@ -61,7 +58,6 @@ namespace ComputerStoreApplication.Pages
                         );
 
                     }
-
                 }
                 
             }
@@ -102,10 +98,6 @@ namespace ComputerStoreApplication.Pages
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
-                case PageControls.PageOption.AddToBasket:
-                    return this;
-                    //Produktvy och lägg kanske till i basket
-                    return this;
                 case PageControls.PageOption.Search:
                     return new SearchedResults();
             }
@@ -120,10 +112,6 @@ namespace ComputerStoreApplication.Pages
             {
                 { ConsoleKey.H, PageControls.HomeCommand },
                 {ConsoleKey.C, PageControls. CustomerHomePage},
-                {ConsoleKey.A, PageControls.AddToBasket },
-                {ConsoleKey.B, PageControls.BrowseCommand},
-                {ConsoleKey.L, PageControls.CustomerLogin },
-                {ConsoleKey.Q, PageControls.CustomerLogout },
                 {ConsoleKey.F, PageControls.Search},
                 {ConsoleKey.K, PageControls.Checkout },
                 {ConsoleKey.V, PageControls.ViewObject }

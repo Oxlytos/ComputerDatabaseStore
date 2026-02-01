@@ -28,6 +28,7 @@ namespace ComputerStoreApplication.Pages
             AdminSetSelected,
             AdminEdit,
             AdminPage,
+            AdminViewStats,
             Search,
             Browse,
             ViewObject,
@@ -52,13 +53,14 @@ namespace ComputerStoreApplication.Pages
             new(PageOption.Exit, "Exit application");
 
         public static readonly PageCommand CustomerLogin =
-           new(PageOption.CustomerLogin, "Login as Customer");
+           new(PageOption.CustomerLogin, "Login/Logout as Customer");
 
         public static readonly PageCommand Admin =
             new(PageOption.AdminPage, "Acess admin site");
    
         public static readonly PageCommand AdminLogin = new(PageOption.AdminLogin, "To Login/Out as admin");
         public static readonly PageCommand AdminCreate = new(PageOption.AdminCreate, "To create, update, delete products or customers");
+        public static readonly PageCommand AdminViewStats = new(PageOption.AdminViewStats, "To view store statistics");
 
 
         public static readonly PageCommand ViewObject = new(PageOption.ViewObject, "To view a desired product");

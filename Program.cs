@@ -4,11 +4,14 @@ namespace ComputerStoreApplication
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-                Console.OutputEncoding = Encoding.UTF8;
-                Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("sv-SE");
-                StoreSimulation.Run();
+            //For all possible swedish stuff
+            Console.OutputEncoding = Encoding.UTF8;
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("sv-SE");
+
+            //Main loop
+            await StoreSimulation.Run();
         }
     }
 }

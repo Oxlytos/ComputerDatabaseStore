@@ -17,22 +17,11 @@ namespace ComputerStoreApplication.Models.ComputerComponents
 
         public virtual ICollection<ComputerPart> ComputerParts { get; set; }
 
-        public ComponentCategory Create()
-        {
-            Console.WriteLine("Name of this cateogory?");
-            Name = GeneralHelpers.SetName(100);
-
-            return this;
-        }
+        
         public void Read()
         {
 
         }
-        public ComponentCategory Update()
-        {
-
-
-            return this;
-        }
+        
     }
 }

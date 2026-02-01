@@ -17,16 +17,7 @@ namespace ComputerStoreApplication.Models.Store
         public decimal Price { get; set; }
         public int AverageDeliveryTime { get; set; }
 
-        public DeliveryProvider Create()
-        {
-            Console.WriteLine("Name?");
-            Name = GeneralHelpers.SetName(30);
-            Console.WriteLine("Price for service (per order)");
-            Price = GeneralHelpers.StringToDecimal();
-            Console.WriteLine("Avg. Delivery time (not including weekends)");
-            AverageDeliveryTime = GeneralHelpers.StringToInt();
-            return this;
-        }
+     
         public void Update()
         {
             Console.WriteLine("To keep current properties, leave empty");

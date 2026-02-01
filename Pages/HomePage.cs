@@ -30,8 +30,6 @@ namespace ComputerStoreApplication.Pages
             
             DrawAccountProfile();
           
-            Console.WriteLine("Products in focus;");
-            Console.WriteLine($"Press {GetKeyFor(PageControls.PageOption.AddToBasket)} to add to basket");
             int left = 2;
             int top = 18;
             int spacing = 35;
@@ -41,10 +39,10 @@ namespace ComputerStoreApplication.Pages
                 var product = SelectedProducts[i];
                 var rows = new List<string>
                 {
-                    $"Id: {product.Id}".PadRight(20),
-                    product.Name.PadRight(20),
-                    $"Price: {product.Price} €".PadRight(20),
-                    (product.Sale ? "ON SALE!" : "(Not on sale)").PadRight(20)
+                    $"Id: {product.Id}".PadRight(30),
+                    product.Name.PadRight(30),
+                    $"Price: {product.Price} €".PadRight(30),
+                    (product.Sale ? "ON SALE!" : "(Not on sale)").PadRight(30)
                 };
                 var window = new MickesWindow.Window(
                    $"Offer {i + 1}",
@@ -130,11 +128,7 @@ namespace ComputerStoreApplication.Pages
         public void Load(ApplicationManager appLol)
         {
             //Random 3 objects every load
-            if (SelectedProducts != null)
-            {
-                //SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Guid.NewGuid()).Take(5).ToList(); ;
-            }
-     
+             SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Random.Shared.Next(5)).ToList(); ;
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {

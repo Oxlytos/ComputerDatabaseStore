@@ -26,12 +26,6 @@ namespace ComputerStoreApplication.Pages
      
         public int? CurrentCustomerId {get; set;}
         public CustomerAccount? CustomerAccount { get; set; }
-        //private List<StoreProduct> products = new List<StoreProduct>();
-        //private List<ComponentOrderCount> mostPopularOrders = new List<ComponentOrderCount>();
-        //private List<CategoryOrderCount> mostpopularCaetgory = new List<CategoryOrderCount>();
-        //private List<MostExpensiveOrders> mostExpensiveOrders = new List<MostExpensiveOrders>();
-        //private List<MostPopularProductByCountry> mostPopularProductByCountries = new List<MostPopularProductByCountry>();
-        //private List<CountrySpending> countrySpendings = new List<CountrySpending>();
         private decimal totalRevenue;
         public void SetPageCommands()
         {
@@ -42,6 +36,7 @@ namespace ComputerStoreApplication.Pages
                 { ConsoleKey.A, PageControls.Admin },
                 {ConsoleKey.L, PageControls.AdminLogin },
                 {ConsoleKey.C, PageControls.AdminCreate },
+                {ConsoleKey.V, PageControls.AdminViewStats },
             };
             //hitta beskrivningarna
             var pageOptions = PageCommands.Select(c => $"[{c.Key}] {c.Value.CommandDescription}").ToList();
@@ -59,13 +54,7 @@ namespace ComputerStoreApplication.Pages
 
             Graphics.PageBanners.DrawAdmingBanner();
             Console.SetCursorPosition(0, 15);
-            if (AdminAccount != null)
-            {
-              
-            }
-            else
-            {
-            }
+          
             DrawAccountProfile();
         }
         public void DrawAccountProfile()
@@ -115,6 +104,12 @@ namespace ComputerStoreApplication.Pages
                         LogoutAdmin(applicationLogic);
                     }
                         return this;
+                case PageControls.PageOption.AdminViewStats:
+                    if (applicationLogic.IsLoggedInAsAdmin)
+                    {
+                         ViewStats(applicationLogic);
+                    }
+                    return this;
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
@@ -123,6 +118,52 @@ namespace ComputerStoreApplication.Pages
             ;
             return this;
 
+        }
+        public async Task ViewStats(ApplicationManager app)
+        {
+            //try and get stats, could fail because of HandlerUserInput not being async
+            try
+            {
+                decimal totalRevenue = await app.Dapper.GetTotalRevenue();
+                var mostProfitableBrand = await app.Dapper.GetMostProfitableBrand();
+                var deliveryStats = await app.Dapper.GetOrdersPerDeliveryService();
+                var countrySpending = await app.Dapper.GetTotalCountrySpending();
+                var biggestSpender = await app.Dapper.GetHighestSpender();
+                var leastAmountSpent = await app.Dapper.GetLowestSpender();
+
+                // Display stats neatly
+                Console.WriteLine("\n=== ADMIN STATS ===\n");
+                Console.WriteLine($"Total Revenue (€): {totalRevenue:N2}");
+                Console.WriteLine($"Most Profitable (€) Brand: {mostProfitableBrand?.BrandName ?? "N/A"} ({mostProfitableBrand?.TotalRevenue:N2})\n");
+
+                Console.WriteLine("Orders Per Delivery Service:");
+                foreach (var d in deliveryStats)
+                {
+                    Console.WriteLine($"{d.DeliveryProviderName.PadRight(25)} : {d.NumberOfOrders} orders");
+                }
+
+                Console.WriteLine("\nCountry Spending (€):");
+                foreach (var c in countrySpending)
+                {
+                    Console.WriteLine($"{c.Country.PadRight(25)} : {c.value:N2}");
+                }
+                if(biggestSpender != null)
+                {
+                    Console.WriteLine("\nHighest spender (€) is; ");
+                    Console.WriteLine($"{biggestSpender.Value.FirstName} {biggestSpender.Value.SurName} with an expendeture of:  {biggestSpender.Value.TotalSpent} (€)");
+                }
+                if (leastAmountSpent != null)
+                {
+                    Console.WriteLine("\nAnd the lowest amount spent (€) by a person is;");
+                    Console.WriteLine($"{leastAmountSpent.Value.FirstName} {leastAmountSpent.Value.SurName} with an expendeture of: {leastAmountSpent.Value.TotalSpent} (€)");
+                }
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching stats: {ex.Message}");
+            }
         }
         public void LoginAdmin(ApplicationManager app)
         {
@@ -133,10 +174,12 @@ namespace ComputerStoreApplication.Pages
             if (username != null && password != null) 
             {
                 app.LoginAsAdmin(username, password);
+
                 Load(app);
             }
             else
             {
+                _ = MongoConnection.AdminLoginAttempt(username, 0, false);
                 return;
             }
             
@@ -174,12 +217,7 @@ namespace ComputerStoreApplication.Pages
         }
         public async Task GetStats(ApplicationManager app)
         {
-            //mostPopularOrders = await app.Dapper.GetMostPopularOrders();
-            //mostpopularCaetgory = await app.Dapper.GetMostPopularCategories();
-            //mostExpensiveOrders = await app.Dapper.GetMostExpensiveOrders();
-            //mostPopularProductByCountries = await app.Dapper.GetMostPopularProductByCountry();
-            //countrySpendings = await app.Dapper.GetCountryWithTheMostSpending();
-            //totalRevenue = await app.Dapper.GetTotalRevenue();
+            
         }
     }
 }

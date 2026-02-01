@@ -1,8 +1,10 @@
 ﻿using ComputerStoreApplication.Account;
+using ComputerStoreApplication.Crud_Related;
 using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,13 +19,11 @@ namespace ComputerStoreApplication.Pages
     internal class CheckoutPage : IPage
     {
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
+        private List<BasketProduct> BasketProducts = new List<BasketProduct>();
+
         public int? AdminId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
-
-        List<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
-        List<ComputerPart> ComputerParts { get; set; }
-
         public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
@@ -35,39 +35,18 @@ namespace ComputerStoreApplication.Pages
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
                 case PageControls.PageOption.BuyCheckout:
-                    if (BasketProducts.Any())
+                    if (applicationLogic.IsLoggedInAsCustomer)
                     {
-                        applicationLogic.HandleCustomerPurchase(CurrentCustomer.Id);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Basket empty, returning");
+                        applicationLogic.HandleCustomerPurchase(CurrentCustomerId.Value);
                         Console.ReadLine();
                     }
-                        return new CustomerPage();
+                        return this;
                 case PageControls.PageOption.AdjustCheckout:
                     if (applicationLogic.IsLoggedInAsCustomer)
                     {
-                        //Mismatch between page loading and updating logic
-                        //Calc needs to be done here, or else numbers wont update
-                        BasketProduct bask;
-                        if (BasketProducts.Count == 1)
-                            bask = BasketProducts.First();
-                        else
-                            bask = StoreHelper.ChooseWhichBasketItem(BasketProducts);
-
-                        if (bask != null)
-                        {
-                            StoreHelper.AdjustQuantityOfBasketItems(bask);
-                            if (bask.Quantity == 0||bask.Quantity<0)
-                            {
-                                Console.WriteLine("Removing product, it has a quantity of 0");
-                                CurrentCustomer.ProductsInBasket.Remove(bask);
-                                applicationLogic.ComputerPartShopDB.Remove(bask);
-                                Console.ReadLine() ;
-                            }
-                            applicationLogic.ComputerPartShopDB.SaveChanges();
-                        }
+                        CrudCreatorHelper.AdjustBasketItems(CurrentCustomer, applicationLogic);
+                        applicationLogic.ComputerPartShopDB.SaveChanges();
+                        applicationLogic.VerifyStoreItems();
                     }
                     return this;
                 case PageControls.PageOption.Home:
@@ -84,6 +63,7 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
+            appLol.VerifyStoreItems();
             if (!appLol.IsLoggedInAsCustomer)
             {
                 CurrentCustomerId = null;
@@ -96,45 +76,25 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
-            var basketProducts = appLol.ComputerPartShopDB.BasketProducts
-            .Include(bp => bp.ComputerPart) // Product navigation property
-            .Where(bp => bp.CustomerId == CurrentCustomerId)
-            .ToList();
-            ComputerParts = appLol.GetStoreProducts();
-
-            BasketProducts = basketProducts;
+            appLol.VerifyBasketItems(CurrentCustomerId);
+            BasketProducts.Clear();
+            BasketProducts = appLol.GetBasketProductsFromCustomerId((int)CurrentCustomerId);
         }
 
         public void RenderPage()
         {
-            Graphics.PageBanners.DrawCheckoutPage();
             ConsoleHelper.ResetConsole();
+            Graphics.PageBanners.DrawCheckoutPage();
             SetPageCommands();
             DrawAccountProfile();
-            if (BasketProducts.Count > 0) 
+            Console.WriteLine("Objects in basket: " + BasketProducts.Count);
+            foreach (var product in BasketProducts) 
             {
-                foreach (var basketItem in BasketProducts)
-                {
-                    if (basketItem.ComputerPart != null)
-                    {
-                        Console.WriteLine($"Product: {basketItem.ComputerPart.Name} €: {basketItem.ComputerPart.Price} Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Product Id {basketItem.ComputerPartId} not found. Quantity [{basketItem.Quantity}] Id: {basketItem.Id}");
-                    }
-                    
-                }
+                Console.WriteLine($"Id {product.Id} Name: {product.ComputerPart.Name} Quantity: {product.Quantity}");
             }
-            else
-            {
-                Console.WriteLine("Empty basket");
-            }
-           
         }
         public void DrawAccountProfile()
         {
-
             List<string> tesList = new List<string>();
             if (CurrentCustomer != null)
             {

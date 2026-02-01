@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ComputerStoreApplication.Logic
 {
@@ -18,6 +19,8 @@ namespace ComputerStoreApplication.Logic
     public class ApplicationManager : IDisposable
     {
         private readonly ComponentService _services;
+
+        public  MongoConnection _mongoConnection;
         public DapperService Dapper {  get; private set; }
         public ComputerDBContext ComputerPartShopDB { get; } //
         public IPage CurrentPage { get; set; }
@@ -28,7 +31,7 @@ namespace ComputerStoreApplication.Logic
         public bool IsLoggedInAsAdmin => AdminId != 0;
         public List<ComputerPart> ProductsInBasket { get; set; }
 
-        public ApplicationManager(ComponentService service)
+        public ApplicationManager(ComponentService service, MongoConnection mongo)
         {
             //Instansiera db kontextet här EN gång
             ComputerPartShopDB = new ComputerDBContext();
@@ -38,6 +41,7 @@ namespace ComputerStoreApplication.Logic
             CurrentPage = new HomePage();
             ProductsInBasket = new List<ComputerPart>();
             _services = service;
+            _mongoConnection = mongo;
             CustomerId = 0;
             AdminId = 0;
         }
@@ -63,6 +67,7 @@ namespace ComputerStoreApplication.Logic
             {
                 Console.WriteLine("Success");
                 AdminId = adminId;
+                _ = MongoConnection.AdminLoginAttempt(username, adminId, true);
                 Console.ReadLine();
                 return true;
             }
@@ -102,23 +107,16 @@ namespace ComputerStoreApplication.Logic
         }
         public bool LoginAsCustomer(string email, string password)
         {
-            if (IsLoggedInAsAdmin)
-            {
-                Console.WriteLine("Can't login as customer while in admin login");
-                Console.ReadLine();
-                return false ;
-            }
             Console.WriteLine("Login attempt started");
             var thisCustomerId = _services.LoginCustomer(email, password);
             if (thisCustomerId != 0)
             {
                 CustomerId = thisCustomerId;
+                _ = MongoConnection.CustomerLoginAttempt(email, thisCustomerId, true);
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            _ = MongoConnection.CustomerLoginAttempt(email, 0, false);
+            return false;
 
         }
         public bool LogoutAsCustomer()
@@ -242,5 +240,79 @@ namespace ComputerStoreApplication.Logic
             _services.SaveGPU(gPU);
         }*/
         public void Dispose() { }
+        public void VerifyStoreItems()
+        {
+            //Make sure user can't buy products no longer in stock
+            //we load this when they load the checkout page
+
+            var itemtsToRemove =ComputerPartShopDB.BasketProducts.Where
+                (b=>b.Quantity==0||ComputerPartShopDB.CompuerProducts.
+                Any(p=>p.Id==b.ComputerPartId&&p.Stock==0))
+                .ToList();
+
+            ComputerPartShopDB.RemoveRange(itemtsToRemove);
+            ComputerPartShopDB.SaveChanges();
+        }
+        public void VerifyBasketItems(int? currentCustomerId)
+        {
+            var zeroItems = ComputerPartShopDB.BasketProducts .Where(b => b.CustomerId == CustomerId && b.Quantity == 0).ToList();
+
+            ComputerPartShopDB.BasketProducts.RemoveRange(zeroItems);
+            ComputerPartShopDB.SaveChanges();
+        }
+        public void InformOfQuittingOperation()
+        {
+            Console.WriteLine("Quitting operation... (Press any key to continue)");
+            Console.ReadKey();
+        }
+
+        internal void AdjustBasketItems(CustomerAccount? currentCustomer, List<BasketProduct> basketProducts)
+        {
+            if (basketProducts.Count == 0)
+            {
+                return;
+            }
+            else if (basketProducts.Count > 1)
+            {
+                Console.WriteLine("Which basket item? Input their Id, cancel operation by submitting 0");
+                foreach (var product in basketProducts)
+                {
+                    Console.WriteLine($"Id: {product.Id} {product.ComputerPart.Name} Quantity: {product.Quantity}");
+                }
+                int choice = GeneralHelpers.ReturnValidIntOrNone();
+                if(choice == 0)
+                {
+                    return;
+                }
+                var valid = basketProducts.FirstOrDefault(X => X.Id == choice);
+                if (valid == null)
+                {
+                    return ;
+                }
+                var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == valid.ComputerPartId);
+                Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
+                int amount = GeneralHelpers.StringToInt();
+                if (amount > storeItem.Stock)
+                {
+                    Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
+                    amount= storeItem.Stock;
+                }
+            }
+            else
+            {
+                var item = basketProducts.First(); 
+                var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == item.ComputerPartId);
+                Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
+                int amount = GeneralHelpers.StringToInt();
+                if (amount > storeItem.Stock)
+                {
+                    Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
+                    amount = storeItem.Stock;
+                }
+
+            }
+                return;
+
+        }
     }
 }

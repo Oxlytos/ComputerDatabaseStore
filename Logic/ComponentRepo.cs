@@ -80,7 +80,7 @@ namespace ComputerStoreApplication.Logic
         }
         public List<BasketProduct> GetCustomerItems(int id)
         {
-            var theseObject = _dbContext.BasketProducts.Where(x => x.CustomerId == id);
+            var theseObject = _dbContext.BasketProducts.Where(x => x.CustomerId == id).Include(s=>s.ComputerPart);
             return theseObject.ToList();
         }
         public void AddCountry(Country country)
@@ -145,15 +145,10 @@ namespace ComputerStoreApplication.Logic
         }
         public List<ComputerPart> GetFrontPageProducts()
         {
-
             var returnList = _dbContext.CompuerProducts
              .Where(s => s.SelectedProduct && s.Stock > 0)
                .ToList();
-            if(returnList.Count > 0)
-            {
                 return returnList;
-            }
-            return null;
            
         }
         public IQueryable<Order> GetOrdersQuired()

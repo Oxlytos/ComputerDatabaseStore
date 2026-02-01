@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using ComputerStoreApplication.Helpers;
 using System.Threading.Tasks;
+using ComputerStoreApplication.Crud_Related;
 
 namespace ComputerStoreApplication.Pages
 {
@@ -54,12 +55,12 @@ namespace ComputerStoreApplication.Pages
             {
                 Console.WriteLine($"--- Order ID: {order.Id} ---");
                 Console.WriteLine($"Creation Date: {order.CreationDate}");
-                Console.WriteLine($"Subtotal: {order.Subtotal:N2} kr");
-                Console.WriteLine($"Total Cost: {order.TotalCost:N2} kr");
-                Console.WriteLine($"Shipping Cost: {order.ShippingCost:N2} kr");
-                Console.WriteLine($"Tax Costs: {order.TaxCosts:N2} kr");
-                Console.WriteLine($"Delivery Provider: {order.DeliveryProvider?.Name ?? "N/A"}");
-                Console.WriteLine($"Payment Method: {order.PaymentMethod?.Name ?? "N/A"}");
+                Console.WriteLine($"Subtotal: {order.Subtotal:N2} €");
+                Console.WriteLine($"Total Cost: {order.TotalCost:N2} €");
+                Console.WriteLine($"Shipping Cost: {order.ShippingCost:N2} €");
+                Console.WriteLine($"Tax Costs: {order.TaxCosts:N2} €");
+                Console.WriteLine($"Delivery Provider: {order.DeliveryProvider?.Name ?? "N/A (Error)"}");
+                Console.WriteLine($"Payment Method: {order.PaymentMethod?.Name ?? "N/A (Error)"}");
 
                 // Access shipping info directly
                 if (order.ShippingInfo != null)
@@ -67,8 +68,8 @@ namespace ComputerStoreApplication.Pages
                     Console.WriteLine($"--- Shipping Info ---");
                     Console.WriteLine($"Street: {order.ShippingInfo.StreetName}");
                     Console.WriteLine($"Postal Code: {order.ShippingInfo.PostalCode}");
-                    Console.WriteLine($"City: {order.ShippingInfo.City?.Name ?? "N/A"}");
-                    Console.WriteLine($"Country: {order.ShippingInfo.City?.Country?.Name ?? "N/A"}");
+                    Console.WriteLine($"City: {order.ShippingInfo.City?.Name ?? "N/A (Error)"}");
+                    Console.WriteLine($"Country: {order.ShippingInfo.City?.Country?.Name ?? "N/A (Error)"}");
                 }
                 else
                 {
@@ -109,9 +110,6 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.CustomerLogin:
                     TryAndLogin(applicationLogic);
                     return this;
-                case PageControls.PageOption.CustomerLogout:
-                    applicationLogic.LogoutAsCustomer();
-                    return this;
                 case PageControls.PageOption.CreateAccount:
                     //Skapa konto
                     CreateAccount(applicationLogic);
@@ -122,8 +120,6 @@ namespace ComputerStoreApplication.Pages
                     //metod
                     HandleShippingInfo(applicationLogic);
                     return this;
-                case PageControls.PageOption.Checkout:
-                    return new CheckoutPage();
                 case PageControls.PageOption.Browse:
                     return new BrowseProducts();
 
@@ -143,8 +139,6 @@ namespace ComputerStoreApplication.Pages
                 {ConsoleKey.C, PageControls. CustomerHomePage},
                 { ConsoleKey.B, PageControls.BrowseCommand },
                 {ConsoleKey.L, PageControls.CustomerLogin },
-                {ConsoleKey.Q, PageControls.CustomerLogout },
-                {ConsoleKey.K, PageControls.Checkout },
                 {ConsoleKey.P, PageControls.CustomerShippingInfo },
                 {ConsoleKey.U, PageControls.CreateAccount }
             };
@@ -196,6 +190,17 @@ namespace ComputerStoreApplication.Pages
 
         public void TryAndLogin(ApplicationManager app)
         {
+            if (app.IsLoggedInAsAdmin)
+            {
+                Console.WriteLine("Can't login as customer while in admin login");
+                Console.ReadLine();
+                return;
+            }
+            if (app.IsLoggedInAsCustomer)
+            {
+                app.LogoutAsCustomer();
+                return;
+            }
             Console.SetCursorPosition(0, 20);
             Console.WriteLine("Email?");
             string email = Console.ReadLine();
@@ -214,7 +219,8 @@ namespace ComputerStoreApplication.Pages
             if (CurrentCustomer != null)
             {
                 Console.Clear();
-                app.HandleCustomerShippingInfo(CurrentCustomer.Id);
+                CrudHandler.CRUDShippingInfo(app,CurrentCustomer);
+               // app.HandleCustomerShippingInfo(CurrentCustomer.Id);
             }
         }
     }

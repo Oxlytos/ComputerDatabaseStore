@@ -1,9 +1,11 @@
 ﻿using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.ComputerComponents;
+using ComputerStoreApplication.Models.Customer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,6 +41,10 @@ namespace ComputerStoreApplication.Models.Store
         internal static BasketProduct ChooseWhichBasketItem(ICollection<BasketProduct> basketProducts)
         {
             Console.WriteLine("Which product? Choose by inputting the correct Id");
+            foreach (var basketProduct in basketProducts)
+            {
+                Console.WriteLine($"Id: {basketProduct.Id} {basketProduct.ComputerPart.Name}");
+            }
             int? choice = GeneralHelpers.StringToInt();
             if (!choice.HasValue)
             {
@@ -54,33 +60,29 @@ namespace ComputerStoreApplication.Models.Store
                 return thisProd;
             }
         }
-        internal static void AdjustQuantityOfBasketItems(BasketProduct basketProducts)
+        internal static void AdjustQuantityOfBasketItems(ApplicationManager app, BasketProduct basketProduct)
         {
-            foreach (var key in Commandos)
+            Console.WriteLine("How many do you want? Input as an int");
+            var productToAdd= app.ComputerPartShopDB.CompuerProducts.FirstOrDefault(x=>x.Id == basketProduct.ComputerPartId);
+            int amount = GeneralHelpers.ReturnValidIntOrNone();
+            if (amount==0||amount<0)
             {
-
-                Console.WriteLine($"[{key.Key}] to {key.Value} a product");
+                basketProduct.Quantity = 0;
+                Console.WriteLine("Removing product, it has a quantity of 0 or lesser");
+                Console.ReadLine();
+            }
+            if (amount > productToAdd.Stock)
+            {
+                Console.WriteLine("Can't add more than available in stock");
+            }
+            else
+            {
+                basketProduct.Quantity = amount;
             }
 
-            var userInputC = Console.ReadKey(true);
-            if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
-            {
-                Console.WriteLine("Some error here bud");
-                return;
-            }
-            switch (userCrudValue)
-            {
-                case CRUD.Increase:
-                    basketProducts.Quantity++;
-                    break;
-                case CRUD.Decrease:
-                    basketProducts.Quantity--;
-                    break;
-               
-                case CRUD.Remove:
-                    basketProducts.Quantity = 0;
-                    break;
-            }
+
         }
+
+      
     }
 }

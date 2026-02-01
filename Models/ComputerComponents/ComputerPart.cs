@@ -40,12 +40,10 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Description = Console.ReadLine();
 
             Console.WriteLine("Category?");
-            ComponentCategory = GeneralHelpers.ChooseCategory(componentCategories);
-            CategoryId = ComponentCategory.Id;
+            CategoryId =  GeneralHelpers.ChooseCategoryById(componentCategories);
 
             Console.WriteLine("Brand/Manufacturer?");
-            BrandManufacturer = GeneralHelpers.ChooseManufacturer(brands);
-            BrandId= BrandManufacturer.Id;
+            BrandId= GeneralHelpers.ChooseManufacturerById(brands);
 
             Console.WriteLine("Market this product as 'selected' on the front page?");
             SelectedProduct = GeneralHelpers.YesOrNoReturnBoolean();
@@ -110,7 +108,7 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             else
             {
                 Console.WriteLine("Assign this product a manufacturer");
-                BrandManufacturer = GeneralHelpers.ChooseManufacturer(manufacturers);
+                BrandId = GeneralHelpers.ChooseManufacturerById(manufacturers);
             }
 
             Console.WriteLine("Is it one sale?");

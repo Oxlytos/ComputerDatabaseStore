@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Helpers;
+using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.Store;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
@@ -256,7 +257,8 @@ namespace ComputerStoreApplication.Models.Customer
             }
             else
             {
-                return GeneralHelpers.ChooseOrCreateCountry(locationHolder.Countries);
+                return null;
+                //return GeneralHelpers.ChooseOrCreateCountry(locationHolder.Countries);
             }
         }
         public static City ChooseCityQuestion(City city, LocationHolder locationHolder)
@@ -269,7 +271,8 @@ namespace ComputerStoreApplication.Models.Customer
             }
             else
             {
-                return GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, city.Country);
+                return null;
+                //return GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, city.Country);
             }
         }
         public static void EditCustomerAccount(CustomerAccount accountToBeEdited)
@@ -311,17 +314,17 @@ namespace ComputerStoreApplication.Models.Customer
             Console.WriteLine("Province/State?");
             customerShippingInfo.State_Or_County_Or_Province = Console.ReadLine();
 
-            Country chosenCountry = ChooseCountryQuestion(city.Country,locationHolder);
-            City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
+            //Country chosenCountry = ChooseCountryQuestion(city.Country,locationHolder);
+            //City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
 
-            customerShippingInfo.City = chosenCity;
-            customerShippingInfo.CityId = chosenCity.Id;
-            Console.WriteLine("Updated address");
+            //customerShippingInfo.City = chosenCity;
+            //customerShippingInfo.CityId = chosenCity.Id;
+            //Console.WriteLine("Updated address");
         }
         internal static CustomerShippingInfo NewAdressQuestionnaire(City city,LocationHolder locationHolder)
         {
-            Country chosenCountry = ChooseCountryQuestion(city.Country, locationHolder);
-            City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
+            //Country chosenCountry = ChooseCountryQuestion(city.Country, locationHolder);
+            //City chosenCity = GeneralHelpers.ChooseOrCreateCity(locationHolder.Cities, chosenCountry);
             Console.WriteLine("Streetname?");
             string street = Console.ReadLine();
 
@@ -331,16 +334,44 @@ namespace ComputerStoreApplication.Models.Customer
             Console.WriteLine("Province/State?");
             string province = Console.ReadLine();
 
-            CustomerShippingInfo customerShippingInfo = new CustomerShippingInfo
+            //CustomerShippingInfo customerShippingInfo = new CustomerShippingInfo
+            //{
+            //    City = chosenCity,
+            //    CityId = chosenCity.Id,
+            //    StreetName = street,
+            //    PostalCode = postal,
+            //    State_Or_County_Or_Province = province
+            //};
+            //Console.WriteLine("Saved new address");
+            //return customerShippingInfo;
+            return null;
+
+        }
+
+        internal static void AdjustBasketItems(List<BasketProduct> basketProducts, ApplicationManager app)
+        {
+            var customer = app.GetCustomers().FirstOrDefault(x => x.Id == app.CustomerId);
+
+            if (customer == null)
             {
-                City = chosenCity,
-                CityId = chosenCity.Id,
-                StreetName = street,
-                PostalCode = postal,
-                State_Or_County_Or_Province = province
-            };
-            Console.WriteLine("Saved new address");
-            return customerShippingInfo;
+                Console.WriteLine("Customer not found");
+                Console.ReadLine();
+                return;
+            }
+            if (basketProducts.Count == 0 || basketProducts == null)
+            {
+                Console.WriteLine("Items not found");
+                Console.ReadLine();
+                return;
+            }
+            
+            Console.WriteLine("How many do you of this product?");
+            int count = GeneralHelpers.ReturnValidIntOrNone();
+            if (count == 0)
+            {
+
+            }
+
 
         }
     }

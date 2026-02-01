@@ -69,25 +69,24 @@ namespace ComputerStoreApplication.Helpers
             return null;
         }
 
-        public static Country ChooseOrCreateCountry(List<Country> countries)
+        public static Country ChooseOrCreateCountry(LocationHolder locationHolder)
         {
             while (true)
             {
-
-                if (countries.Any())
+                if (locationHolder.Countries.Any())
                 {
                     Console.WriteLine("Please choose a country from the list, input the corresponding Id. To register a new country, input 0");
-                    foreach (var item in countries)
+                    foreach (var country in locationHolder.Countries)
                     {
-                        Console.WriteLine($"Id: {item.Id} Name: {item.Name}\n");
+                        Console.WriteLine($"Id: {country.Id} Name: {country.Name}\n");
                     }
-                    int choice = GeneralHelpers.StringToInt();
+                    int choice = GeneralHelpers.ReturnValidIntOrNone();
                     if (choice == 0)
                     {
                         Country country = CreateCountry();
                         return country;
                     }
-                    var validCountry = countries.FirstOrDefault(x => x.Id == choice);
+                    var validCountry = locationHolder.Countries.FirstOrDefault(x => x.Id == choice);
                     if (validCountry != null)
                     {
                         return validCountry;
@@ -98,11 +97,34 @@ namespace ComputerStoreApplication.Helpers
                     // empty list o countries, create
                     Console.WriteLine("No countries registered yet. Please create one.");
                     Country newCountry = CreateCountry();
+                    locationHolder.Countries.Add(newCountry);
                     return newCountry;
                 }
             }
 
         }
+
+        public static int ReturnValidIntOrNone()
+        {
+            while (true)
+            {
+                Console.WriteLine("Input a valid int, 0 to quit this operation");
+                string? userInputAnew = Console.ReadLine(); // read inside the loop
+                if (Int32.TryParse(userInputAnew, out int intVal))
+                {
+                    if(intVal > -1)
+                    {
+                        return intVal;
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
+                    Console.WriteLine("Invalid input, please enter a  integer:");
+            }
+        }
+
         public static Country CreateCountry()
         {
             //Invalid input, continue trying to create until there's something
@@ -118,18 +140,44 @@ namespace ComputerStoreApplication.Helpers
                 Console.WriteLine("Country name cannot be empty. Try again.\n");
             }
         }
-        public static City ChooseOrCreateCity(List<City> cities, Country country)
+        public static City CreateCity(Country choosenCountry)
         {
-            var relevantCitiesBasedOnCountry = cities.Where(c => c.CountryId == country.Id).ToList();
-            if (relevantCitiesBasedOnCountry.Any())
+            //Invalid input, continue trying to create until there's something
+            while (true)
             {
-                Console.WriteLine("Please choose a city, input the corresponding Id");
-                foreach (var item in cities)
+                Console.WriteLine($"Please input the name for your city in {choosenCountry.Name}");
+                string country = Console.ReadLine();
+                if (!string.IsNullOrEmpty(country))
+                {
+                    City newCity =
+                    new City 
+                    {
+                        Name = country,
+                        Country = choosenCountry
+                    };
+                    return newCity;
+                }
+                ;
+                Console.WriteLine("Country name cannot be empty. Try again.\n");
+            }
+        }
+        public static City ChooseOrCreateCity(LocationHolder locationHolder, Country choosenCountry)
+        {
+            //All citiies in X country
+            var citiesInCountries = locationHolder.Cities.Where(x => x.CountryId == choosenCountry.Id);
+            if (citiesInCountries.Any())
+            {
+                Console.WriteLine("Please choose a city, input the corresponding Id, input 0 to register new city");
+                foreach (var item in citiesInCountries)
                 {
                     Console.WriteLine($"Id: {item.Id} Name: {item.Name}\n");
                 }
-                int cityChoice = GeneralHelpers.StringToInt();
-                var validCity = cities.FirstOrDefault(x => x.Id == cityChoice);
+                int cityChoice = GeneralHelpers.ReturnValidIntOrNone();
+                if(cityChoice == 0)
+                {
+                    //Create a new city in the while loop later
+                }
+                var validCity = citiesInCountries.FirstOrDefault(x => x.Id == cityChoice);
                 if (validCity != null)
                 {
                     return validCity;
@@ -137,11 +185,18 @@ namespace ComputerStoreApplication.Helpers
             }
             while (true)
             {
-                Console.WriteLine($"Please enter the name for the city in county {country.Name}");
+                Console.WriteLine($"No registered cities in our database for {choosenCountry.Name}");
+                Console.WriteLine("Please enter the name for the city in choosen country");
                 string name = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(name))
                 {
-                    return new City { Name = name, Country = country, CountryId = country.Id };
+                    City newCity = new City
+                    {
+                        Name = name,
+                        Country = choosenCountry,
+                    };
+                    locationHolder.Cities.Add(newCity);
+                    return newCity;
                 }
                 Console.WriteLine("Please input a name");
             }
@@ -228,12 +283,11 @@ namespace ComputerStoreApplication.Helpers
         //    }
         //}
         internal static bool ChangeManufacturer(List<Brand> manufacturers, ComputerPart part)
-        {
-            Brand manuf = GeneralHelpers.ChooseManufacturer(manufacturers);
+        {   
+            int manuf = GeneralHelpers.ChooseManufacturerById(manufacturers);
             if (manuf != null)
             {
-                part.BrandManufacturer = manuf;
-                part.BrandId = manuf.Id;
+                part.BrandId = manuf;
                 Console.WriteLine("Done! Press Enter");
                 return true;
             }
@@ -467,14 +521,20 @@ namespace ComputerStoreApplication.Helpers
             {
                 Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
             }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
+            int choice = GeneralHelpers.ReturnValidIntOrNone();
+            if(choice == 0)
             {
-                var hit = brands.FirstOrDefault(v => v.Id == choice);
-                return hit;
+                return brand;
             }
+            while (true)
+            {
+
+            }
+            var hit = brands.FirstOrDefault(v => v.Id == choice);
+            return hit;
             return brand;
         }
-        internal static Brand ChooseManufacturer(List<Brand> manufacturers)
+        internal static int ChooseManufacturerById(List<Brand> manufacturers)
         {
             while (true)
             {
@@ -486,7 +546,7 @@ namespace ComputerStoreApplication.Helpers
                 if (Int32.TryParse(Console.ReadLine(), out int choice))
                 {
                     var hit = manufacturers.FirstOrDefault(v => v.Id == choice);
-                    return hit;
+                    return hit.Id;
                 }
                 Console.WriteLine("Invalid input");
             }
@@ -527,7 +587,7 @@ namespace ComputerStoreApplication.Helpers
             }
 
         }
-        internal static ComponentCategory ChooseCategory(List<ComponentCategory> categories)
+        internal static int ChooseCategoryById(List<ComponentCategory> categories)
         {
             while (true)
             {
@@ -540,7 +600,7 @@ namespace ComputerStoreApplication.Helpers
                 var validCateogry = categories.FirstOrDefault(x => x.Id == choice);
                 if (validCateogry != null)
                 {
-                    return validCateogry;
+                    return validCateogry.Id;
                 }
                 Console.WriteLine("Invalid, re-doing this function");
             }

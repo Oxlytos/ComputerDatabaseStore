@@ -14,6 +14,7 @@ namespace ComputerStoreApplication.Models.Vendors_Producers
     {
         public int Id { get; set; }
 
+        [StringLength(40)]
         public string Name { get; set; } //Nvidia, AMD, Intel, Seagate
 
         //Manufacturers have products they sell, MSI has GPUs, Corsair has Ram sticks (RIP) and Intel CPUs, but they're all 
