@@ -123,7 +123,7 @@ namespace ComputerStoreApplication.Pages
         public void Load(ApplicationManager appLol)
         {
             //Random 3 objects every load
-             SelectedProducts = appLol.GetFrontPageProducts().Take(3).OrderBy(_ => Random.Shared.Next(3)).ToList(); ;
+             SelectedProducts = appLol.GetFrontPageProducts().Take(3).OrderBy(_ => Random.Shared.Next()).ToList(); ;
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
