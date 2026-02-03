@@ -182,55 +182,49 @@ namespace ComputerStoreApplication.Logic
         {
             return _dbContext.Admins.ToList();
         }
-        public void AddProductToBasket(int prod, int count, CustomerAccount cus)
+        public void AddProductToBasket(int prod, int count, int customerId)
         {
-            if (cus == null)
+            if (customerId == 0)
             {
                 Console.WriteLine("You need to be logged in to add to basket");
                 Console.ReadLine();
                 return;
             }
-            Console.WriteLine("Checking if already exists");
-            Console.ReadLine();
-
-            //kunddata
-            var trackedCustomerInfo = _dbContext.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == cus.Id);
-
+           
+            //work with trackedcustomer thats part of ef
+            var trackedCustomerInfo = _dbContext.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == customerId);
+            var basketItem = _dbContext.BasketProducts.FirstOrDefault(bp => bp.CustomerId == customerId && bp.ComputerPartId == prod);
             if (trackedCustomerInfo == null) 
             {
                 return;
             }
-            var checkIfExistingProductInBasket = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(x => x.ComputerPartId == prod);
-            Console.ReadLine();
-            if (checkIfExistingProductInBasket!=null)
+            //check existence
+            if (basketItem != null)
             {
-                Console.WriteLine("You already have this product in your basket");
-                Console.WriteLine("Increased quantity by previous input amount");
-                count += checkIfExistingProductInBasket.Quantity;
+                basketItem.Quantity += count;
             }
             else
             {
                 var newItem = new BasketProduct
                 {
-                    CustomerId = cus.Id,
+                    CustomerId = trackedCustomerInfo.Id,
                     ComputerPartId = prod,
-                    Quantity =count
+                    Quantity = count
                 };
-                Console.WriteLine("Added to basket");
-                cus.ProductsInBasket.Add(newItem);
+                _dbContext.BasketProducts.Add(newItem); // <-- add directly to DbSet othwerise EF cries a bit
             }
 
-            //Sänk stock av store objekt antal, de håller på att köpas här
+            //Lower store stock of x item
             var storeObjects = _dbContext.CompuerProducts.FirstOrDefault(x=>x.Id==prod);
             if (storeObjects != null)
             {
                 storeObjects.Stock -= count;
-                if(storeObjects.Stock < 0)
-                {
-                    storeObjects.SelectedProduct = false;
-                     storeObjects.Stock = 0;
-                }
             }
+            //when troubleshooting tracking
+            //foreach (var bp in _dbContext.ChangeTracker.Entries<BasketProduct>())
+            //{
+            //    Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
+            //}
             TrySaveChanges();
         }
         public void RemoveSingularObjectFromBasket(BasketProduct prod, CustomerAccount cus)
@@ -292,6 +286,11 @@ namespace ComputerStoreApplication.Logic
         //}
         public bool TrySaveChanges()
         {
+            //foreach (var bp in _dbContext.ChangeTracker.Entries<BasketProduct>())
+            //{
+            //    Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
+            //}
+            //Console.ReadLine();
             try
             {
                 _dbContext.SaveChanges();
@@ -319,5 +318,14 @@ namespace ComputerStoreApplication.Logic
 
         }
 
+        internal ComponentCategory GetCatagory(int productId)
+        {
+            return _dbContext.ComponentCategories.FirstOrDefault(x => x.Id == productId);
+        }
+
+        internal Brand GetBrand(int productId)
+        {
+            return _dbContext.BrandManufacturers.FirstOrDefault(x => x.Id == productId);
+        }
     }
 }

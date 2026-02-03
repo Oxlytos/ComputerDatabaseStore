@@ -83,19 +83,12 @@ namespace ComputerStoreApplication.Pages
 
         public void DrawAccountProfile()
         {
-            List<string> tesList = new List<string>();
-            if (CurrentCustomer != null)
-            {
-                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
-            }
-            else
-            {
-                tesList.Add("Not Loggedin");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
@@ -163,6 +156,10 @@ namespace ComputerStoreApplication.Pages
 
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+            appLol.VerifyBasketItems(CurrentCustomerId);
+            appLol.RefreshCurrentCustomerBasket(CurrentCustomer);
+            appLol.VerifyStoreItems();
+            appLol.VerifyBasketItems(CurrentCustomerId);
 
             Countries = appLol.ComputerPartShopDB.Countries.ToList();
             Cities = appLol.ComputerPartShopDB.Cities.Include(c => c.Country).ToList();
@@ -208,6 +205,7 @@ namespace ComputerStoreApplication.Pages
             string password = Console.ReadLine();
             app.LoginAsCustomer(email, password);
         }
+      
         public void CreateAccount(ApplicationManager app)
         {
             Console.WriteLine("Email?");

@@ -220,13 +220,18 @@ namespace ComputerStoreApplication.Models.Customer
                 customerShippingInfos.Add(newAddress);
             }
         }
-        internal static void MakeSureOfShippingInfoLocation(CustomerShippingInfo shippingInfo,  LocationHolder locationHolder)
+        internal static void MakeSureOfShippingInfoLocation(CustomerShippingInfo? shippingInfo,  LocationHolder locationHolder)
         {
             if (shippingInfo.City == null)
+            {
                 shippingInfo.City = locationHolder.Cities.FirstOrDefault(c => c.Id == shippingInfo.CityId);
-
+            }
+               
             if (shippingInfo.City?.Country == null && shippingInfo.City != null)
+            {
                 shippingInfo.City.Country = locationHolder.Countries.FirstOrDefault(c => c.Id == shippingInfo.City.CountryId);
+            }
+             
         }
         internal static CustomerShippingInfo ChooseAdress(ICollection<CustomerShippingInfo> customerShippingInfos)
         {

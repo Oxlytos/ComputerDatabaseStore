@@ -4,6 +4,7 @@ using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -38,6 +39,65 @@ namespace ComputerStoreApplication.Models.Store
             Console.WriteLine("Add to basket?");
             return GeneralHelpers.YesOrNoReturnBoolean();
         }
+        internal static ComputerPart DecideToAddToBasket(int? currentCustomerId, List<ComputerPart> parts)
+        {
+            if (currentCustomerId != null)
+            {
+                int choice = GeneralHelpers.ReturnValidIntOrNone();
+                if (choice == 0) { return null; }
+                var doesItExist = parts.FirstOrDefault(x => x.Id == choice);
+                if (doesItExist != null)
+                {
+                    Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
+                    bool confirmation = GeneralHelpers.YesOrNoReturnBoolean();
+                    if (confirmation)
+                    {
+                        return doesItExist;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Quitting operation...");
+                        return null;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Dosen't exist");
+                    return null;
+                }
+                Console.ReadLine();
+            }
+            else
+            {
+                Console.WriteLine("You can only add to basket if your logged in");
+                Console.ReadLine();
+                return null;
+            }
+        }
+        internal static List<ComputerPart> SearchResults(List<ComputerPart> allParts)
+        {
+            Console.WriteLine("Input search query, please");
+            string input = Console.ReadLine();
+            //sök
+            List<ComputerPart> parts = new List<ComputerPart>();
+            foreach (ComputerPart part in allParts)
+            {
+                if (part.Name.ToLower().Contains(input.ToLower()))
+                {
+                    parts.Add(part);
+                }
+            }
+            if (parts.Count > 0)
+            {
+                return parts;
+            }
+            else
+            {
+                return null;
+            }
+
+
+        }
         internal static BasketProduct ChooseWhichBasketItem(ICollection<BasketProduct> basketProducts)
         {
             Console.WriteLine("Which product? Choose by inputting the correct Id");
@@ -63,9 +123,9 @@ namespace ComputerStoreApplication.Models.Store
         internal static void AdjustQuantityOfBasketItems(ApplicationManager app, BasketProduct basketProduct)
         {
             Console.WriteLine("How many do you want? Input as an int");
-            var productToAdd= app.ComputerPartShopDB.CompuerProducts.FirstOrDefault(x=>x.Id == basketProduct.ComputerPartId);
+            var productToAdd = app.ComputerPartShopDB.CompuerProducts.FirstOrDefault(x => x.Id == basketProduct.ComputerPartId);
             int amount = GeneralHelpers.ReturnValidIntOrNone();
-            if (amount==0||amount<0)
+            if (amount == 0 || amount < 0)
             {
                 basketProduct.Quantity = 0;
                 Console.WriteLine("Removing product, it has a quantity of 0 or lesser");
@@ -83,6 +143,18 @@ namespace ComputerStoreApplication.Models.Store
 
         }
 
-      
+        internal static ComputerPart ChooceViewObject(List<ComputerPart> products)
+        {
+            int choice = GeneralHelpers.StringToInt();
+            var validObject = products.FirstOrDefault(s => s.Id == choice);
+            if (validObject != null)
+            {
+                return validObject;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

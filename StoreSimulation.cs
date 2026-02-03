@@ -11,6 +11,7 @@ using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.Pages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -28,7 +29,18 @@ namespace ComputerStoreApplication
     {
         public static async Task Run()
         {
-            const string connectionUri = "mongodb+srv://oscardbuser:Oscar1234@cluster0.pb6h2cm.mongodb.net/?appName=Cluster0";
+            //await CheckMongoConnection();
+            //For when empty
+           // FillDatabaseWithBaseInformation();
+            await MainSimulationLogic();
+            Console.ReadLine();
+        }
+        private static async Task CheckMongoConnection()
+        {
+            var config = new ConfigurationBuilder().AddUserSecrets<ComputerDBContext>().Build();
+            var loginPassword = config["MongoPassword"];
+
+            string connectionUri = $"mongodb+srv://oscardbuser:{loginPassword}@cluster0.pb6h2cm.mongodb.net/?appName=Cluster0";
             var settings = MongoClientSettings.FromConnectionString(connectionUri);
             // Set the ServerApi field of the settings object to set the version of the Stable API on the client
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
@@ -45,37 +57,30 @@ namespace ComputerStoreApplication
                 Console.WriteLine(ex);
             }
             Console.ReadLine();
-            //For when empty
-            //  FillDatabaseWithBaseInformation();
-
-            await MainSimulationLogic();
-
-            Console.ReadLine();
         }
         private static async Task MainSimulationLogic() 
         {
             //Database connection
             var db = new Logic.ComputerDBContext();
-
-            //var admin = new AdminAccount
-            //{
-            //    UserName="admin1",
-            //    FirstName = "Admin",
-            //    SurName = "Adminsson",
-            //    Email = "admin.oscar@gmail.com",
-            //    PhoneNumber = CustomerHelper.RandomPhoneNumber()
-            //};
-            //admin.ChangeOwnPassword("1234");
-            //db.Add(admin);
-            //db.SaveChanges();
-
+            if (!db.Admins.Any())
+            {
+                var admin = new AdminAccount
+                {
+                    UserName = "admin1",
+                    FirstName = "Admin",
+                    SurName = "Adminsson",
+                    Email = "admin.oscar@gmail.com",
+                    PhoneNumber = CustomerHelper.RandomPhoneNumber()
+                };
+                admin.ChangeOwnPassword("1234");
+                db.Add(admin);
+                db.SaveChanges();
+            }
             //Repo often returns basic queries and ToLists()
             var rep = new Logic.ComponentRepo(db);
             //Call service and do basic data handling
             var service = new Logic.ComponentService(rep);
-
             var mongo = new MongoConnection();
-           
             //Application logic follows between pages, and carries db context which is the main component
             var computerApplicationLogic = new Logic.ApplicationManager(service, mongo);
             while (true) 
@@ -91,11 +96,10 @@ namespace ComputerStoreApplication
                 ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
                 //Handle input
                 var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
-
                 //Do thing on page if there's a command for it
                 if (actionOnPage != null)
                 {
-                    computerApplicationLogic.CurrentPage = actionOnPage;
+                    computerApplicationLogic.CurrentPage = await actionOnPage;
                 }
             }
         }
@@ -208,20 +212,6 @@ namespace ComputerStoreApplication
             componentCategories.Add(new ComponentCategory { Name = "Motherboard" });
             componentCategories.Add(new ComponentCategory { Name = "RAM" });
             db.AddRange(componentCategories);
-            var admin = new AdminAccount
-            {
-                UserName = "admin",
-                FirstName = "Adam",
-                SurName = "Adamsson",
-                PhoneNumber = CustomerHelper.RandomPhoneNumber(),
-                Email = "oscarcomputer@shop.admin.help",
-
-            };
-            admin.ChangeOwnPassword("admin");
-            db.Add(admin);
-            db.SaveChanges();
-
-
             //db.SaveChanges();
             Console.WriteLine("Saved changes!");
         }

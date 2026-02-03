@@ -24,12 +24,17 @@ namespace ComputerStoreApplication.Crud_Related
 
             return newComponentCategory;
         }
-        public static void ReadCategoryData(ComponentCategory part)
+        public static void ReadCategoryData(ComponentCategory cat, ApplicationManager logic)
         {
-            //Print stats
-            //How many products are in this category
-            //etc
-
+            var result = logic.Dapper.GetCountOfUniqueProductsAndStockInCategory(cat.Id);
+            if (result == null)
+            {
+                return;
+            }
+            foreach (var product in result.Result) 
+            {
+                Console.WriteLine($"We have this many unique products in {cat.Name}: {product.DifferentProducts}, with a total stock of: {product.TotalStock} ");
+            }
         }
 
         internal static void UpdateCategory(ComponentCategory part)
@@ -103,9 +108,14 @@ namespace ComputerStoreApplication.Crud_Related
         }
         internal static void ReadProductData(ApplicationManager logic, ComputerPart thing)
         {
-            logic.Dapper.TotalStockValueOnSpecificProduct(thing);
-
-
+           var result = logic.Dapper.TotalStockValueOnSpecificProduct(thing).Result;
+            var resultOrders = logic.Dapper.CountOrdersForProduct(thing.Id);
+            Console.WriteLine($"Info on {thing.Name}");
+            Console.WriteLine($"We got this many in stock of this product: {result.InStock}");
+            Console.WriteLine($"We've sold in total {result.UnitsSold} units");
+            Console.WriteLine($"Our total stock value (quantity * value per unit) of this product is {result.StockValue} €");
+            Console.WriteLine($"Total revenue thus far is {result.TotalRevenue} €");
+            Console.WriteLine($"Its a part of {resultOrders.Result} orders");
         }
 
         internal static void UpdateProduct(ComputerPart thing, List<Brand> allManufactuers, List<ComponentCategory> categories)
@@ -170,7 +180,8 @@ namespace ComputerStoreApplication.Crud_Related
 
         internal static void ReadPaymentData(ApplicationManager logic, PaymentMethod thing)
         {
-            throw new NotImplementedException();
+            var result = logic.Dapper.GetHowManyUseThisPayMethod(thing.Id);
+            Console.WriteLine($"This many people use {thing.Name}: {result.Result}");
         }
 
         internal static PaymentMethod CreatePaymentMethod()
@@ -181,11 +192,7 @@ namespace ComputerStoreApplication.Crud_Related
             return pay;
         }
 
-        internal static void ReadCustomerData(ApplicationManager app, CustomerAccount thing)
-        {
-            throw new NotImplementedException();
-        }
-
+      
         internal static void UpdateCustomerData(CustomerAccount customer)
         {
             Console.WriteLine("Firstname? Leave empty for no change");
@@ -265,6 +272,26 @@ namespace ComputerStoreApplication.Crud_Related
 
         internal static void ReadAddressInfo(CustomerShippingInfo adress, LocationHolder locationHolder)
         {
+            if (locationHolder.Cities == null || locationHolder.Countries == null||locationHolder==null)
+            {
+                return;
+            }
+
+            City city = locationHolder.Cities.FirstOrDefault(x => x.Id == adress.CityId);
+            if (city == null)
+            {
+                return;
+            }
+            Country country = locationHolder.Countries.FirstOrDefault(c => c.Id == city.CountryId);
+            if(country== null) 
+            {
+                return ;
+            }
+            Console.WriteLine("Your address info");
+            Console.WriteLine($"Street {adress.StreetName}");
+            Console.WriteLine($"Postal code {adress.PostalCode}");
+            Console.WriteLine($"State/Province {adress.State_Or_County_Or_Province}");
+            Console.WriteLine($"City {city.Name} in {country.Name}");
         }
 
         internal static void AdjustBasketItems(CustomerAccount currentCustomer, ApplicationManager logic)
@@ -294,13 +321,19 @@ namespace ComputerStoreApplication.Crud_Related
                 {
                     return;
                 }
+                //this is the item
                 var basketItem = basketProducts.FirstOrDefault(X => X.Id == choice);
-                if (basketItem == null)
+                //this is the item but tracked with ef
+                //loads of errors when saving otherewise, something with Ids and columns not macthing
+                //trackedbasketitem makes sure we're modifying the entity in the db
+                var trackedBasketItem = logic.ComputerPartShopDB.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
+
+                if (trackedBasketItem == null)
                 {
                     Console.WriteLine("Error with basket item, returning...");
                     return;
                 }
-                var storeItem = storeProducts.FirstOrDefault(x => x.Id == basketItem.ComputerPartId);
+                var storeItem = storeProducts.FirstOrDefault(x => x.Id == trackedBasketItem.ComputerPartId);
                 if(storeItem == null)
                 {
                     Console.WriteLine("Error finding store item, returning...");
@@ -311,47 +344,76 @@ namespace ComputerStoreApplication.Crud_Related
                 if (amount > storeItem.Stock)
                 {
                     Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
-                    basketItem.Quantity = storeItem.Stock;
+                    trackedBasketItem.Quantity = storeItem.Stock;
                 }
                 if (amount == 0)
                 {
-                    logic.ComputerPartShopDB.Remove(basketItem);
-                    logic.ComputerPartShopDB.SaveChanges();
+                    logic.ComputerPartShopDB.Remove(trackedBasketItem);
                 }
                 else
                 {
-                    basketItem.Quantity=amount;
+                    trackedBasketItem.Quantity=amount;
                 }
+                logic.VerifyStoreItems();
+                logic.VerifyBasketItems(currentCustomer.Id);
+
+                logic.ComputerPartShopDB.SaveChanges();
+                
+                return;
             }
             else
             {
                 var basketItem = basketProducts.First();
-                var storeItem = storeProducts.FirstOrDefault(x => x.Id == basketItem.ComputerPartId);
+                var trackedBasketItem = logic.ComputerPartShopDB.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
+                var storeItem = storeProducts.FirstOrDefault(x => x.Id == trackedBasketItem.ComputerPartId);
                 Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
                 int amount = GeneralHelpers.ReturnValidIntOrNone();
                 if (amount > storeItem.Stock)
                 {
                     Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
-                    basketItem.Quantity = storeItem.Stock;
+                    trackedBasketItem.Quantity = storeItem.Stock;
                 }
                 if (amount == 0)
                 {
-                    logic.ComputerPartShopDB.Remove(basketItem);
-                    logic.ComputerPartShopDB.SaveChanges();
+                    logic.ComputerPartShopDB.Remove(trackedBasketItem);
+                  
                 }
                 else
                 {
-                    basketItem.Quantity = amount;
+                    trackedBasketItem.Quantity = amount;
                 }
-
+                logic.VerifyStoreItems();
+                logic.VerifyBasketItems(currentCustomer.Id);
+                logic.ComputerPartShopDB.SaveChanges();
             }
-            return;
-
         }
 
         internal static void ReadBrandStatistics(ApplicationManager manager, Brand validBrand)
         {
+            var revenue = manager.Dapper.TotalRevenueBasedOnBrand(validBrand.Id);
+            var totalProductsInBrand = manager.Dapper.GetUniqueCountAndTotalStockCountOfBrandsProducts(validBrand.Id);
 
+            if (revenue.Result != null)
+            {
+              Console.WriteLine($"Total revune of this brand is: {revenue.Result}");
+            }
+            else
+            {
+                Console.WriteLine("No revenue data recorded...");
+            }
+            foreach (var r in totalProductsInBrand.Result)
+            {
+                if (r.UniqueCountProducts != null || r.TotalStock != null)
+                {
+                    Console.WriteLine($"They have {r.UniqueCountProducts} different products in our store, and we keep at total of {r.TotalStock} of their wares in stock");
+                }
+                else
+                {
+                    Console.WriteLine("Nothing to show");
+                }
+                    
+               
+            }
         }
 
         internal static void UpdateBrandName(Brand validBrand)
@@ -365,5 +427,34 @@ namespace ComputerStoreApplication.Crud_Related
             brand.Name = GeneralHelpers.SetName(30);
             return brand;
         }
+        //admin Read customer data
+        internal static void ReadCustomerData(ApplicationManager logic, CustomerAccount customer)
+        {
+            var customercosts = logic.Dapper.GetOrdersByCustomerAndAvgCost(customer.Id);
+
+            var customerspentBrand = logic.Dapper.MostSpentOnBrand(customer.Id);
+
+            if (customercosts != null)
+            {
+                Console.WriteLine($"Objects ordered in total {customercosts.Result.Value.CountProductsTotal}.");
+                Console.WriteLine($"Average order value is  {customercosts.Result.Value.AvgValue} €.");
+                Console.WriteLine($"Total spent at our store is  {customercosts.Result.Value.TotalCost}. €");
+                Console.WriteLine($"Most expensive product orded was {customercosts.Result.Value.MostExpensiveProductOrdered} at {customercosts.Result.Value.MostExpensiveObject} €");
+            }
+            if (customerspentBrand != null)
+            {
+                    Console.WriteLine($"Their favoured brand seems to be {customerspentBrand.Result.BrandName}, since they've spent {customerspentBrand.Result.TotalSpent} € on their products!");
+            }
+        }
+
+        internal static void ReadDeliveryServiceData(ApplicationManager logic, DeliveryProvider thing)
+        {
+            var result = logic.Dapper.GetHowManyUseThisDeliveryService(thing.Id);
+            if (result != null) 
+            {
+                Console.WriteLine($"This many people {thing.Name} as their provider for their orders: {result.Result}");
+            }
+        }
+           
     }
 }

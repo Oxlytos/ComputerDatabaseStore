@@ -24,7 +24,7 @@ namespace ComputerStoreApplication.Pages
         public int? AdminId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
@@ -38,6 +38,7 @@ namespace ComputerStoreApplication.Pages
                     if (applicationLogic.IsLoggedInAsCustomer)
                     {
                         applicationLogic.HandleCustomerPurchase(CurrentCustomerId.Value);
+                        applicationLogic.RefreshCurrentCustomerBasket(CurrentCustomer);
                         Console.ReadLine();
                     }
                         return this;
@@ -45,8 +46,11 @@ namespace ComputerStoreApplication.Pages
                     if (applicationLogic.IsLoggedInAsCustomer)
                     {
                         CrudCreatorHelper.AdjustBasketItems(CurrentCustomer, applicationLogic);
-                        applicationLogic.ComputerPartShopDB.SaveChanges();
+                        applicationLogic.RefreshCurrentCustomerBasket(CurrentCustomer);
                         applicationLogic.VerifyStoreItems();
+                        applicationLogic.VerifyBasketItems(CurrentCustomerId);
+                        applicationLogic.ComputerPartShopDB.SaveChanges();
+                        
                     }
                     return this;
                 case PageControls.PageOption.Home:
@@ -75,10 +79,21 @@ namespace ComputerStoreApplication.Pages
             }
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
-            CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
+            if (CurrentCustomerId == null)
+            {
+                return;
+            }
+            CurrentCustomer = appLol.GetCustomerInfo(CurrentCustomerId.Value);
+            RefreshBasketInfo(appLol);
+          
+        }
+        public void RefreshBasketInfo(ApplicationManager appLol)
+        {
+            appLol.RefreshCurrentCustomerBasket(CurrentCustomer);
+
             appLol.VerifyBasketItems(CurrentCustomerId);
-            BasketProducts.Clear();
-            BasketProducts = appLol.GetBasketProductsFromCustomerId((int)CurrentCustomerId);
+
+            BasketProducts = CurrentCustomer.ProductsInBasket.ToList();
         }
 
         public void RenderPage()
@@ -87,7 +102,7 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawCheckoutPage();
             SetPageCommands();
             DrawAccountProfile();
-            Console.WriteLine("Objects in basket: " + BasketProducts.Count);
+            Console.WriteLine("Different products in basket: " + BasketProducts.Count);
             foreach (var product in BasketProducts) 
             {
                 Console.WriteLine($"Id {product.Id} Name: {product.ComputerPart.Name} Quantity: {product.Quantity}");
@@ -95,18 +110,10 @@ namespace ComputerStoreApplication.Pages
         }
         public void DrawAccountProfile()
         {
-            List<string> tesList = new List<string>();
-            if (CurrentCustomer != null)
-            {
-                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email);
-            }
-            else
-            {
-                tesList.Add("Not Loggedin");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
-
         }
 
         public void SetPageCommands()

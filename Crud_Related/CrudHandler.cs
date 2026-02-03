@@ -324,11 +324,22 @@ namespace ComputerStoreApplication.Crud_Related
                 Console.WriteLine("These are the store producs");
                 foreach (var product in storeObjects)
                 {
-                    Console.WriteLine($"{product.Id} {product.Name} {product.Price}");
+                    string selectedText = product.SelectedProduct ? "Selected" : "Not selected";
+                    Console.Write($"{product.Id.ToString().PadRight(5)} | {product.Name} | Price: {product.Price} |");
+                    Console.Write($"{("".PadRight(2))} Selected? {selectedText}| Stock: {product.Stock}\n");
+                    
+                 
                 }
 
+                Console.WriteLine("Press 'Q' to unmark all selected products (clear selected)");
                 PrintCrudCommands();
                 var userInputC = Console.ReadKey(true);
+              
+                if (userInputC.Key == ConsoleKey.Q)
+                {
+                    logic.Dapper.ClearSelected();
+                    return;
+                }
                 if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
                 {
                     logic.InformOfQuittingOperation();
@@ -439,7 +450,7 @@ namespace ComputerStoreApplication.Crud_Related
                     switch (userCrudValue)
                     {
                         case CRUD.Read:
-                            CrudHandler.ReadDeliveryServiceData(thing);
+                            CrudCreatorHelper.ReadDeliveryServiceData(logic, thing);
                             break;
                         case CRUD.Update:
                             CrudCreatorHelper.UpdateDeliverService(thing);
@@ -477,6 +488,7 @@ namespace ComputerStoreApplication.Crud_Related
 
         private static void ReadDeliveryServiceData(DeliveryProvider thing)
         {
+
             throw new NotImplementedException();
         }
 
@@ -515,26 +527,25 @@ namespace ComputerStoreApplication.Crud_Related
                     Console.WriteLine("Some error here bud");
                     return;
                 }
-                var allManufactuers = logic.GetManufacturers();
                 if (userCrudValue != CRUD.Create)
                 {
                     Console.WriteLine("Which object from the list? Input its Id");
                     int valid = GeneralHelpers.StringToInt();
-                    var thing = storeCategories.FirstOrDefault(x => x.Id == valid);
-                    if (thing == null)
+                    var category = storeCategories.FirstOrDefault(x => x.Id == valid);
+                    if (category == null)
                     {
                         return;
                     }
                     switch (userCrudValue)
                     {
                         case CRUD.Read:
-                            CrudCreatorHelper.ReadCategoryData(thing);
+                            CrudCreatorHelper.ReadCategoryData(category, logic);
                             break;
                         case CRUD.Update:
-                            CrudCreatorHelper.UpdateCategory(thing);
+                            CrudCreatorHelper.UpdateCategory(category);
                             break;
                         case CRUD.Delete:
-                            logic.ComputerPartShopDB.Remove(thing);
+                            logic.ComputerPartShopDB.Remove(category);
                             break;
                     }
                 }
@@ -595,7 +606,7 @@ namespace ComputerStoreApplication.Crud_Related
                 var storeObjects = logic.GetStoreProducts();
                 foreach (var storeObject in storeObjects)
                 {
-                    Console.WriteLine($"Id: {storeObject.Id} Name: {storeObject.Name} Selected? {storeObject.SelectedProduct}");
+                    Console.WriteLine($"Id: {storeObject.Id.ToString().PadRight(5)} Name: {storeObject.Name} Selected? {storeObject.SelectedProduct}");
                 }
                 Console.WriteLine("Input the corresponding Id of the product you want to mark as 'Selected'");
                 int choice = GeneralHelpers.StringToInt();
@@ -633,7 +644,7 @@ namespace ComputerStoreApplication.Crud_Related
                     Name = name,
                 };
                 var currentBrands = logic.GetManufacturers();
-                var valid = currentBrands.FirstOrDefault(x => x.Name == newBrand.Name);
+                var valid = currentBrands.FirstOrDefault(x => x.Name.ToLower() == newBrand.Name.ToLower());
                 //Dosen't already exist
                 if (valid == null)
                 {
@@ -650,378 +661,6 @@ namespace ComputerStoreApplication.Crud_Related
             }
         }
 
-        //Vill vi skiippa och printa tråkiga fälts med ID och annat för användaren
-        //public static void ComponentInput(ApplicationManager logic)
-        //{
-        //    ComputerPart componentToCreate = AskWhatProductType(logic);
-
-        //    var relevantObjects = logic.GetComputerComponentsByType(componentToCreate);
-
-        //    Console.WriteLine($"You chose: {componentToCreate.GetType().Name}");
-        //    Console.WriteLine("Current components in this category;");
-        //    if (relevantObjects != null)
-        //    {
-        //        foreach (var part in relevantObjects)
-        //        {
-        //            Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("No component of this type yet");
-        //    }
-        //    Console.WriteLine("What CRUD action?");
-        //    if (relevantObjects != null || relevantObjects.Count()>0)
-        //    {
-        //        foreach (var key in Commandos)
-        //        {
-
-        //            Console.WriteLine($"[{key.Key}] to {key.Value} a product");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine($"Only action available is to Create, by pressing [C]");
-        //    }
-
-        //    var userInputC = Console.ReadKey(true);
-        //    if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
-        //    {
-        //        Console.WriteLine("Some error here bud");
-        //        return;
-        //    }
-        //    if (userCrudValue != CRUD.Create)
-        //    {
-        //        var selectedComponent = GetObjectByTypeAndId(relevantObjects.ToList());
-        //        switch (userCrudValue)
-        //        {
-        //            case CRUD.Read:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Read(logic);
-        //                }
-        //                break;
-        //            case CRUD.Update:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Update(logic);
-        //                }
-        //                break;
-        //            case CRUD.Delete:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Delete(logic);
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        componentToCreate.Create(logic);
-        //    }
-        //}
-
-        //public static void StoreProductInput(ApplicationManager logic)
-        //{
-        //    Console.WriteLine("These are the current store products on the website");
-        //    var storeObjs = logic.GetStoreProducts();
-        //    if (storeObjs != null) 
-        //    {
-        //        foreach (var storeObj in storeObjs)
-        //        {
-        //            Console.WriteLine($"Id: {storeObj.Id} Name: {storeObj.Name} Price: {storeObj.Price} Sale: {storeObj.Sale} Stock: {storeObj.Stock} CompId: {storeObj.ComputerPartId}");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("No store objects as of now");
-        //    }
-        //    Console.WriteLine("");
-        //    Console.WriteLine("What CRUD action?");
-        //    if (storeObjs != null)
-        //    {
-        //        foreach (var key in Commandos)
-        //        {
-        //            Console.WriteLine($"[{key.Key}] to {key.Value} a product");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine($"Only action available is to Create, by pressing [C]");
-        //    }
-
-        //    var userInputC = Console.ReadKey(true);
-        //    if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
-        //    {
-        //        Console.WriteLine("Some error here bud");
-        //        return;
-        //    }
-        //    if (userCrudValue != CRUD.Create)
-        //    {
-        //        var selectedComponent = GetStoreProductById(storeObjs.ToList());
-        //        switch (userCrudValue)
-        //        {
-        //            case CRUD.Read:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Read(logic);
-        //                }
-        //                break;
-        //            case CRUD.Update:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Update(logic);
-        //                }
-        //                break;
-        //            case CRUD.Delete:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Delete(logic);
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        ComputerPart part = ChooseWhatPartToMakeAStoreProductOutOf(logic);
-        //        StoreProduct newStoreProduct = new StoreProduct();
-        //        if(part != null)
-        //        {
-        //            newStoreProduct.Create(logic, part);
-        //        }
-        //        else
-        //        {
-        //            Console.WriteLine("error");
-        //        }
-
-        //    }
-
-
-        //}
-        //public static ComputerPart ChooseWhatPartToMakeAStoreProductOutOf(ApplicationManager logic)
-        //{
-        //    Console.WriteLine("What category?");
-        //    ComputerPart componentToCreate = AskWhatProductType(logic);
-
-        //    var relevantObjects = logic.GetComputerComponentsByType(componentToCreate);
-
-        //    Console.WriteLine($"You chose: {componentToCreate.GetType().Name}");
-        //    Console.WriteLine("Current components in this category;");
-        //    if (relevantObjects != null)
-        //    {
-        //        foreach (var part in relevantObjects)
-        //        {
-        //            Console.WriteLine($"-\tId: {part.Id} Name: {part.Name}");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("No component of this type yet");
-        //    }
-        //    Console.WriteLine("Input the Id of the object you'd like to make a product out of");
-        //    int choice =GeneralHelpers.StringToInt();
-        //    var chosenObject = relevantObjects.FirstOrDefault(x => x.Id == choice);
-        //    var currentStoreObjects = logic.GetStoreProducts();
-        //    if (chosenObject != null) 
-        //    {
-        //        Console.WriteLine("Valid object");
-        //        if (currentStoreObjects != null) 
-        //        {
-        //            Console.WriteLine("We have a refernce object");
-        //            if(currentStoreObjects.Any(x => x.ComputerPartId == chosenObject.Id))
-        //            {
-        //                Console.WriteLine("That already exists on the store page");
-        //                Console.WriteLine("Press Enter to Continue");
-        //                Console.ReadLine();
-        //                return null;
-        //            }
-        //            else
-        //            {
-        //                return chosenObject;
-        //            }
-        //        }
-        //    }
-        //    return null;
-        //}
-        //public static void CategoryInput(ApplicationManager logic)
-        //{
-        //    ComponentSpecification specCreate = AskWhatComponentSpecification(logic);
-
-
-        //    Console.WriteLine($"You chose: {specCreate.GetType().Name}");
-        //    Console.WriteLine("Current components in this category;");
-        //    if (relevantObjects != null)
-        //    {
-        //        foreach (var spec in relevantObjects)
-        //        {
-        //            Console.WriteLine($"-\tId: {spec.Id} {spec.Name}");
-        //        }
-        //    }
-        //    Console.WriteLine("What CRUD action?");
-        //    if (relevantObjects != null)
-        //    {
-        //        foreach (var key in Commandos)
-        //        {
-        //            Console.WriteLine($"[{key.Key}] to {key.Value} a product");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine($"Only action available is to Create, by pressing [C]");
-        //    }
-
-        //    var userInputC = Console.ReadKey(true);
-        //    if (!Commandos.TryGetValue(userInputC.Key, out var userCrudValue))
-        //    {
-        //        Console.WriteLine("Some error here bud");
-        //        return;
-        //    }
-        //    if (userCrudValue != CRUD.Create)
-        //    {
-        //        var selectedComponent = GetSpecByTypeAndId(relevantObjects.ToList());
-        //        switch (userCrudValue)
-        //        {
-        //            case CRUD.Read:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Read(logic);
-        //                }
-        //                break;
-        //            case CRUD.Update:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Update(logic);
-        //                }
-        //                break;
-        //            case CRUD.Delete:
-        //                if (selectedComponent != null)
-        //                {
-        //                    selectedComponent.Delete(logic);
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        specCreate.Create(logic);
-        //    }
-        //}
-        static ComputerPart GetObjectByTypeAndId(List<ComputerPart> compObjs)
-        {
-            Console.WriteLine("What object (by ID) do you want to interact with?");
-            int idChoice = GeneralHelpers.StringToInt();
-            if (compObjs.Any(x => x.Id == idChoice))
-            {
-                return compObjs.FirstOrDefault(c => c.Id == idChoice);
-            }
-            else
-            {
-                return null;
-            }
-        }
-        static ComponentSpecification GetSpecByTypeAndId(List<ComponentSpecification> compObjs)
-        {
-            Console.WriteLine("What object (by ID) do you want to interact with?");
-            int idChoice = GeneralHelpers.StringToInt();
-            if (compObjs.Any(x => x.Id == idChoice))
-            {
-                return compObjs.FirstOrDefault(c => c.Id == idChoice);
-            }
-            else
-            {
-                return null;
-            }
-        }
-        //static StoreProduct GetStoreProductById(List<StoreProduct> compObjs)
-        //{
-        //    Console.WriteLine("What object (by ID) do you want to interact with?");
-        //    int idChoice = GeneralHelpers.StringToInt();
-        //    if (compObjs.Any(x => x.Id == idChoice))
-        //    {
-        //        return compObjs.FirstOrDefault(c => c.Id == idChoice);
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-        //}
-        //static ComputerPart AskWhatProductType(ApplicationManager logic)
-        //{
-        //    Console.WriteLine("What type of product?");
-        //    List<Type> types = GeneralHelpers.ReturnComputerPartTypes();
-        //    for (int i = 0; i < types.Count; i++)
-        //    {
-        //        Console.WriteLine($"{i + 1} {types[i].Name}");
-        //    }
-
-        //    string usIn = Console.ReadLine();
-        //    if (Int32.TryParse(usIn, out int choice))
-        //    {
-        //        choice -= 1;
-        //        switch (choice)
-        //        {
-        //            case 0:
-        //                return new CPU();
-        //            case 1:
-        //                return new GPU();
-        //            case 2:
-        //                return new Motherboard();
-        //            case 3:
-        //                return new PSU();
-        //            case 4:
-        //                return new RAM();
-        //        }
-        //    }
-        //    return null;
-        //}
-        static ComponentSpecification AskWhatComponentSpecification(ApplicationManager logic)
-        {
-            Console.WriteLine("What type of category?");
-            List<Type> types = GeneralHelpers.ReturnComponentSpecificationTypes();
-            Console.WriteLine(types.Count);
-            for (int i = 0; i < types.Count; i++)
-            {
-                Console.WriteLine($"{i + 1} {types[i].Name}");
-            }
-
-            string usIn = Console.ReadLine();
-            if (Int32.TryParse(usIn, out int choice))
-            {
-                choice -= 1;
-                switch (choice)
-                {
-                    case 0:
-                        return new CPUArchitecture();
-                    case 1:
-                        return new CPUSocket();
-                    case 2:
-                        return new EnergyClass();
-                    case 3:
-                        return new MemoryType();
-                    case 4:
-                        return new RamProfileFeatures();
-                }
-            }
-            return null;
-        }
-        internal static CustomerShippingInfo GetCustomerShippingInfoInput()
-        {
-            return null;
-        }
-        static void LoadBackgroundForm()
-        {
-            int startPosX = GeneralHelpers.ReturnMiddleOfTheScreenXAxisWithOffsetForSomeStringOrLength(15);
-            Helpers.WindowStuff.EmptyWindow form = new Helpers.WindowStuff.EmptyWindow
-            {
-                Header = " Questionnaire",
-                Left = startPosX,
-                Top = 15,
-                Height = 25,
-                BgColor = ConsoleColor.Red,
-            };
-            form.Draw();
-        }
-
         internal static void CRUDShippingInfo(ApplicationManager app, CustomerAccount currentCustomer)
         {
             LocationHolder locationHolder = new LocationHolder
@@ -1035,7 +674,7 @@ namespace ComputerStoreApplication.Crud_Related
                 Console.WriteLine("Found these addresses linked to your account");
                 foreach (var address in addresses)
                 {
-                    Console.WriteLine($"Id: {address.Id} {address.StreetName} {address.PostalCode} {address.City.Name} {address.State_Or_County_Or_Province} {address.City.Country.Name} ");
+                    Console.WriteLine($"Id: {address.Id.ToString().PadRight(5)} {address.StreetName} {address.PostalCode} {address.City.Name} {address.State_Or_County_Or_Province} {address.City.Country.Name} ");
                 }
             }
             else
@@ -1062,7 +701,6 @@ namespace ComputerStoreApplication.Crud_Related
             }
             if (userCrudValue != CRUD.Create)
             {
-
                 Console.WriteLine("Which object from the list? Input its Id");
                 int valid = GeneralHelpers.StringToInt();
                 var adress = addresses.FirstOrDefault(x => x.Id == valid);

@@ -65,20 +65,13 @@ namespace ComputerStoreApplication.Pages
         }
         public void DrawAccountProfile()
         {
-            List<string> tesList = new List<string>();
-            if (CurrentCustomer != null)
-            {
-                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
-            }
-            else
-            {
-                tesList.Add("Not Loggedin");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 15);
 
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
             //har vi inte deras input
@@ -128,29 +121,28 @@ namespace ComputerStoreApplication.Pages
         public void CheckoutObject(ApplicationManager app)
         {
             Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
-            int choice = GeneralHelpers.StringToInt();
-            var validObject = Products.FirstOrDefault(s=>s.Id== choice);
-            if (validObject != null) 
+            var objectToView = StoreHelper.ChooceViewObject(Products);
+
+            var category = app.ComputerPartShopDB.ComponentCategories.FirstOrDefault(x => x.Id == objectToView.CategoryId);
+            var brand = app.ComputerPartShopDB.BrandManufacturers.FirstOrDefault(x => x.Id == objectToView.BrandId);
+            Console.ReadLine();
+            objectToView.Read(brand, category);
+            Console.WriteLine("Add to basket?");
+            bool yes = GeneralHelpers.YesOrNoReturnBoolean();
+            if (yes && CurrentCustomer != null)
             {
-               bool yes =  StoreHelper.ViewProduct(validObject, app);
-                if (yes && CurrentCustomer!=null) 
-                {
-                    app.AddProductToBasket(validObject,CurrentCustomer);
-                }
-                if (CurrentCustomer == null)
-                {
-                    Console.WriteLine("You need to be logged in to add to basket");
-                    Console.ReadLine();
-                    return;
-                }
-                else
-                {
-                    Console.WriteLine("Quitting operation");
-                    Console.ReadLine();
-                    return;
-                }
+                app.AddProductToBasket(objectToView, CurrentCustomerId.Value);
             }
-          
+            else if(CurrentCustomer==null) 
+            {
+                Console.WriteLine("You need to be logged in to add to basket");
+                app.InformOfQuittingOperation();
+            }
+            else
+            {
+                Console.WriteLine("Error with adding to basket");
+                app.InformOfQuittingOperation();
+            }
         }
         public void TryAndLogin(ApplicationManager app)
         {

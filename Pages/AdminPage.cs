@@ -60,54 +60,50 @@ namespace ComputerStoreApplication.Pages
         public void DrawAccountProfile()
         {
 
-            List<string> tesList = new List<string>();
-            if (AdminAccount != null)
-            {
-                tesList.AddRange(AdminAccount.UserName, AdminAccount.FirstName, AdminAccount.SurName, AdminAccount.PhoneNumber);
-            }
-            if (CustomerAccount != null)
-            {
-                tesList.AddRange(CustomerAccount.FirstName, CustomerAccount.SurName, CustomerAccount.PhoneNumber, "Admin Operations not available ");
-            }
-            else
-            {
-                tesList.AddRange("Not lgged in as Admin", "Admin Operations not available");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnAdminProfileAccountString(AdminAccount);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
 
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
-                return this; //retunera samma sida igen
+                return this;
+            //This blir denna sida //retunera samma sida igen
 
             //retunera sida beroende på sida
             switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
                 //Bokstaven N är skapa ny produkt, vi laddar om samma sida, fast kallar en metod innan
                 case PageControls.PageOption.AdminCreate:
-                    if (!applicationLogic.IsLoggedInAsAdmin) { return this; }
+                    if (!applicationLogic.IsLoggedInAsAdmin) 
+                    {
+                        return this; 
+                    }
                     Console.Clear();
                     CrudHandler.ChooseCategory(applicationLogic);
                     applicationLogic.SaveChangesOnComponent();
-                    return this; //This blir denna sida
+                    return this;
                 case PageControls.PageOption.AdminLogin:
                     Console.SetCursorPosition(0, 15);
+                    //try and login
                     if (!applicationLogic.IsLoggedInAsAdmin)
                     {
                         LoginAdmin(applicationLogic);
                     }
+                    //if logged in, try and logout
                     else if (applicationLogic.IsLoggedInAsAdmin)
                     {
                         LogoutAdmin(applicationLogic);
                     }
-                        return this;
+                    return this;
                 case PageControls.PageOption.AdminViewStats:
+                    //show stats if logged in admin
                     if (applicationLogic.IsLoggedInAsAdmin)
                     {
-                         ViewStats(applicationLogic);
+                          await ViewStats(applicationLogic);
                     }
                     return this;
                 case PageControls.PageOption.Home:
@@ -115,37 +111,55 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.CustomerPage:
                     return new CustomerPage();
             }
-            ;
             return this;
-
         }
+
         public async Task ViewStats(ApplicationManager app)
         {
-            //try and get stats, could fail because of HandlerUserInput not being async
+            ///try and get queries via dapper for stats
             try
             {
                 decimal totalRevenue = await app.Dapper.GetTotalRevenue();
                 var mostProfitableBrand = await app.Dapper.GetMostProfitableBrand();
                 var deliveryStats = await app.Dapper.GetOrdersPerDeliveryService();
+                var mostExpensiveOrderLastDay = await app.Dapper.GetMostExpensiveOrderLast24Hours();
+                var top3mostmoneyspentcountries = await app.Dapper.GetCountryWithTheMostSpending();
                 var countrySpending = await app.Dapper.GetTotalCountrySpending();
                 var biggestSpender = await app.Dapper.GetHighestSpender();
                 var leastAmountSpent = await app.Dapper.GetLowestSpender();
+                var mostCommonPayMethod = await app.Dapper.GetMostCommonPayMethod();
+                var mostCommonCategoryPerCity = await app.Dapper.GetMostCommanCategoryPerCity();
 
                 // Display stats neatly
-                Console.WriteLine("\n=== ADMIN STATS ===\n");
+                Console.WriteLine("\n ---- Admin Info --------\n");
                 Console.WriteLine($"Total Revenue (€): {totalRevenue:N2}");
-                Console.WriteLine($"Most Profitable (€) Brand: {mostProfitableBrand?.BrandName ?? "N/A"} ({mostProfitableBrand?.TotalRevenue:N2})\n");
+                Console.WriteLine($"Most Profitable (€) Brand: {mostProfitableBrand?.BrandName ?? "Not available"} ({mostProfitableBrand?.TotalRevenue})\n");
 
+                if (mostExpensiveOrderLastDay.HasValue)
+                {
+                    Console.WriteLine($"Most expensive order last 24 hours is {mostExpensiveOrderLastDay.Value.TotalValue} € by account {mostExpensiveOrderLastDay.Value.Email}");
+                }
                 Console.WriteLine("Orders Per Delivery Service:");
                 foreach (var d in deliveryStats)
                 {
-                    Console.WriteLine($"{d.DeliveryProviderName.PadRight(25)} : {d.NumberOfOrders} orders");
+                    Console.WriteLine($"{d.DeliveryProviderName.PadRight(25)} : {d.NumberOfOrders} orders, handling wares with a total value of {d.TotalValue}");
                 }
 
-                Console.WriteLine("\nCountry Spending (€):");
-                foreach (var c in countrySpending)
+                Console.WriteLine("\nCity Spending (€):");
+                Console.WriteLine("We got orders in these places; ");
+                foreach(var d in countrySpending)
                 {
-                    Console.WriteLine($"{c.Country.PadRight(25)} : {c.value:N2}");
+                    Console.WriteLine($"{d.City} (in {d.Country}) at {d.TotalValue}€");
+                }
+                Console.WriteLine("\nTotal spent per country");
+                foreach (var c in top3mostmoneyspentcountries)
+                {
+                    Console.WriteLine($"{c.CountryName} spent {c.TotalSpent} in total!");
+                }
+                Console.WriteLine("\nMost common category per city");
+                foreach(var c in mostCommonCategoryPerCity)
+                {
+                    Console.WriteLine($"{c.CityName} has category {c.PartCategory} as their most common (based on units), with {c.TotalProducts} sold/delivered there");
                 }
                 if(biggestSpender != null)
                 {
@@ -156,6 +170,14 @@ namespace ComputerStoreApplication.Pages
                 {
                     Console.WriteLine("\nAnd the lowest amount spent (€) by a person is;");
                     Console.WriteLine($"{leastAmountSpent.Value.FirstName} {leastAmountSpent.Value.SurName} with an expendeture of: {leastAmountSpent.Value.TotalSpent} (€)");
+                }
+                if (mostCommonPayMethod != null) 
+                {
+                    Console.WriteLine("\nMost common pay method is;");
+                    foreach(var p in mostCommonPayMethod)
+                    {
+                        Console.WriteLine($"{p.PayName} with {p.Count}");
+                    }
                 }
                 Console.WriteLine("Press any key to continue");
                 Console.ReadKey();

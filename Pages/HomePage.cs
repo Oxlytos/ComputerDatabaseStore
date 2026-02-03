@@ -34,11 +34,13 @@ namespace ComputerStoreApplication.Pages
             int top = 18;
             int spacing = 35;
 
+            //loop through all selcted products
             for (int i = 0; i < SelectedProducts.Count; i++)
             {
                 var product = SelectedProducts[i];
                 var rows = new List<string>
                 {
+                    //nice formatting
                     $"Id: {product.Id}".PadRight(30),
                     product.Name.PadRight(30),
                     $"Price: {product.Price} €".PadRight(30),
@@ -50,7 +52,7 @@ namespace ComputerStoreApplication.Pages
                    top,
                    rows
                );
-
+                //draw windows, can and will overflow
                 window.Draw();
 
             }
@@ -58,19 +60,12 @@ namespace ComputerStoreApplication.Pages
         }
         public void DrawAccountProfile()
         {
-            List<string> tesList = new List<string>();
-            if (CurrentCustomer != null)
-            {
-                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " +CurrentCustomer.ProductsInBasket.Count);
-            }
-            else
-            {
-                tesList.Add("Not Loggedin");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 15);
         }
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
@@ -128,7 +123,7 @@ namespace ComputerStoreApplication.Pages
         public void Load(ApplicationManager appLol)
         {
             //Random 3 objects every load
-             SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Random.Shared.Next(5)).ToList(); ;
+             SelectedProducts = appLol.GetFrontPageProducts().Take(3).OrderBy(_ => Random.Shared.Next(3)).ToList(); ;
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -162,7 +157,7 @@ namespace ComputerStoreApplication.Pages
             if (valid != null)
             {
                 Console.WriteLine("Working...");
-                appLo.AddProductToBasket(valid, CurrentCustomer);
+                appLo.AddProductToBasket(valid, CurrentCustomerId.Value);
                 
             }
             else

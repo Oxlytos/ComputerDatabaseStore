@@ -7,6 +7,7 @@ using ComputerStoreApplication.Models.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using static ComputerStoreApplication.Pages.PageControls;
@@ -21,11 +22,10 @@ namespace ComputerStoreApplication.Pages
 
         public int? CurrentCustomerId {get; set; }
 
-        public IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
+        public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
                 return this; //retunera samma sida igen
-
             //retunera sida beroende på sida
             switch (whateverButtonUserPressed.PageCommandOptionInteraction)
             {
@@ -37,7 +37,7 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.AdminPage:
                     return new AdminPage();
                 case PageControls.PageOption.Search:
-                    SearchResults(applicationLogic);
+                    await SearchResults(applicationLogic);
                     return this;
             }
             ;
@@ -46,22 +46,15 @@ namespace ComputerStoreApplication.Pages
         }
 
         //Basic
-        public void SearchResults(ApplicationManager appLol)
+        public async Task SearchResults(ApplicationManager appLol)
         {
-            Console.WriteLine("Input search query, please");
-            string input = Console.ReadLine();
-
-            //sök
-            var allProducts = appLol.GetStoreProducts();
-            List<ComputerPart> parts = new List<ComputerPart>();
-            foreach (ComputerPart part in allProducts)
-            {
-                if (part.Name.ToLower().Contains(input.ToLower()))
-                {
-                    parts.Add(part);
-                }
-            }
+           List<ComputerPart>? parts = StoreHelper.SearchResults(appLol.GetStoreProducts());
             //printa alla resultat
+            if (!parts.Any())
+            {
+                Console.WriteLine("No objects based on search term....");
+                appLol.InformOfQuittingOperation();
+            }
             Console.WriteLine($"Found this many similar objects based on query results: {parts.Count}");
             if (parts.Count > 0)
             {
@@ -71,50 +64,20 @@ namespace ComputerStoreApplication.Pages
                 }
             }
             Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket, or 0 to return");
-            int choice = GeneralHelpers.ReturnValidIntOrNone();
-            if(choice == 0) {return; }
-            if (CurrentCustomer != null)
+            
+            var objectToAdd = StoreHelper.DecideToAddToBasket(CurrentCustomerId, parts);
+            if(objectToAdd == null)
             {
-                var doesItExist = parts.FirstOrDefault(x => x.Id == choice);
-                if (doesItExist != null)
-                {
-                    Console.WriteLine("Exists!");
-                    Console.WriteLine($"You wanna add {doesItExist.Name} to your basket?");
-                    bool confirmation = GeneralHelpers.YesOrNoReturnBoolean();
-                    if (confirmation)
-                    {
-                        appLol.AddProductToBasket(doesItExist, CurrentCustomer);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Quitting operation...");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Dosen't exist");
-                }
-                Console.ReadLine();
-            }
-            else
-            {
-                Console.WriteLine("You can only add to basket if your logged in");
-                Console.ReadLine();
+                appLol.InformOfQuittingOperation();
                 return;
             }
+            appLol.AddProductToBasket(objectToAdd, CurrentCustomerId.Value);
         }
         public void DrawAccountProfile()
         {
-            List<string> tesList = new List<string>();
-            if (CurrentCustomer != null)
-            {
-                tesList.AddRange(CurrentCustomer.FirstName, CurrentCustomer.SurName, CurrentCustomer.Email, "Objects in basket: " + CurrentCustomer.ProductsInBasket.Count);
-            }
-            else
-            {
-                tesList.Add("Not Loggedin");
-            }
-            PageAccount.DrawAccountGraphic(tesList, "", ConsoleColor.DarkCyan);
+            List<string> accountInfo = new List<string>();
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
         }
         public void Load(ApplicationManager appLol)

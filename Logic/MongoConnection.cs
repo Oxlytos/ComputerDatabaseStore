@@ -1,5 +1,6 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.MongoModels;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,20 @@ namespace ComputerStoreApplication.Logic
 {
     public class MongoConnection
     {
-        private static readonly MongoClient _client = new MongoClient(MongoClientSettings.FromUrl(new MongoUrl(
-            "mongodb+srv://oscardbuser:Oscar1234@cluster0.pb6h2cm.mongodb.net/")
-    )
-);
-        //singelton create once and use many times over later, aka don't open a connection every times
+        //Create one client connection 
+        //Create at start in ShopSimulation with application manager or
+        private static readonly MongoClient _client;
+
+        static MongoConnection()
+        {
+            var config = new ConfigurationBuilder().AddUserSecrets<ComputerDBContext>().Build();
+            var loginPassword = config["MongoPassword"];
+
+            var connString = $"mongodb+srv://oscardbuser:{loginPassword}@cluster0.pb6h2cm.mongodb.net/";
+
+            _client = new MongoClient(connString);
+        }
+        //Get client once
         private static MongoClient GetClient() => _client;
        
         public static async Task CustomerLoginAttempt(string email, int customerId, bool success)

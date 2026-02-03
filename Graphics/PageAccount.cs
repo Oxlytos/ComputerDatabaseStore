@@ -8,6 +8,36 @@ namespace ComputerStoreApplication.Graphics
 {
     internal class PageAccount
     {
+        internal static List<string> ReturnCustomerProfileAccountString(Account.CustomerAccount? currentCustomer)
+        {
+            int? totalAmountInBasket = 0;
+            List<string> strings = new List<string>();
+            if (currentCustomer != null)
+            {
+                totalAmountInBasket = currentCustomer.ProductsInBasket?.Sum(p => p.Quantity) ?? 0;
+               
+                strings.AddRange(currentCustomer.FirstName, currentCustomer.SurName, currentCustomer.Email, "Objects in basket: " + totalAmountInBasket);
+            }
+            else
+            {
+                strings.Add("Not Loggedin");
+                totalAmountInBasket = 0;
+            }
+            return strings;
+        }
+        internal static List<string> ReturnAdminProfileAccountString(Account.AdminAccount? admin)
+        {
+            List<string> strings = new List<string>();
+            if (admin != null)
+            {
+                strings.AddRange(admin.UserName, admin.FirstName, admin.SurName, admin.Email);
+            }
+            else
+            {
+                strings.Add("Not Loggedin");
+            }
+            return strings;
+        }
         internal static void DrawAccountGraphic(List<string> textElements, string headerText, ConsoleColor bannerColor)
         {
             //Width

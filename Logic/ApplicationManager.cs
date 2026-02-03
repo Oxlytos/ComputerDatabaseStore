@@ -3,7 +3,9 @@ using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
+using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.Pages;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +46,14 @@ namespace ComputerStoreApplication.Logic
             _mongoConnection = mongo;
             CustomerId = 0;
             AdminId = 0;
+        }
+        public ComponentCategory GetCategory(int productId)
+        {
+           return _services.GetCategory(productId);
+        }
+        public Brand GetBrand(int productId)
+        {
+            return _services.GetBrand( productId);
         }
         public void EditCustomerProfile()
         {
@@ -137,9 +147,9 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.HandleCustomerBasket(customerId);
         }
-        public void AddStoreProductToBasket(CustomerAccount cus, ComputerPart prod)
+        public void AddStoreProductToBasket(int customerId, ComputerPart prod)
         {
-            _services.AddProductToBasket(prod, cus);
+            _services.AddProductToBasket(prod, customerId);
         }
         public void SaveChangesOnComponent()
         {
@@ -202,9 +212,9 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetCPUs();
         }*/
-        public void AddProductToBasket(ComputerPart prod, CustomerAccount customer)
+        public void AddProductToBasket(ComputerPart prod, int customerId)
         {
-            _services.AddProductToBasket(prod, customer);
+            _services.AddProductToBasket(prod, customerId);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {
@@ -226,6 +236,17 @@ namespace ComputerStoreApplication.Logic
         {
             _services.RemoveComponent(part);
         }
+        public void RefreshCurrentCustomerBasket(CustomerAccount customer)
+        {
+            if (customer == null) 
+            { 
+                return; 
+            }
+            customer.ProductsInBasket = ComputerPartShopDB.BasketProducts
+          .Where(b => b.CustomerId == customer.Id && b.Quantity > 0)
+          .Include(b => b.ComputerPart)
+          .ToList();
+        }
         public void RemoveComponentSpecifications(ComponentSpecification speec)
         {
             _services.RemoveComponentSpecifications(speec);
@@ -245,20 +266,26 @@ namespace ComputerStoreApplication.Logic
             //Make sure user can't buy products no longer in stock
             //we load this when they load the checkout page
 
-            var itemtsToRemove =ComputerPartShopDB.BasketProducts.Where
-                (b=>b.Quantity==0||ComputerPartShopDB.CompuerProducts.
-                Any(p=>p.Id==b.ComputerPartId&&p.Stock==0))
-                .ToList();
+            //var itemtsToRemove =ComputerPartShopDB.BasketProducts.Where
+            //    (b=>b.Quantity==0||ComputerPartShopDB.CompuerProducts.
+            //    Any(p=>p.Id==b.ComputerPartId&&p.Stock==0))
+            //    .ToList();
 
-            ComputerPartShopDB.RemoveRange(itemtsToRemove);
-            ComputerPartShopDB.SaveChanges();
+            //ComputerPartShopDB.RemoveRange(itemtsToRemove);
+            //ComputerPartShopDB.SaveChanges();
+
+            var outOfStockItems = ComputerPartShopDB.CompuerProducts
+               .Where(p => p.Stock == 0)
+               .Select(p => p.Id)
+               .ToList();
+
         }
         public void VerifyBasketItems(int? currentCustomerId)
         {
-            var zeroItems = ComputerPartShopDB.BasketProducts .Where(b => b.CustomerId == CustomerId && b.Quantity == 0).ToList();
-
-            ComputerPartShopDB.BasketProducts.RemoveRange(zeroItems);
-            ComputerPartShopDB.SaveChanges();
+            //var zeroItems = ComputerPartShopDB.BasketProducts .Where(b => b.CustomerId == CustomerId && b.Quantity == 0).ToList();
+            var basketItems = ComputerPartShopDB.BasketProducts.Where(b => b.CustomerId == currentCustomerId && b.Quantity > 0) .ToList();
+            //ComputerPartShopDB.BasketProducts.RemoveRange(zeroItems);
+            //ComputerPartShopDB.SaveChanges();
         }
         public void InformOfQuittingOperation()
         {

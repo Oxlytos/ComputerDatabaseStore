@@ -22,6 +22,6 @@ namespace ComputerStoreApplication.Pages
 
         void DrawAccountProfile();
         //Hantera input som variabel på alla sidor, ge de olika funktioner per sida
-        IPage? HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic);
+        Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic);
     }
 }

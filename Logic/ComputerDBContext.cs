@@ -51,8 +51,9 @@ namespace ComputerStoreApplication.Logic
         {
             var config = new ConfigurationBuilder().AddUserSecrets<ComputerDBContext>().Build();
             var loginPassword = config["Password"];
-          //  optionsBuilder.UseSqlServer($@"Server=tcp:oscardbassigment.database.windows.net,1433;Initial Catalog=ComputerShopDbOscar;Persist Security Info=False;User ID=dbadmin;Password={loginPassword};MultipleActiveResultSets=False; Encrypt=True;TrustServerCertificate=False; Connection Timeout=30;");
-            optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerShopDb; Trusted_Connection=True;TrustServerCertificate=True;");
+           // optionsBuilder.UseSqlServer($@"Server=tcp:oscardbassigment.database.windows.net,1433;Initial Catalog=ComputerShopDbOscar;Persist Security Info=False;User ID=dbadmin;Password={loginPassword};MultipleActiveResultSets=False; Encrypt=True;TrustServerCertificate=False; Connection Timeout=30;");
+            optionsBuilder.UseSqlServer($@" Server =tcp:oscarsdb.database.windows.net,1433;Initial Catalog=oscarcomputershopdb;Persist Security Info=False;User ID=superadmin;Password={loginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+          //  optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerShopDb; Trusted_Connection=True;TrustServerCertificate=True;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

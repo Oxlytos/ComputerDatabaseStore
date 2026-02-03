@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Models.Account;
 using ComputerStoreApplication.Crud_Related;
+using ComputerStoreApplication.Models.Vendors_Producers;
 
 namespace ComputerStoreApplication.Logic
 {
@@ -292,6 +293,10 @@ namespace ComputerStoreApplication.Logic
                 ThenInclude(k => k.ComputerPart).
                 Include(q => q.CustomerShippingInfos).
                 FirstOrDefault(k => k.Id == customerId);
+            if (!customer.ProductsInBasket.Any()) 
+            {
+                return;
+            }
             if (customer == null)
             {
                 return;
@@ -310,6 +315,12 @@ namespace ComputerStoreApplication.Logic
 
             };
             var selectedAddress = CustomerHelper.ChooseAdress(customer.CustomerShippingInfos);
+            if (selectedAddress == null)
+            {
+                Console.WriteLine("No address found, returning...");
+                Console.ReadLine();
+                return;
+            }
             CustomerHelper.MakeSureOfShippingInfoLocation(selectedAddress, locationHolder);
             var prodIds = customer.ProductsInBasket.Select(k => k.Id).ToList();
 
@@ -494,15 +505,15 @@ namespace ComputerStoreApplication.Logic
         {
             _repo.SaveNewCustomer(cus);
         }
-        public void AddProductToBasket(ComputerPart storeProduct, CustomerAccount cus)
+        public void AddProductToBasket(ComputerPart storeProduct, int customerId)
         {
-
+            //validate input before trying to add
             Console.WriteLine("How many do you wish to add to your basket?");
             Console.WriteLine("Max quantity is " + storeProduct.Stock);
             int count = GeneralHelpers.StringToInt();
             if (count > 0 && count <= storeProduct.Stock)
             {
-                Console.WriteLine("Valid");
+                //Console.WriteLine("Valid");
             }
             else if(count> storeProduct.Stock)
             {
@@ -510,20 +521,21 @@ namespace ComputerStoreApplication.Logic
                 Console.ReadLine();
                 return;
             }
-            else if (count == 0)
+            else if (count == 0||count<0)
             {
-                Console.WriteLine("Can't order 0!");
+                Console.WriteLine("Can't order 0 or fewer!");
                 Console.ReadLine();
                 return;
             }
             else
             {
-                //Utgå från att någon bara köper en sak åt gången
-                count = 1;
+                Console.WriteLine("Coudn't read input, returning...!");
+                Console.ReadLine();
+                return;
             }
             int prodId = storeProduct.Id;
 
-            _repo.AddProductToBasket(prodId, count, cus);
+            _repo.AddProductToBasket(prodId, count, customerId);
         }
         public void SaveNewSpecification(ComponentSpecification spec)
         {
@@ -584,6 +596,14 @@ namespace ComputerStoreApplication.Logic
             return _repo.GetMemoryTypes();
         }
 
-       
+        internal ComponentCategory GetCategory(int productId)
+        {
+           return _repo.GetCatagory(productId);
+        }
+
+        internal Brand GetBrand(int productId)
+        {
+            return _repo.GetBrand(productId);
+        }
     }
 }
