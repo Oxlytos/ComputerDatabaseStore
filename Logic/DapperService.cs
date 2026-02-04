@@ -1,5 +1,4 @@
 ﻿using ComputerStoreApplication.Account;
-using ComputerStoreApplication.Helpers.DTO;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
@@ -18,20 +17,44 @@ using static ComputerStoreApplication.Crud_Related.CrudHandler;
 
 namespace ComputerStoreApplication.Logic
 {
-    public class DapperService
+    public class DapperService:IDapperService
     {
-        readonly string _connstring;
-        public DapperService(ComputerDBContext dBContext)
+        private readonly IConnectionFactory _connectionFactory;
+        public DapperService(IConnectionFactory connectionFactory)
         {
-            _connstring = dBContext.Database.GetConnectionString();
+            if (connectionFactory ==null)
+            {
+                throw new ArgumentNullException("Error with connection factory");
+            }
+            _connectionFactory = connectionFactory;
+
+
         }
-        SqlConnection GetConnection()=>new SqlConnection(_connstring);
-    
-        public async Task<List<CountrySpending>> GetCountryWithTheMostSpending()
+        private SqlConnection GetConnection () =>  _connectionFactory.CreateConnection();
+        //When we querey first or default async
+        private async Task<T> QueryFirstOrDefaultAsync<T>(string sql, object? param = null)
         {
             using var connection = GetConnection();
             await connection.OpenAsync();
-
+            return await connection.QueryFirstOrDefaultAsync<T>(sql, param);
+        }
+        //Everything Ieanumerable
+        private async Task<IEnumerable<T>> QueryAsync<T>(string sql, object? param = null)
+        {
+            using var connection = GetConnection();
+            await connection.OpenAsync();
+            return await connection.QueryAsync<T>(sql, param);
+        }
+        //Update execeute
+        private async Task<int> ExecuteAsync(string sql, object? param = null)
+        {
+            using var connection = GetConnection();
+            await connection.OpenAsync();
+            return await connection.ExecuteAsync(sql, param);
+        }
+        //these just keep the query more or less, call their respective method for correct result (execute for one thing, ieanimerable for more rows etc)
+        public async Task<IEnumerable<(string CountryName, decimal TotalSpent)>> GetCountryWithTheMostSpending()
+        {
             var sql = @"Select TOP 3
                 co.Name as CountryName,
                 Sum(o.TotalCost) as TotalSpent
@@ -45,16 +68,11 @@ namespace ComputerStoreApplication.Logic
             Group By co.Name
             Order By TotalSpent DESC;";
 
-            var result = await connection.QueryAsync<CountrySpending>(sql);
-            Console.WriteLine($"Rows returned: {result.Count()}");
-            return result.ToList();
+            return await QueryAsync<(string CountryName, decimal TotalSpent)>(sql);
         }
        
         public async Task<decimal> GetTotalRevenue()
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
-
             var sql = @"
               SELECT 
              SUM(oi.Quantity * com.Price) AS TotalRevenue
@@ -63,13 +81,10 @@ namespace ComputerStoreApplication.Logic
             JOIN CompuerProducts com ON oi.ComputerPartId = com.Id;";
 
             //Execute scalar for singular easy value
-            var totalRevenue = await connection.ExecuteScalarAsync<decimal?>(sql) ?? 0m;
-            return totalRevenue;
+            return await QueryFirstOrDefaultAsync<decimal?>(sql) ?? 0m;
         }
         public async Task<(int CustomerId, string FirstName, string SurName, decimal TotalSpent)?> GetHighestSpender()
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
             string sql = @"
                 SELECT TOP 1 c.Id, c.FirstName, c.SurName, SUM(oi.Quantity * cp.Price) As TotalSpent
                 FROM Customers c
@@ -79,8 +94,7 @@ namespace ComputerStoreApplication.Logic
                 Group By c.Id, c.FirstName, c.SurName
                 ORder By TotalSpent DESC;";
 
-            var result = await connection.QueryFirstOrDefaultAsync<(int Id, string FirstName, string SurName, decimal TotalSpent)?>(sql);
-            return result;
+            return await QueryFirstOrDefaultAsync<(int Id, string FirstName, string SurName, decimal TotalSpent)?>(sql);
         }
 
         public async Task<(int CustomerId, string FirstName, string SurName, decimal TotalSpent)?> GetLowestSpender()
@@ -96,8 +110,7 @@ namespace ComputerStoreApplication.Logic
                 Group By c.Id, c.FirstName, c.SurName
                 ORder By TotalSpent ASC;";
 
-            var result = await connection.QueryFirstOrDefaultAsync<(int Id, string FirstName, string SurName, decimal TotalSpent)?>(sql);
-            return result;
+            return await QueryFirstOrDefaultAsync<(int Id, string FirstName, string SurName, decimal TotalSpent)?>(sql);
         }
         public async Task<int?> ReadCustomerInfo()
         {
@@ -121,8 +134,7 @@ namespace ComputerStoreApplication.Logic
             Where com.Id = @Id
             Group By com.Id, com.Price, com.Stock;";
 
-            var value = await connection.QueryFirstOrDefaultAsync<(int InStock, decimal StockValue, int UnitsSold, decimal TotalRevenue)> (sql, new { Id = part.Id });
-            return value;
+            return await QueryFirstOrDefaultAsync<(int InStock, decimal StockValue, int UnitsSold, decimal TotalRevenue)> (sql, new { Id = part.Id });
         }
         //How many active orders include this product?
         public async Task<int> CountOrdersForProduct(int computerPartId)
@@ -134,9 +146,7 @@ namespace ComputerStoreApplication.Logic
                 From OrderedProducts oi
                 Where oi.ComputerPartId = @Id";
 
-            int orderCount = await connection.ExecuteScalarAsync<int>(sql, new { Id = computerPartId } );
-
-            return orderCount;
+            return await QueryFirstOrDefaultAsync<int>(sql, new { Id = computerPartId } );
         }
         //Most expensive purchase per country
         public async Task<(int CountProductsTotal,  decimal AvgValue, decimal TotalCost, decimal MostExpensiveObject, string MostExpensiveProductOrdered)?> GetOrdersByCustomerAndAvgCost(int inputCustomerId)
@@ -166,10 +176,8 @@ namespace ComputerStoreApplication.Logic
             Group By crs.Id;
             ";
 
-            var result = await connection.QueryFirstOrDefaultAsync<(int CountProductsTotal, decimal AvgValue, decimal TotalCost, decimal MostExpensiveObjectm,  string MostExpensiveProductOrdered)>( sql, new { CustomerId = inputCustomerId }  );
+           return await QueryFirstOrDefaultAsync<(int CountProductsTotal, decimal AvgValue, decimal TotalCost, decimal MostExpensiveObjectm,  string MostExpensiveProductOrdered)>( sql, new { CustomerId = inputCustomerId }  );
 
-            //we return how many products in total and avg spendings
-            return result;
         }
         //Most expensive purchase per country
         public async Task<( decimal TotalValue, string Email)?> GetMostExpensiveOrderLast24Hours()
@@ -196,15 +204,12 @@ namespace ComputerStoreApplication.Logic
             ;";
 
             //A few rows, query first or default (might find 1, maybe more)
-            var result = await connection.QueryFirstOrDefaultAsync<(decimal TotalValue, string Email)>(sql);
+            return await QueryFirstOrDefaultAsync<(decimal TotalValue, string Email)>(sql);
 
-            return result;
         }
         //Get singular customers most spent on brand
         public async Task<(string BrandName, decimal TotalSpent)> MostSpentOnBrand(int customerId)
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
 
             string sql = @"Select
 	                fav.BrandName,
@@ -230,27 +235,20 @@ namespace ComputerStoreApplication.Logic
                 ) fav
                 Where crs.Id = @CustomerId";
 
-            var favouriteBrandResult = await connection.QueryFirstOrDefaultAsync<(string BrandName, decimal TotalSpent)> (sql, new { CustomerId = customerId });
-            return favouriteBrandResult;
+            return await QueryFirstOrDefaultAsync<(string BrandName, decimal TotalSpent)> (sql, new { CustomerId = customerId });
         }
         public async Task<decimal?> TotalRevenueBasedOnBrand(int brandId)
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
-
             string sql = @"Select Sum(oi.Quantity * cs.Price) As TotalRevenue
             From OrderedProducts oi
             Join 
                 CompuerProducts cs ON cs.Id = oi.ComputerPartId
             Where cs.BrandId = @BrandId;";
 
-            var brandRevenue = await connection.QuerySingleOrDefaultAsync<decimal?>(sql, new { BrandId = brandId });
-            return brandRevenue;
+            return await QueryFirstOrDefaultAsync<decimal?>(sql, new { BrandId = brandId });
         }
         public async Task<IEnumerable<(int DeliveryProviderId, string DeliveryProviderName, int NumberOfOrders, decimal TotalValue)>> GetOrdersPerDeliveryService()
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
             string sql = @"
                    Select 
                 dp.Id As DeliveryProviderId,
@@ -265,13 +263,10 @@ namespace ComputerStoreApplication.Logic
             Group By dp.Id, dp.Name
             Order By NumberOfOrders DESC;";
 
-            var result = await connection.QueryAsync<(int DeliveryProviderId, string DeliveryProviderName, int NumberOfOrders, decimal TotalValue)>(sql);
-            return result;
+           return await QueryAsync<(int DeliveryProviderId, string DeliveryProviderName, int NumberOfOrders, decimal TotalValue)>(sql);
         }
         public async Task<IEnumerable<(string? PayName, int? Count)>> GetMostCommonPayMethod()
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
 
             string sql = @"Select top 1
 	        pay.Name as MostCommonPayMethod,
@@ -281,14 +276,10 @@ namespace ComputerStoreApplication.Logic
 		        on ords.PaymentMethodId = pay.Id
         Group By pay.Name";
 
-            var result = await connection.QueryAsync<(string? PayName, int? Count)>(sql);
-            return result;
+           return await QueryAsync<(string? PayName, int? Count)>(sql);
         }
         public async Task<int?> GetHowManyUseThisPayMethod(int payId)
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
-
             string sql = @"Select
 	            Sum(ords.PaymentMethodId) as OrdersUsing
             From PaymentMethods pay
@@ -296,14 +287,10 @@ namespace ComputerStoreApplication.Logic
 		            on ords.PaymentMethodId = pay.Id
             Where pay.Id = @PayId";
 
-            var result = await connection.ExecuteScalarAsync<int?>(sql, new { PayId = payId });
-            return result;
+            return await QueryFirstOrDefaultAsync<int?>(sql, new { PayId = payId });
         }
         public async Task<int?> GetHowManyUseThisDeliveryService(int deliveryId)
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
-
             string sql = @"Select
 	        Sum(ords.DeliveryProviderId) as OrdersUsing
 		        From DeliveryProviders drs
@@ -312,14 +299,10 @@ namespace ComputerStoreApplication.Logic
 				        On ords.DeliveryProviderId = drs.Id
         Where drs.Id=@DeliveryId";
 
-            var result = await connection.ExecuteScalarAsync<int?>(sql, new { DeliveryId = deliveryId });
-            return result;
+            return await QueryFirstOrDefaultAsync<int?>(sql, new { DeliveryId = deliveryId });
         }
         public async Task<IEnumerable<(int? UniqueCountProducts, int? TotalStock)>> GetUniqueCountAndTotalStockCountOfBrandsProducts(int brandId)
         {
-
-            using var connection = GetConnection();
-            await connection.OpenAsync();
 
             string sql = @"Select
 	            Count(*) as UniqueProducts,
@@ -330,13 +313,10 @@ namespace ComputerStoreApplication.Logic
 					            On prods.BrandId = brnds.Id
             Where brnds.Id = @BrandId";
 
-            var result = await connection.QueryAsync<(int? UniqueCountProducts, int? TotalStock)>(sql, new { BrandId = brandId });
-            return result;
+           return await QueryAsync<(int? UniqueCountProducts, int? TotalStock)>(sql, new { BrandId = brandId });
         }
         public async Task<IEnumerable<(int? DifferentProducts, int? TotalStock)>> GetCountOfUniqueProductsAndStockInCategory(int categoryId)
         {
-            using var connection = GetConnection();
-            await connection.OpenAsync();
             string sql = @"Select
                 Count(prs.Id) As DifferentProducts,  
                 Sum(prs.Stock) As TotalStock            
@@ -348,8 +328,23 @@ namespace ComputerStoreApplication.Logic
             Order By DifferentProducts Desc, TotalStock Desc;
             ";
 
-            var result = await connection.QueryAsync<(int? DifferentProducts, int? TotalStock)>(sql, new { CategoryId = categoryId });
-            return result;
+          return await QueryAsync<(int? DifferentProducts, int? TotalStock)>(sql, new { CategoryId = categoryId });
+        }
+        public async Task<int?> GetSoldInCategory(int categoryId)
+        {
+            string sql = @"Select 
+            Count(crps.Id) as TotalSoldOfCategory
+            From Orders o
+            Join
+                OrderedProducts orps On orps.OrderId = o.Id
+            Join
+                CompuerProducts crps On orps.ComputerPartId = crps.Id
+            Join
+                ComponentCategories cats On crps.CategoryId = cats.Id
+            Where cats.Id = @CatId
+        ";
+
+           return await QueryFirstOrDefaultAsync<int> (sql, new { CatId = categoryId });
         }
         public async Task<(int BrandId, string BrandName, decimal TotalRevenue)?> GetMostProfitableBrand()
         {
@@ -368,11 +363,12 @@ namespace ComputerStoreApplication.Logic
             Group By brand.Id, brand.Name
             Order By TotalRevenue DESC;";
 
-            var result = await connection.QueryFirstOrDefaultAsync<(int BrandId, string BrandName, decimal TotalRevenue)>(sql);
-            return result;
+            return await QueryFirstOrDefaultAsync<(int BrandId, string BrandName, decimal TotalRevenue)>(sql);
         }
         public async Task<IEnumerable<(string CityName, string PartCategory, int TotalProducts)>> GetMostCommanCategoryPerCity()
         {
+            //cross apply
+            //https://www.geeksforgeeks.org/plsql/cross-apply-vs-inner-join-in-plsql/
             using var connection = GetConnection();
             await connection.OpenAsync();
             string sql = @"Select
@@ -397,8 +393,7 @@ namespace ComputerStoreApplication.Logic
             ) topCat
             Order By ci.Name;";
 
-            var result = await connection.QueryAsync<(string CityName, string PartCategory, int TotalProducts)>(sql);
-            return result;
+            return await QueryAsync<(string CityName, string PartCategory, int TotalProducts)>(sql);
         }
         public async Task<IEnumerable<(string Country, string City, decimal TotalValue)>> GetTotalCountrySpending()
         {
@@ -417,15 +412,7 @@ namespace ComputerStoreApplication.Logic
             ;";
 
             //All orders all countries
-             var countryOrders = await connection.QueryAsync<(string Country, string City, decimal TotalValue)>(sql);
-            var sortedCountries = countryOrders.
-                OrderBy(g => g.Country)
-                  .Select(g => 
-                  (Country: g.Country, 
-                  City:g.City,
-                  TotalValue: g.TotalValue));
-
-            return sortedCountries;
+             return await QueryAsync<(string Country, string City, decimal TotalValue)>(sql);
         }
 
         public async Task ClearSelected()
@@ -433,9 +420,16 @@ namespace ComputerStoreApplication.Logic
             using var connection = GetConnection();
             await connection.OpenAsync();
             string sql = @"Update CompuerProducts
-        Set SelectedProduct=0
-        Where SelectedProduct = 1";
+            Set SelectedProduct=0
+            Where SelectedProduct = 1";
 
+            await ExecuteAsync(sql);
+
+        }
+
+        Task<IEnumerable<(string CountryName, decimal TotalSpent)?>> IDapperService.GetCountryWithTheMostSpending()
+        {
+            throw new NotImplementedException();
         }
     }
 }

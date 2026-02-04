@@ -19,11 +19,10 @@ namespace ComputerStoreApplication.Pages
     internal class CheckoutPage : IPage
     {
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-        private List<BasketProduct> BasketProducts = new List<BasketProduct>();
-
         public int? AdminId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
+        private List<BasketProduct> basketProducts = new();
         public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
@@ -83,8 +82,9 @@ namespace ComputerStoreApplication.Pages
             {
                 return;
             }
+            basketProducts = appLol.CurrentBasket.ToList();
             CurrentCustomer = appLol.GetCustomerInfo(CurrentCustomerId.Value);
-            RefreshBasketInfo(appLol);
+            //RefreshBasketInfo(appLol);
           
         }
         public void RefreshBasketInfo(ApplicationManager appLol)
@@ -93,25 +93,24 @@ namespace ComputerStoreApplication.Pages
 
             appLol.VerifyBasketItems(CurrentCustomerId);
 
-            BasketProducts = CurrentCustomer.ProductsInBasket.ToList();
         }
 
-        public void RenderPage()
+        public void RenderPage(ApplicationManager applicationLogic)
         {
             ConsoleHelper.ResetConsole();
             Graphics.PageBanners.DrawCheckoutPage();
             SetPageCommands();
-            DrawAccountProfile();
-            Console.WriteLine("Different products in basket: " + BasketProducts.Count);
-            foreach (var product in BasketProducts) 
+            DrawAccountProfile(applicationLogic);
+            Console.WriteLine("Different products in basket: " + basketProducts.Count);
+            foreach (var product in basketProducts) 
             {
                 Console.WriteLine($"Id {product.Id} Name: {product.ComputerPart.Name} Quantity: {product.Quantity}");
             }
         }
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationLogic)
         {
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(applicationLogic);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
         }

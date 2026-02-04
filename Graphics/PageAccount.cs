@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ComputerStoreApplication.Logic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,34 +9,35 @@ namespace ComputerStoreApplication.Graphics
 {
     internal class PageAccount
     {
-        internal static List<string> ReturnCustomerProfileAccountString(Account.CustomerAccount? currentCustomer)
+        internal static List<string> ReturnCustomerProfileAccountString(ApplicationManager app)
         {
+            if (!app.IsLoggedInAsCustomer)
+            {
+                return null;
+            }
             int? totalAmountInBasket = 0;
             List<string> strings = new List<string>();
-            if (currentCustomer != null)
+            if (app.IsLoggedInAsCustomer)
             {
-                totalAmountInBasket = currentCustomer.ProductsInBasket?.Sum(p => p.Quantity) ?? 0;
+                //totalAmountInBasket = currentCustomer.ProductsInBasket?.Sum(p => p.Quantity) ?? 0;
                
-                strings.AddRange(currentCustomer.FirstName, currentCustomer.SurName, currentCustomer.Email, "Objects in basket: " + totalAmountInBasket);
+                //strings.AddRange(currentCustomer.FirstName, currentCustomer.SurName, currentCustomer.Email, " Objects in basket: " + totalAmountInBasket);
             }
             else
             {
-                strings.Add("Not Loggedin");
+                strings.Add(" Not logged in as a customer");
                 totalAmountInBasket = 0;
             }
             return strings;
         }
-        internal static List<string> ReturnAdminProfileAccountString(Account.AdminAccount? admin)
+        internal static List<string> ReturnAdminProfileAccountString(ApplicationManager app)
         {
+            if (!app.IsLoggedInAsAdmin)
+            {
+                return null;
+            }
             List<string> strings = new List<string>();
-            if (admin != null)
-            {
-                strings.AddRange(admin.UserName, admin.FirstName, admin.SurName, admin.Email);
-            }
-            else
-            {
-                strings.Add("Not Loggedin");
-            }
+                //strings.AddRange(admin.UserName, admin.FirstName, admin.SurName, admin.Email);
             return strings;
         }
         internal static void DrawAccountGraphic(List<string> textElements, string headerText, ConsoleColor bannerColor)

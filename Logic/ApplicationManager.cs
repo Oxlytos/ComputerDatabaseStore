@@ -1,6 +1,5 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Helpers;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
@@ -23,21 +22,25 @@ namespace ComputerStoreApplication.Logic
         private readonly ComponentService _services;
 
         public  MongoConnection _mongoConnection;
-        public DapperService Dapper {  get; private set; }
+        public IDapperService Dapper { get; }
         public ComputerDBContext ComputerPartShopDB { get; } //
+        private readonly ContextFactory _contextFactory;
         public IPage CurrentPage { get; set; }
         public int CustomerId { get; set; }
         public bool IsLoggedInAsCustomer => CustomerId != 0;
+
+        //application holds reference to basket items on a customer
+        private List<BasketProduct> _currentBasket = new();
+        //ireadonly should like suggested only read and not be able to modify
+        public IReadOnlyList<BasketProduct> CurrentBasket => _currentBasket;
 
         public int AdminId { get; set; }
         public bool IsLoggedInAsAdmin => AdminId != 0;
         public List<ComputerPart> ProductsInBasket { get; set; }
 
-        public ApplicationManager(ComponentService service, MongoConnection mongo)
+        public ApplicationManager(ComponentService service, MongoConnection mongo, ContextFactory contextFactory, IDapperService dapper)
         {
             //Instansiera db kontextet här EN gång
-            ComputerPartShopDB = new ComputerDBContext();
-            Dapper = new DapperService(ComputerPartShopDB);
 
             //Startsidan blir där man kan browse:a produkter
             CurrentPage = new HomePage();
@@ -46,7 +49,20 @@ namespace ComputerStoreApplication.Logic
             _mongoConnection = mongo;
             CustomerId = 0;
             AdminId = 0;
+            _contextFactory = contextFactory;
+            Dapper = dapper;
         }
+        public void RefreshBasket()
+        {
+            if (!IsLoggedInAsCustomer)
+            {
+                return;
+            }
+            using var contex = _contextFactory.Create();
+            _currentBasket = contex.BasketProducts.Include(p=>p.ComputerPart).Where(s=>s.ComputerPartId == CustomerId).ToList();
+        }
+
+        public int BasketItemCount => _currentBasket.Sum(b=>b.Quantity);
         public ComponentCategory GetCategory(int productId)
         {
            return _services.GetCategory(productId);
@@ -139,22 +155,13 @@ namespace ComputerStoreApplication.Logic
         {
             _services.HandleCustomerPurchase(customerId);
         }
-        public void HandleCustomerShippingInfo(int customerId)
-        {
-            _services.HandleCustomerShippingInfo(customerId);
-        }
-        public List<BasketProduct> HandleCustomerBasket(int customerId)
-        {
-            return _services.HandleCustomerBasket(customerId);
-        }
+    
+      
         public void AddStoreProductToBasket(int customerId, ComputerPart prod)
         {
             _services.AddProductToBasket(prod, customerId);
         }
-        public void SaveChangesOnComponent()
-        {
-            _services.SaveChangesOnComponent();
-        }
+  
         public List<ComputerPart> GetStoreProducts()
         {
             return _services.GetStoreProducts();
@@ -183,83 +190,28 @@ namespace ComputerStoreApplication.Logic
         {
             return _services.GetManufacturers();
         }
-        public List<Models.ComponentSpecifications.EnergyClass> GetEnergyClasses()
-        {
-            return _services.GetEnergyClasses();
-        }
-        public List<Models.ComponentSpecifications.RamProfileFeatures> GetRamProfileFeatures()
-        {
-            return _services.GetRamProfileFeatures();
-        }
-        public List<Models.ComponentSpecifications.CPUSocket> GetCPUSockets()
-        {
-            return _services.GetCPUSockets();
-        }
-        public List<Models.ComponentSpecifications.CPUArchitecture> GetCPUArchitectures()
-        {
-            return _services.GetCPUArchitectures();
-        }
-        public List<Models.ComponentSpecifications.MemoryType> GetMemoryTypes()
-        {
-            return _services.GetMemoryTypes();
-        }
-        /*
-        public List<Models.ComputerComponents.GPU> GetGPUs()
-        {
-            return _services.GetGPUs();
-        }
-        public List<Models.ComputerComponents.CPU> GetCPUs()
-        {
-            return _services.GetCPUs();
-        }*/
         public void AddProductToBasket(ComputerPart prod, int customerId)
         {
             _services.AddProductToBasket(prod, customerId);
         }
-        public void SaveNewSpecification(ComponentSpecification spec)
-        {
-            _services.SaveNewSpecification(spec);
-        }
+       
         public void SaveNewCustomer(CustomerAccount cus)
         {
             _services.SaveNewCustomer(cus);
         }
-        public void SaveNewComponent(ComputerPart part)
-        {
-            _services.SaveNew(part);
-        }
-        public void SaveNewStoreProduct(ComputerPart prodc)
-        {
-            _services.SaveNew(prodc);
-        }
-        public void RemoveComponent(ComputerPart part)
-        {
-            _services.RemoveComponent(part);
-        }
         public void RefreshCurrentCustomerBasket(CustomerAccount customer)
         {
             if (customer == null) 
-            { 
-                return; 
+            {
+                throw new Exception("Could not find customer");
             }
-            customer.ProductsInBasket = ComputerPartShopDB.BasketProducts
+            var context = new ComputerDBContext();
+            customer.ProductsInBasket = context.BasketProducts
           .Where(b => b.CustomerId == customer.Id && b.Quantity > 0)
           .Include(b => b.ComputerPart)
           .ToList();
         }
-        public void RemoveComponentSpecifications(ComponentSpecification speec)
-        {
-            _services.RemoveComponentSpecifications(speec);
-        }
-        /*
-        public void SaveCPU(CPU cPU)
-        {
-            _services.SaveCPU(cPU);
-        }
-        public void SaveGPU(GPU gPU)
-        {
-            _services.SaveGPU(gPU);
-        }*/
+       
         public void Dispose() { }
         public void VerifyStoreItems()
         {
@@ -274,7 +226,8 @@ namespace ComputerStoreApplication.Logic
             //ComputerPartShopDB.RemoveRange(itemtsToRemove);
             //ComputerPartShopDB.SaveChanges();
 
-            var outOfStockItems = ComputerPartShopDB.CompuerProducts
+            var context = new ComputerDBContext();
+            var outOfStockItems = context.CompuerProducts
                .Where(p => p.Stock == 0)
                .Select(p => p.Id)
                .ToList();
@@ -283,7 +236,8 @@ namespace ComputerStoreApplication.Logic
         public void VerifyBasketItems(int? currentCustomerId)
         {
             //var zeroItems = ComputerPartShopDB.BasketProducts .Where(b => b.CustomerId == CustomerId && b.Quantity == 0).ToList();
-            var basketItems = ComputerPartShopDB.BasketProducts.Where(b => b.CustomerId == currentCustomerId && b.Quantity > 0) .ToList();
+            var context = new ComputerDBContext();
+            var basketItems = context.BasketProducts.Where(b => b.CustomerId == currentCustomerId && b.Quantity > 0) .ToList();
             //ComputerPartShopDB.BasketProducts.RemoveRange(zeroItems);
             //ComputerPartShopDB.SaveChanges();
         }
@@ -314,7 +268,7 @@ namespace ComputerStoreApplication.Logic
                 var valid = basketProducts.FirstOrDefault(X => X.Id == choice);
                 if (valid == null)
                 {
-                    return ;
+                    throw new Exception("Could not find that product, returning");
                 }
                 var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == valid.ComputerPartId);
                 Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");

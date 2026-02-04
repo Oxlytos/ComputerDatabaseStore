@@ -63,9 +63,9 @@ namespace ComputerStoreApplication.Models.ComputerComponents
             Console.WriteLine($"Product name: {this.Name}");
             Console.WriteLine($"Description : {this.Description}");
             Console.WriteLine($"Price : {this.Price}€");
-            Console.WriteLine($"Brand : {brand.Name}€");
-            Console.WriteLine($"Category : {category.Name}€");
-            Console.WriteLine($"Stock : {this.Stock}€");
+            Console.WriteLine($"Brand : {brand.Name}");
+            Console.WriteLine($"Category : {category.Name}");
+            Console.WriteLine($"Stock : {this.Stock}");
             string onSale = this.Sale ? "On sale!":"Not on sale";
             Console.WriteLine($"On Sale? : {onSale}");
 

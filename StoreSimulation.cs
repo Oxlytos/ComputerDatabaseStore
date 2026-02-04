@@ -3,7 +3,6 @@ using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.MickesWindow;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -12,6 +11,7 @@ using ComputerStoreApplication.Pages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -62,6 +62,17 @@ namespace ComputerStoreApplication
         {
             //Database connection
             var db = new Logic.ComputerDBContext();
+            var config = new ConfigurationBuilder().AddUserSecrets<ComputerDBContext>().Build();
+            var loginPassword = config["Password"];
+            // optionsBuilder.UseSqlServer($@"Server=tcp:oscardbassigment.database.windows.net,1433;Initial Catalog=ComputerShopDbOscar;Persist Security Info=False;User ID=dbadmin;Password={loginPassword};MultipleActiveResultSets=False; Encrypt=True;TrustServerCertificate=False; Connection Timeout=30;");
+             string connstring = ($@" Server =tcp:oscarsdb.database.windows.net,1433;Initial Catalog=oscarcomputershopdb;Persist Security Info=False;User ID=superadmin;Password={loginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+            
+            IConnectionFactory connectionFactory = new SQLConnectionFactory(connstring);
+
+            IDapperService dapperService = new DapperService(connectionFactory);
+            
+            
+            
             if (!db.Admins.Any())
             {
                 var admin = new AdminAccount
@@ -82,7 +93,8 @@ namespace ComputerStoreApplication
             var service = new Logic.ComponentService(rep);
             var mongo = new MongoConnection();
             //Application logic follows between pages, and carries db context which is the main component
-            var computerApplicationLogic = new Logic.ApplicationManager(service, mongo);
+            var dbContextFactory = new ContextFactory();
+            var computerApplicationLogic = new Logic.ApplicationManager(service, mongo, dbContextFactory, dapperService);
             while (true) 
             {
                 Console.Clear();
@@ -91,7 +103,7 @@ namespace ComputerStoreApplication
                 //At default load up home page
                 computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
                 //Render X page on and on again until application closses
-                computerApplicationLogic.CurrentPage.RenderPage();
+                computerApplicationLogic.CurrentPage.RenderPage(computerApplicationLogic);
                 //Key press on a site => Different actions/methods
                 ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
                 //Handle input
@@ -99,7 +111,10 @@ namespace ComputerStoreApplication
                 //Do thing on page if there's a command for it
                 if (actionOnPage != null)
                 {
+                    //peform action, otherwise it just reloads page
+                    
                     computerApplicationLogic.CurrentPage = await actionOnPage;
+                    computerApplicationLogic.RefreshBasket();
                 }
             }
         }
@@ -214,47 +229,6 @@ namespace ComputerStoreApplication
             db.AddRange(componentCategories);
             //db.SaveChanges();
             Console.WriteLine("Saved changes!");
-        }
-        static void SetupMenus()
-        {
-            using (var dbContext = new Logic.ComputerDBContext())
-            {
-                while (true)
-                {
-                    ConsoleKeyInfo key = Console.ReadKey();
-                    Console.Clear();
-                    PageBanners.DrawShopBanner();
-                    List<Type> types = GeneralHelpers.ReturnComputerPartTypes();
-                    List<string> customerOptions = GeneralHelpers.AllCategoriesFoundAsStrings(types, true);
-                    var customerWindow = new Window("Site Actions", 120, 4, customerOptions);
-                    customerWindow.Draw();
-
-                    /*List<string> adminOptions = new List<string> { "1. Administer Products", "2. Administer Categories", "3. Administer Customers", "4. View Statistics (Queries)" };
-                    var adminWindow = new Window("Admin Options (Hidden)", 85, 4, adminOptions);
-                    adminWindow.Draw();*/
-
-                    var newWindow = new Helpers.WindowStuff.WideWindow("Categories", 2, 4, customerOptions);
-                    newWindow.Draw();
-
-                    List<string> topText2 = new List<string> { "AMD 7800x3d", "THE gaming processor", "Price: 450€", "Press (A) to buy" };
-                    var windowTop2 = new Window("Offer 1", 2, 10, topText2);
-                    windowTop2.Draw();
-
-                    //List<string> topText3 = new List<string> { CPUs.First().Id.ToString(), CPUs.First().Name, CPUs.First().Cores.ToString() };
-                    // var windowTop3 = new Window("Erbjudande 2", 28, 10, topText3);
-                    /// windowTop3.Draw();
-
-                    List<string> topText4 = new List<string> { "Läderskor", "Extra flotta", "Pris: 450 kr", "Tryck C för att köpa" };
-                    var windowTop4 = new Window("Erbjudande 3", 56, 10, topText4);
-                    windowTop4.Draw();
-
-
-                }
-
-
-
-            }
-
         }
 
 

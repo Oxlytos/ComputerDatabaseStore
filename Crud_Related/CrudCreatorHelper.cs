@@ -35,6 +35,11 @@ namespace ComputerStoreApplication.Crud_Related
             {
                 Console.WriteLine($"We have this many unique products in {cat.Name}: {product.DifferentProducts}, with a total stock of: {product.TotalStock} ");
             }
+            var totalSold = logic.Dapper.GetSoldInCategory(cat.Id);
+            if (totalSold.Result != null)
+            {
+                Console.WriteLine($"We've sold {totalSold.Result} in this category");
+            }
         }
 
         internal static void UpdateCategory(ComponentCategory part)

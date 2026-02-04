@@ -45,7 +45,7 @@ namespace ComputerStoreApplication.Pages
 
         }
 
-        //Basic
+        //Basic search
         public async Task SearchResults(ApplicationManager appLol)
         {
            List<ComputerPart>? parts = StoreHelper.SearchResults(appLol.GetStoreProducts());
@@ -60,7 +60,8 @@ namespace ComputerStoreApplication.Pages
             {
                 foreach (ComputerPart part in parts)
                 {
-                    Console.WriteLine($"Id: {part.Id} Name: {part.Name}");
+                    string onSale = part.Sale ? "Yes":"No";
+                    Console.WriteLine($"Id: {part.Id.ToString().PadRight(5)}| Name: {part.Name} | Category: {part.ComponentCategory.Name} | Price: {part.Price} | On Sale? {onSale}");
                 }
             }
             Console.WriteLine("Do any of these objects catch your eye? Input their corresponding Id number to add to your personal basket, or 0 to return");
@@ -101,7 +102,7 @@ namespace ComputerStoreApplication.Pages
             Console.Clear();
             ConsoleHelper.ResetConsole();
             SetPageCommands();
-            Graphics.PageBanners.DrawSearchedResults ();
+            Graphics.PageBanners.DrawSearchedResults();
             DrawAccountProfile();
         }
 

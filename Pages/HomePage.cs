@@ -21,18 +21,18 @@ namespace ComputerStoreApplication.Pages
         CustomerAccount? CurrentCustomer { get; set; }
         public int? CurrentCustomerId { get; set; }
 
-        public void RenderPage()
+        public void RenderPage(ApplicationManager applicationManager)
         {
             Console.Clear();
             ConsoleHelper.ResetConsole();
             SetPageCommands();
             PageBanners.DrawShopBanner();
             
-            DrawAccountProfile();
+            DrawAccountProfile(applicationManager);
           
             int left = 2;
             int top = 18;
-            int spacing = 35;
+            int spacing = 55;
 
             //loop through all selcted products
             for (int i = 0; i < SelectedProducts.Count; i++)
@@ -41,14 +41,16 @@ namespace ComputerStoreApplication.Pages
                 var rows = new List<string>
                 {
                     //nice formatting
-                    $"Id: {product.Id}".PadRight(30),
-                    product.Name.PadRight(30),
-                    $"Price: {product.Price} €".PadRight(30),
-                    (product.Sale ? "ON SALE!" : "(Not on sale)").PadRight(30)
+                    $"Id: {product.Id}".PadRight(40),
+                    product.Name.PadRight(40),
+                    $"Price: {product.Price} €".PadRight(40),
+                    (product.Sale ? "ON SALE!" : "(Not on sale)").PadRight(40),
+                    $"Category: {product.ComponentCategory.Name}".PadRight(40),
+                    $"Brand/Manufacturer: {product.BrandManufacturer.Name}"
                 };
                 var window = new MickesWindow.Window(
                    $"Offer {i + 1}",
-                   left + (i * spacing),
+                   left + (i * spacing+1),
                    top,
                    rows
                );
@@ -58,10 +60,10 @@ namespace ComputerStoreApplication.Pages
             }
 
         }
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationManager)
         {
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(applicationManager);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 15);
         }
@@ -123,7 +125,7 @@ namespace ComputerStoreApplication.Pages
         public void Load(ApplicationManager appLol)
         {
             //Random 3 objects every load
-             SelectedProducts = appLol.GetFrontPageProducts().Take(3).OrderBy(_ => Random.Shared.Next()).ToList(); ;
+            SelectedProducts = appLol.GetFrontPageProducts().OrderBy(_ => Random.Shared.Next(100)).Take(3).ToList(); ;
             //kolla om inloggad
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -157,6 +159,7 @@ namespace ComputerStoreApplication.Pages
             if (valid != null)
             {
                 Console.WriteLine("Working...");
+                Console.ReadLine() ;
                 appLo.AddProductToBasket(valid, CurrentCustomerId.Value);
                 
             }

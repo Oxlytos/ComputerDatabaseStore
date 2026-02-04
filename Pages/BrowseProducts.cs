@@ -38,13 +38,13 @@ namespace ComputerStoreApplication.Pages
            
 
         }
-        public void RenderPage()
+        public void RenderPage(ApplicationManager applicationLogic)
         {
             Console.Clear();
             SetPageCommands();
             Graphics.PageBanners.DrawBrowsePageBanner();
             Console.SetCursorPosition(0, 10);
-            DrawAccountProfile();
+            DrawAccountProfile(applicationLogic);
             Console.WriteLine("Our wide cataloge of things, down below!");
             if (Products != null || Products.Count > 0)
             {
@@ -52,10 +52,8 @@ namespace ComputerStoreApplication.Pages
                 {
                     if (product.Stock > 0)
                     {
-                        Console.WriteLine(
-                        $"Id: {product.Id}\n" +
-                        $"Name: {product.Name}\n"
-                        );
+                        string onSale = product.Sale ? "Yes" : "No";
+                        Console.WriteLine($"Id: [{product.Id}] Name: [{product.Name}]\t Price: [{product.Price}]€\t On Sale?: [{onSale}] Category: [{product.ComponentCategory.Name}]\t Brand:[{product.BrandManufacturer.Name}]");
 
                     }
                 }
@@ -63,10 +61,10 @@ namespace ComputerStoreApplication.Pages
             }
 
         }
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationLogic)
         {
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(applicationLogic);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 15);
 
@@ -122,9 +120,18 @@ namespace ComputerStoreApplication.Pages
         {
             Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
             var objectToView = StoreHelper.ChooceViewObject(Products);
+            var context = new ComputerDBContext();
 
-            var category = app.ComputerPartShopDB.ComponentCategories.FirstOrDefault(x => x.Id == objectToView.CategoryId);
-            var brand = app.ComputerPartShopDB.BrandManufacturers.FirstOrDefault(x => x.Id == objectToView.BrandId);
+            var category = context.ComponentCategories.FirstOrDefault(x => x.Id == objectToView.CategoryId);
+            if (category == null) 
+            {
+                throw new Exception("Could not fint category");
+            }
+            var brand = context.BrandManufacturers.FirstOrDefault(x => x.Id == objectToView.BrandId);
+            if (brand == null) 
+            {
+                throw new Exception("Could not find brand");
+            }
             Console.ReadLine();
             objectToView.Read(brand, category);
             Console.WriteLine("Add to basket?");

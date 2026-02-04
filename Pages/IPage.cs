@@ -13,14 +13,14 @@ namespace ComputerStoreApplication.Pages
     {
         public int? AdminId { get; set; }
         public int? CurrentCustomerId { get; set; }
-        //Abrstract void, alla sidor ska rendera sig själv som metod, fast det kan se olika ut
+      
         void Load(ApplicationManager appLol);
-
-        void RenderPage();
+        //Abrstract void, alla sidor ska rendera sig själv som metod, fast det kan se olika ut
+        void RenderPage(ApplicationManager applicationLogic);
 
         void SetPageCommands();
 
-        void DrawAccountProfile();
+        void DrawAccountProfile(ApplicationManager applicationLogic);
         //Hantera input som variabel på alla sidor, ge de olika funktioner per sida
         Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic);
     }

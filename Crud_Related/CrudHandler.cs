@@ -1,7 +1,6 @@
 ﻿using ComputerStoreApplication.Account;
 using ComputerStoreApplication.Helpers;
 using ComputerStoreApplication.Logic;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -545,6 +544,7 @@ namespace ComputerStoreApplication.Crud_Related
                             CrudCreatorHelper.UpdateCategory(category);
                             break;
                         case CRUD.Delete:
+                            Console.WriteLine("Category won't be removed if its used by a product");
                             logic.ComputerPartShopDB.Remove(category);
                             break;
                     }

@@ -18,20 +18,18 @@ namespace ComputerStoreApplication.Pages
         public int? AdminId { get; set; }
         public int? CurrentCustomerId { get; set; }
         CustomerAccount? CurrentCustomer { get; set; }
-        List<Order>? CustomerOrders { get; set; } = new List<Order>();
-
         public List<Country> Countries { get; set; } = new List<Country>();
         public List<City> Cities { get; set; } = new List<City>();
         public Dictionary<ConsoleKey, PageControls.PageCommand> PageCommands;
-        private List<Order> orders = new List<Order>();
-        public void RenderPage()
+        private List<Order> Orders = new List<Order>();
+        public void RenderPage(ApplicationManager applicationManager)
         {
             Console.Clear();
             ConsoleHelper.ResetConsole();
             SetPageCommands();
             Graphics.PageBanners.DrawCustomerPage();
 
-            DrawAccountProfile();
+            DrawAccountProfile(applicationManager);
 
             PrintOrders();
 
@@ -40,18 +38,18 @@ namespace ComputerStoreApplication.Pages
         {
             Console.SetCursorPosition(0, 10); // start printing
 
-            if (orders == null || !orders.Any())
+            if (Orders == null || !Orders.Any())
             {
                 Console.WriteLine("No orders found :(");
                 return;
             }
 
             // Use DisplayHelpers to prepare display objects
-            var displayOrders = orders
+            var displayOrders = Orders
                 .Select(o => DisplayHelpers.ToDisplay(o, Cities, Countries))
                 .ToList();
 
-            foreach (var order in orders) // orders is EF Order list
+            foreach (var order in Orders) // orders is EF Order list
             {
                 Console.WriteLine($"--- Order ID: {order.Id} ---");
                 Console.WriteLine($"Creation Date: {order.CreationDate}");
@@ -81,10 +79,10 @@ namespace ComputerStoreApplication.Pages
             Console.WriteLine(); // spacing between orders
             }
 
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationManager)
         {
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(applicationManager);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
         }
@@ -150,9 +148,10 @@ namespace ComputerStoreApplication.Pages
             {
                 CurrentCustomerId = null;
                 CurrentCustomer = null;
-                orders.Clear();
+                Orders.Clear();
                 return;
             }
+            var context = new ComputerDBContext();
 
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
@@ -161,15 +160,15 @@ namespace ComputerStoreApplication.Pages
             appLol.VerifyStoreItems();
             appLol.VerifyBasketItems(CurrentCustomerId);
 
-            Countries = appLol.ComputerPartShopDB.Countries.ToList();
-            Cities = appLol.ComputerPartShopDB.Cities.Include(c => c.Country).ToList();
-            Console.WriteLine($"CustomerId: {appLol.CustomerId}");
-            var anyOrders = appLol.ComputerPartShopDB.Orders.ToList();
-            Console.WriteLine($"Total orders in DB: {anyOrders.Count}");
-            // DEBUG: check if CustomerId is valid
-            Console.WriteLine($"Loading orders for Customer ID: {appLol.CustomerId}");
+            Countries = context.Countries.ToList();
+            Cities = context.Cities.Include(c => c.Country).ToList();
+            //Console.WriteLine($"CustomerId: {appLol.CustomerId}");
+            //var anyOrders = appLol.ComputerPartShopDB.Orders.ToList();
+            //Console.WriteLine($"Total orders in DB: {anyOrders.Count}");
+            //// DEBUG: check if CustomerId is valid
+            //Console.WriteLine($"Loading orders for Customer ID: {appLol.CustomerId}");
 
-            orders = appLol.ComputerPartShopDB.Orders
+            Orders = context.Orders
               .AsNoTracking()
               .Include(o => o.OrderItems)
                   .ThenInclude(oi => oi.ComputerPart)

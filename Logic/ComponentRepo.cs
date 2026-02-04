@@ -1,5 +1,4 @@
 ﻿using ComputerStoreApplication.Account;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -17,187 +16,121 @@ namespace ComputerStoreApplication.Logic
 {
     public class ComponentRepo
     {
-        //Här sparar vi till databasen
-        //Och hämtar saker från dbn
-        //Här ska saker varit validerade innan något sparas
-        readonly ComputerDBContext _dbContext;
-
-        public ComponentRepo(ComputerDBContext dBContext)
+        private readonly ComputerDBContext _dbContext;
+        public ComponentRepo(ComputerDBContext dbContext)
         {
-            _dbContext = dBContext;
+            _dbContext = dbContext;
         }
-        //APU kallelser här nästan
-        /*
-        public List<ComputerPart?> GetAllProducts()
-        {
-            //Cast:a alla object som ComputerPart, concat till ett lång mixad lista med objekt av samma basklass
-            return _dbContext.CPUs.Cast<ComputerPart>()
-                 .Concat(_dbContext.GPUs)
-                 .Concat(_dbContext.RAMs)
-                 .Concat(_dbContext.PSUs)
-                 .Concat(_dbContext.Motherboards).
-                 ToList();
-        }*/
         public List<CustomerShippingInfo> GetAdressesOfCustomer(int customerId)
         {
-            return _dbContext.CustomerShippingInfos.Where(x => x.CustomerId == customerId).ToList();
+            using var context = new ComputerDBContext();
+            return context.CustomerShippingInfos.Where(x => x.CustomerId == customerId).ToList();
         }
-        //public List<RAM> GetRAMs()
-        //{
-        //    return _dbContext.RAMs.Cast<RAM>().ToList();
-        //}
-        //public List<Motherboard> GetMotherboards()
-        //{
-        //    return _dbContext.Motherboards.Cast<Motherboard>().ToList();
-        //}
-        //public List<PSU> GetPSUs()
-        //{
-        //    return _dbContext.PSUs.Cast<PSU>().ToList();
         //}
         public List<Brand> GetManufacturers()
         {
-            return _dbContext.BrandManufacturers.Cast<Brand>().ToList();
-        }
-        public List<CPUSocket> GetSockets()
-        {
-            return _dbContext.CPUSockets.Cast<CPUSocket>().ToList();
-        }
-        public List<EnergyClass> GetEnergyClasses()
-        {
-            return _dbContext.EnergyClasses.ToList();
-        }
-        public List<CPUArchitecture> GetCPUArchitectures()
-        {
-            return _dbContext.CPUArchitectures.Cast<CPUArchitecture>().ToList();
-        }
-        public List<MemoryType> GetMemoryTypes()
-        {
-            return _dbContext.MemoryTypes.Cast<MemoryType>().ToList();
-        }
-        public List<RamProfileFeatures> GetRamProfileFeatures()
-        {
-            return _dbContext.RamProfiles.Cast<RamProfileFeatures>().ToList();
+            using var context = new ComputerDBContext();
+            return context.BrandManufacturers.Cast<Brand>().ToList();
         }
         public List<BasketProduct> GetCustomerItems(int id)
         {
-            var theseObject = _dbContext.BasketProducts.Where(x => x.CustomerId == id).Include(s=>s.ComputerPart);
+            using var context = new ComputerDBContext();
+            var theseObject = context.BasketProducts.Where(x => x.CustomerId == id).Include(s=>s.ComputerPart);
             return theseObject.ToList();
         }
         public void AddCountry(Country country)
         {
-            _dbContext.Countries.Add(country);
+            using var context = new ComputerDBContext();
+            context.Countries.Add(country);
         }
         public void AddCity(City city)
         {
-            _dbContext.Cities.Add(city);
+            using var context = new ComputerDBContext();
+            context.Cities.Add(city);
         }
         public List<City> GetCities()
         {
-            return _dbContext.Cities.ToList();
+            using var context = new ComputerDBContext();
+            return context.Cities.ToList();
         }
         public List<Country> GetCountries()
         {
-            return _dbContext.Countries.ToList();
+            using var context = new ComputerDBContext();
+            return context.Countries.ToList();
         }
         public List<BasketProduct> GetCustomerItemsForBasket(int customerId)
         {
-            return _dbContext.BasketProducts
+            using var context = new ComputerDBContext();
+            return context.BasketProducts
                 .Include(bp => bp.ComputerPart)      // Include the Product navigation property
                 .Where(bp => bp.CustomerId == customerId)
                 .ToList();                      // Return as a List<BasketProduct>
         }
         public List<ComputerPart> GetStoreProducts()
         {
-            return _dbContext.CompuerProducts.Include(z=>z.BrandManufacturer).Include(k=>k.ComponentCategory).ToList();
+            using var context = new ComputerDBContext();
+            return context.CompuerProducts.Include(z=>z.BrandManufacturer).Include(k=>k.ComponentCategory).ToList();
         }
-        //public List<GPU> GetGPUs()
-        //{
-        //    return _dbContext.GPUs.ToList();
-        //}
-        //public List<CPU> GetCPUs()
-        //{
-        //    var cpus = _dbContext.CPUs.ToList();
-
-        //    //Koppla ihop virtuella proprterties här
-        //    var man = GetManufacturers();
-        //    var vendors = GetVendors();
-        //    var sockets = GetSockets();
-        //    var cpuArchs = GetCPUArchitectures();
-        //    foreach (var cpu in cpus)
-        //    {
-        //        cpu.BrandManufacturer = man.FirstOrDefault(s => s.Id == cpu.BrandId);
-        //        cpu.ChipsetVendor = vendors.FirstOrDefault(s => s.Id == cpu.ChipsetVendorId);
-        //        cpu.SocketType = sockets.FirstOrDefault(s => s.Id == cpu.SocketId);
-        //        cpu.CPUArchitecture = cpuArchs.FirstOrDefault(s => s.Id == cpu.CPUArchitectureId);
-
-        //    }
-
-        //    return cpus;
-        //}
 
         public List<CustomerAccount> GetCustomers()
         {
-            return _dbContext.Customers.ToList();
+            using var context = new ComputerDBContext();
+            return context.Customers.ToList();
         }
         public List<Order> GetOrders()
         {
-            return _dbContext.Orders.ToList();
+            using var context = new ComputerDBContext();
+            return context.Orders.ToList();
         }
         public List<ComputerPart> GetFrontPageProducts()
         {
-            var returnList = _dbContext.CompuerProducts
-             .Where(s => s.SelectedProduct && s.Stock > 0)
+            using var context = new ComputerDBContext();
+            var returnList = context.CompuerProducts
+             .Where(s => s.SelectedProduct && s.Stock > 0).Include(s=>s.ComponentCategory).Include(b=>b.BrandManufacturer)
                .ToList();
                 return returnList;
            
         }
-        public IQueryable<Order> GetOrdersQuired()
+        public List<Order> GetOrdersQuired()
         {
-            return _dbContext.Orders;
+            using var context = new ComputerDBContext();
+            return context.Orders.ToList();
         }
-        public IQueryable<CustomerAccount> GetCustomersQuired()
+        public List<CustomerAccount> GetCustomersQuired()
         {
-            return _dbContext.Customers;
+            using var context = new ComputerDBContext();
+            return context.Customers.ToList();
         }
         public List<DeliveryProvider> GetDeliveryServices()
         {
-            return _dbContext.DeliveryProviders.ToList();
+            using var context = new ComputerDBContext();
+            return context.DeliveryProviders.ToList();
         }
         public List<PaymentMethod> GetPayrmentMethods()
         {
-            return _dbContext.PaymentMethods.ToList();
-        }
-      
-        public void SaveNew(ComputerPart part)
-        {
-            _dbContext.CompuerProducts.Add(part);
-            TrySaveChanges();
-        }
-        public void SaveNewSpecification(ComponentSpecification spec)
-        {
-            _dbContext.AllComponentSpecifcations.Add(spec);
-            TrySaveChanges();
+            using var context = new ComputerDBContext();
+            return context.PaymentMethods.ToList();
         }
         public List<AdminAccount> GetAdmins()
         {
-            return _dbContext.Admins.ToList();
+            using var context = new ComputerDBContext();
+            return context.Admins.ToList();
         }
         public void AddProductToBasket(int prod, int count, int customerId)
         {
+            using var context = new ComputerDBContext();
             if (customerId == 0)
             {
-                Console.WriteLine("You need to be logged in to add to basket");
-                Console.ReadLine();
-                return;
+                throw new InvalidOperationException("User must be logged in to add products to basket");
             }
-           
             //work with trackedcustomer thats part of ef
-            var trackedCustomerInfo = _dbContext.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == customerId);
-            var basketItem = _dbContext.BasketProducts.FirstOrDefault(bp => bp.CustomerId == customerId && bp.ComputerPartId == prod);
-            if (trackedCustomerInfo == null) 
+            var trackedCustomerInfo = context.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == customerId);
+            if (trackedCustomerInfo == null)
             {
-                return;
+
+                throw new InvalidOperationException("Customer not found");
             }
+            var basketItem = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(bp => bp.CustomerId == customerId && bp.ComputerPartId == prod);
             //check existence
             if (basketItem != null)
             {
@@ -211,21 +144,23 @@ namespace ComputerStoreApplication.Logic
                     ComputerPartId = prod,
                     Quantity = count
                 };
-                _dbContext.BasketProducts.Add(newItem); // <-- add directly to DbSet othwerise EF cries a bit
+                trackedCustomerInfo.ProductsInBasket.Add(newItem); // <-- add directly to DbSet othwerise EF cries a bit
+               
             }
 
             //Lower store stock of x item
-            var storeObjects = _dbContext.CompuerProducts.FirstOrDefault(x=>x.Id==prod);
+            var storeObjects = context.CompuerProducts.FirstOrDefault(x=>x.Id==prod);
             if (storeObjects != null)
             {
                 storeObjects.Stock -= count;
             }
             //when troubleshooting tracking
-            //foreach (var bp in _dbContext.ChangeTracker.Entries<BasketProduct>())
-            //{
-            //    Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
-            //}
-            TrySaveChanges();
+            foreach (var bp in context.ChangeTracker.Entries<BasketProduct>())
+            {
+                Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
+            }
+            context.SaveChanges();
+            //TrySaveChanges();
         }
         public void RemoveSingularObjectFromBasket(BasketProduct prod, CustomerAccount cus)
         {
@@ -254,9 +189,10 @@ namespace ComputerStoreApplication.Logic
         }
         public void SaveNewCustomer(CustomerAccount customer)
         {
-            if (!_dbContext.Customers.Contains(customer))
+            using var context = new ComputerDBContext();
+            if (!context.Customers.Contains(customer))
             {
-                _dbContext.Add(customer);
+                context.Add(customer);
                 TrySaveChanges();
             }
             else
@@ -264,26 +200,6 @@ namespace ComputerStoreApplication.Logic
                 Console.WriteLine("Customer already exists");
             }
         }
-        public void RemoveComponent(ComputerPart part)
-        {
-            _dbContext.Remove(part);
-            TrySaveChanges();
-        }
-        public void RemoveSpec(ComponentSpecification spec)
-        {
-            _dbContext.Remove(spec);
-            TrySaveChanges();
-        }
-        //public void SaveNewCPU(CPU cpu)
-        //{
-        //    _dbContext.CPUs.Add(cpu);
-        //    TrySaveChanges();
-        //}
-        //public void SaveNewGPU(GPU gpu)
-        //{
-        //    _dbContext.GPUs.Add(gpu);
-        //    TrySaveChanges();
-        //}
         public bool TrySaveChanges()
         {
             //foreach (var bp in _dbContext.ChangeTracker.Entries<BasketProduct>())
@@ -293,39 +209,51 @@ namespace ComputerStoreApplication.Logic
             //Console.ReadLine();
             try
             {
-                _dbContext.SaveChanges();
                 Console.WriteLine("DB Operation succesfull, press enter to continue");
                 Console.ReadLine();
                 return true;
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                Console.WriteLine($"Error when updating, {ex.Message}");
+                Console.WriteLine($"Concurrency error when updating: {ex.Message}");
+                return false;
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"Error when trying to save: {ex.Message}");
                 return false;
             }
             catch (DbException ex)
             {
-                Console.WriteLine($"Error when trying to save, {ex.Message}");
+                Console.WriteLine($"Database error: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
                 return false;
             }
         }
         public void SaveManufacturer(Brand manufacturer)
         {
-            _dbContext.BrandManufacturers.Add(manufacturer);
+            using var context = new ComputerDBContext();
+            context.BrandManufacturers.Add(manufacturer);
             Console.WriteLine("Saved manufacturer!");
             Console.ReadLine();
-            _dbContext.SaveChanges();
+            TrySaveChanges();
 
         }
 
         internal ComponentCategory GetCatagory(int productId)
         {
-            return _dbContext.ComponentCategories.FirstOrDefault(x => x.Id == productId);
+            using var context = new ComputerDBContext();
+            return context.ComponentCategories.FirstOrDefault(x => x.Id == productId);
         }
 
         internal Brand GetBrand(int productId)
         {
-            return _dbContext.BrandManufacturers.FirstOrDefault(x => x.Id == productId);
+            using var context = new ComputerDBContext();
+            return context.BrandManufacturers.FirstOrDefault(x => x.Id == productId);
         }
     }
 }

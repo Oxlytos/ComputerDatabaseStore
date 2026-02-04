@@ -2,9 +2,7 @@
 using ComputerStoreApplication.Crud_Related;
 using ComputerStoreApplication.Graphics;
 using ComputerStoreApplication.Helpers;
-using ComputerStoreApplication.Helpers.DTO;
 using ComputerStoreApplication.Logic;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
 using System;
@@ -47,7 +45,7 @@ namespace ComputerStoreApplication.Pages
                 Graphics.PageOptions.DrawPageOptions(pageOptions, ConsoleColor.DarkCyan);
             }
         }
-        public void RenderPage()
+        public void RenderPage(ApplicationManager applicationLogic)
         {
             Console.Clear();
             SetPageCommands();
@@ -55,9 +53,9 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawAdmingBanner();
             Console.SetCursorPosition(0, 15);
           
-            DrawAccountProfile();
+            DrawAccountProfile(applicationLogic);
         }
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationLogic)
         {
 
             List<string> accountInfo = new List<string>();
@@ -84,7 +82,6 @@ namespace ComputerStoreApplication.Pages
                     }
                     Console.Clear();
                     CrudHandler.ChooseCategory(applicationLogic);
-                    applicationLogic.SaveChangesOnComponent();
                     return this;
                 case PageControls.PageOption.AdminLogin:
                     Console.SetCursorPosition(0, 15);
@@ -123,7 +120,7 @@ namespace ComputerStoreApplication.Pages
                 var mostProfitableBrand = await app.Dapper.GetMostProfitableBrand();
                 var deliveryStats = await app.Dapper.GetOrdersPerDeliveryService();
                 var mostExpensiveOrderLastDay = await app.Dapper.GetMostExpensiveOrderLast24Hours();
-                var top3mostmoneyspentcountries = await app.Dapper.GetCountryWithTheMostSpending();
+                //var top3mostmoneyspentcountries = await app.Dapper.GetCountryWithTheMostSpending();
                 var countrySpending = await app.Dapper.GetTotalCountrySpending();
                 var biggestSpender = await app.Dapper.GetHighestSpender();
                 var leastAmountSpent = await app.Dapper.GetLowestSpender();
@@ -152,10 +149,10 @@ namespace ComputerStoreApplication.Pages
                     Console.WriteLine($"{d.City} (in {d.Country}) at {d.TotalValue}€");
                 }
                 Console.WriteLine("\nTotal spent per country");
-                foreach (var c in top3mostmoneyspentcountries)
-                {
-                    Console.WriteLine($"{c.CountryName} spent {c.TotalSpent} in total!");
-                }
+                //foreach (var c in top3mostmoneyspentcountries)
+                //{
+                //    Console.WriteLine($"{c.Value.CountryName} spent {c.Value.TotalSpent} in total!");
+                //}
                 Console.WriteLine("\nMost common category per city");
                 foreach(var c in mostCommonCategoryPerCity)
                 {
@@ -237,9 +234,6 @@ namespace ComputerStoreApplication.Pages
             Console.ReadLine();
             Console.WriteLine("What CRUD action?");
         }
-        public async Task GetStats(ApplicationManager app)
-        {
-            
-        }
+     
     }
 }

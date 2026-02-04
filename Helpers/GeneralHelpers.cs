@@ -1,5 +1,4 @@
-﻿using ComputerStoreApplication.Models.ComponentSpecifications;
-using ComputerStoreApplication.Models.ComputerComponents;
+﻿using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using System;
@@ -23,12 +22,7 @@ namespace ComputerStoreApplication.Helpers
             //Användbar
             return compPartCat.ToList();
         }
-        internal static List<Type> ReturnComponentSpecificationTypes()
-        {
-            Type catType = typeof(ComponentSpecification);
-            var catTypes = typeof(ComponentSpecification).Assembly.GetTypes().Where(c => catType.IsAssignableFrom(c) && c.IsClass && !c.IsAbstract);
-            return catTypes.ToList();
-        }
+       
         //Vill vi skiippa och printa tråkiga fälts med ID och annat för användaren
         internal static string[] SkippablePropertiesInPrints()
         {
@@ -246,24 +240,7 @@ namespace ComputerStoreApplication.Helpers
             return (new string(' ', leftPadding) + text).PadRight(width);
         }
 
-        internal static MemoryType ChooseMemoryType(List<MemoryType> mems)
-        {
-            Console.WriteLine("What memorytype does the graphics card have? Choose by inputting an int");
-            foreach (MemoryType memoryType in mems)
-            {
-                Console.WriteLine($"ID: {memoryType.Id} Name/Type: {memoryType.Name}");
-            }
-            if (Int32.TryParse(Console.ReadLine(), out int choice))
-            {
-                var hit = mems.FirstOrDefault(v => v.Id == choice);
-                return hit;
-            }
-            else
-            {
-                Console.WriteLine("Some kind of errror");
-                return null;
-            }
-        }
+        
         //Helper metoder
         //internal static bool ChangeVendor(List<ChipsetVendor> vendors, ComputerPart part)
         //{
@@ -455,62 +432,6 @@ namespace ComputerStoreApplication.Helpers
             Console.WriteLine("Press Enter to Continue");
             Console.ReadLine();
         }
-        internal static List<RamProfileFeatures> ChooseProfileFeatures(List<RamProfileFeatures> ramProfiles)
-        {
-            List<RamProfileFeatures> currentFeatues = new List<RamProfileFeatures>();
-            Console.WriteLine("Profiles loaded count: " + ramProfiles.Count);
-            bool done = false;
-            while (!done)
-            {
-                Console.WriteLine("What profiles features does it have?");
-                foreach (RamProfileFeatures ramProfile in ramProfiles)
-                {
-                    if (currentFeatues.Contains(ramProfile))
-                    {
-                        Console.WriteLine($"REGISTERD on this object [ Id: {ramProfile.Id} Name: {ramProfile.Name} ]");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"NOT REGISTERD on this object [ Id: {ramProfile.Id} Name: {ramProfile.Name} ]");
-                    }
-
-                }
-                Console.WriteLine("To add a profile to this object, input its corresponding Id");
-                Console.WriteLine("To remove a profile, input its corresponding Id");
-                Console.WriteLine("Leave empty to quit operation");
-                if (Int32.TryParse(Console.ReadLine(), out int choice))
-                {
-                    var hit = ramProfiles.FirstOrDefault(v => v.Id == choice);
-                    if (hit != null)
-                    {
-                        if (currentFeatues.Contains(hit))
-                        {
-                            currentFeatues.Remove(hit);
-                            Console.WriteLine($"Removed {hit.Name}");
-                        }
-                        else
-                        {
-                            currentFeatues.Add(hit);
-                            Console.WriteLine($"Added profile {hit.Name}");
-                        }
-                    }
-                    else
-                    {
-                        done = true;
-                        return currentFeatues;
-                    }
-                }
-                else if (string.IsNullOrEmpty(Console.ReadLine()) && currentFeatues.Count > 0)
-                {
-                    done = true;
-                    Console.WriteLine($"This RAM has registered {currentFeatues.First().Name} as their profile, leaving function");
-                    return currentFeatues;
-                }
-                Console.WriteLine("Done?");
-                done = YesOrNoReturnBoolean();
-            }
-            return currentFeatues;
-        }
 
         internal static Brand ChangeManufacturer(Brand brand, List<Brand> brands)
         {
@@ -550,42 +471,6 @@ namespace ComputerStoreApplication.Helpers
                 }
                 Console.WriteLine("Invalid input");
             }
-        }
-        internal static EnergyClass ChooseEnergyClass(List<EnergyClass> classes)
-        {
-            while (true)
-            {
-
-                Console.WriteLine("Which class? Choose by inputting an int");
-                foreach (EnergyClass m in classes)
-                {
-                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
-                }
-                if (Int32.TryParse(Console.ReadLine(), out int choice))
-                {
-                    var hit = classes.FirstOrDefault(v => v.Id == choice);
-                    return hit;
-                }
-                Console.WriteLine("Invalid input");
-            }
-        }
-        internal static CPUSocket ChooseCPUSocket(List<CPUSocket> cPUSockets)
-        {
-            while (true)
-            {
-                Console.WriteLine("Which socket? Choose by inputting an int");
-                foreach (CPUSocket m in cPUSockets)
-                {
-                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
-                }
-                if (Int32.TryParse(Console.ReadLine(), out int choice))
-                {
-                    var hit = cPUSockets.FirstOrDefault(v => v.Id == choice);
-                    return hit;
-                }
-                Console.WriteLine("Invalid input");
-            }
-
         }
         internal static int ChooseCategoryById(List<ComponentCategory> categories)
         {
@@ -684,23 +569,7 @@ namespace ComputerStoreApplication.Helpers
                 return newName;
             }
         }
-        internal static CPUArchitecture ChooseCPUArch(List<CPUArchitecture> archs)
-        {
-            while (true)
-            {
-                Console.WriteLine("Which CPU arch? Choose by inputting an int");
-                foreach (CPUArchitecture m in archs)
-                {
-                    Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
-                }
-                if (Int32.TryParse(Console.ReadLine(), out int choice))
-                {
-                    var hit = archs.FirstOrDefault(v => v.Id == choice);
-                    return hit;
-                }
-                Console.WriteLine("Invalid input");
-            }
-        }
+        
         internal static object TryAndUpdateValueOnObject(PropertyInfo thisProperty)
         {
             //Type of property type, just här kändes det användbart

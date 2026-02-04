@@ -1,5 +1,4 @@
 ﻿using ComputerStoreApplication.Account;
-using ComputerStoreApplication.Models.ComponentSpecifications;
 using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
@@ -20,13 +19,7 @@ namespace ComputerStoreApplication.Logic
         //https://www.entityframeworktutorial.net/code-first/simple-code-first-example.aspx
         //DB Sets for things to query later for convinience
         //Component specifcations
-        public DbSet<ComponentSpecification> AllComponentSpecifcations { get; set; }
 
-        public DbSet<CPUArchitecture> CPUArchitectures { get; set; }
-        public DbSet<CPUSocket> CPUSockets { get; set; }
-        public DbSet<EnergyClass> EnergyClasses { get; set; }
-        public DbSet<MemoryType> MemoryTypes { get; set; }
-        public DbSet<RamProfileFeatures> RamProfiles { get; set; }
         //Components
         public DbSet<ComputerPart> CompuerProducts { get; set; }
         public DbSet<ComponentCategory> ComponentCategories { get; set; }
@@ -55,7 +48,6 @@ namespace ComputerStoreApplication.Logic
             optionsBuilder.UseSqlServer($@" Server =tcp:oscarsdb.database.windows.net,1433;Initial Catalog=oscarcomputershopdb;Persist Security Info=False;User ID=superadmin;Password={loginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
           //  optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS; Database=ComputerShopDb; Trusted_Connection=True;TrustServerCertificate=True;");
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -92,10 +84,10 @@ namespace ComputerStoreApplication.Logic
                 HasForeignKey(k => k.CustomerId).
                 OnDelete(DeleteBehavior.Cascade);
 
+            //Seperate entries based on customer and part, no overlap, all unique
             modelBuilder.Entity<BasketProduct>().
-                HasIndex(bps => new { bps.CustomerId, bps.ComputerPartId}).IsUnique()
+                HasIndex(bps => new { bps.CustomerId, bps.ComputerPartId}).IsUnique();
 
-                ;
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.OrderItems).
                 WithOne(o => o.Order).
@@ -125,10 +117,9 @@ namespace ComputerStoreApplication.Logic
         .HasForeignKey(o => o.ShippingInfoId)
         .OnDelete(DeleteBehavior.Restrict);
 
-
-            modelBuilder.Entity<City>()
-                .HasIndex(c => new { c.Name, c.CountryId })
-                .IsUnique();
+            //A city is in a country, map country towards a city (country is a virtual prop of city)
+            //
+            modelBuilder.Entity<City>() .HasIndex(c => new { c.Name, c.CountryId }).IsUnique();
 
 
         }
