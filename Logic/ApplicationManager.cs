@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -59,7 +60,7 @@ namespace ComputerStoreApplication.Logic
                 return;
             }
             using var contex = _contextFactory.Create();
-            _currentBasket = contex.BasketProducts.Include(p=>p.ComputerPart).Where(s=>s.ComputerPartId == CustomerId).ToList();
+            _currentBasket = contex.BasketProducts.Include(p=>p.ComputerPart).Where(s=>s.CustomerId == CustomerId).ToList();
         }
 
         public int BasketItemCount => _currentBasket.Sum(b=>b.Quantity);
@@ -81,12 +82,7 @@ namespace ComputerStoreApplication.Logic
         }
         public bool LoginAsAdmin(string username, string password)
         {
-            if (IsLoggedInAsCustomer) 
-            {
-                Console.WriteLine("Can't login as a admin while logged in as a customer");
-                Console.ReadLine();
-                return false;
-            }
+           
             Console.WriteLine("Trying to login as admin");
             var adminId = _services.LoginAdmin(username, password);
             if (adminId != 0)
@@ -157,10 +153,6 @@ namespace ComputerStoreApplication.Logic
         }
     
       
-        public void AddStoreProductToBasket(int customerId, ComputerPart prod)
-        {
-            _services.AddProductToBasket(prod, customerId);
-        }
   
         public List<ComputerPart> GetStoreProducts()
         {
@@ -180,19 +172,23 @@ namespace ComputerStoreApplication.Logic
         //}
         public List<ComputerPart> GetComputerParts()
         {
-            return ComputerPartShopDB.CompuerProducts.ToList();
+            using var context = new ComputerDBContext();
+            return context.CompuerProducts.ToList();
         }
         public List<ComponentCategory> GetCategories()
         {
-            return ComputerPartShopDB.ComponentCategories.ToList();
+            using var context = new ComputerDBContext();
+            return context.ComponentCategories.ToList();
         }
         public List<Models.Vendors_Producers.Brand> GetManufacturers()
         {
-            return _services.GetManufacturers();
+            using var context = new ComputerDBContext();
+            return context.BrandManufacturers.ToList();
         }
         public void AddProductToBasket(ComputerPart prod, int customerId)
         {
             _services.AddProductToBasket(prod, customerId);
+            RefreshBasket();
         }
        
         public void SaveNewCustomer(CustomerAccount cus)
@@ -205,7 +201,7 @@ namespace ComputerStoreApplication.Logic
             {
                 throw new Exception("Could not find customer");
             }
-            var context = new ComputerDBContext();
+            using var context = new ComputerDBContext();
             customer.ProductsInBasket = context.BasketProducts
           .Where(b => b.CustomerId == customer.Id && b.Quantity > 0)
           .Include(b => b.ComputerPart)
@@ -226,7 +222,7 @@ namespace ComputerStoreApplication.Logic
             //ComputerPartShopDB.RemoveRange(itemtsToRemove);
             //ComputerPartShopDB.SaveChanges();
 
-            var context = new ComputerDBContext();
+            using var context = new ComputerDBContext();
             var outOfStockItems = context.CompuerProducts
                .Where(p => p.Stock == 0)
                .Select(p => p.Id)
@@ -236,8 +232,9 @@ namespace ComputerStoreApplication.Logic
         public void VerifyBasketItems(int? currentCustomerId)
         {
             //var zeroItems = ComputerPartShopDB.BasketProducts .Where(b => b.CustomerId == CustomerId && b.Quantity == 0).ToList();
-            var context = new ComputerDBContext();
+            using var context = new ComputerDBContext();
             var basketItems = context.BasketProducts.Where(b => b.CustomerId == currentCustomerId && b.Quantity > 0) .ToList();
+
             //ComputerPartShopDB.BasketProducts.RemoveRange(zeroItems);
             //ComputerPartShopDB.SaveChanges();
         }
@@ -247,53 +244,123 @@ namespace ComputerStoreApplication.Logic
             Console.ReadKey();
         }
 
-        internal void AdjustBasketItems(CustomerAccount? currentCustomer, List<BasketProduct> basketProducts)
+        internal List<ComputerPart> GetDBProductsFromList(List<ComputerPart>? selectedProducts)
         {
-            if (basketProducts.Count == 0)
+            if (selectedProducts == null)
             {
-                return;
+                return null;
             }
-            else if (basketProducts.Count > 1)
-            {
-                Console.WriteLine("Which basket item? Input their Id, cancel operation by submitting 0");
-                foreach (var product in basketProducts)
-                {
-                    Console.WriteLine($"Id: {product.Id} {product.ComputerPart.Name} Quantity: {product.Quantity}");
-                }
-                int choice = GeneralHelpers.ReturnValidIntOrNone();
-                if(choice == 0)
-                {
-                    return;
-                }
-                var valid = basketProducts.FirstOrDefault(X => X.Id == choice);
-                if (valid == null)
-                {
-                    throw new Exception("Could not find that product, returning");
-                }
-                var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == valid.ComputerPartId);
-                Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
-                int amount = GeneralHelpers.StringToInt();
-                if (amount > storeItem.Stock)
-                {
-                    Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
-                    amount= storeItem.Stock;
-                }
-            }
-            else
-            {
-                var item = basketProducts.First(); 
-                var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == item.ComputerPartId);
-                Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
-                int amount = GeneralHelpers.StringToInt();
-                if (amount > storeItem.Stock)
-                {
-                    Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
-                    amount = storeItem.Stock;
-                }
+            using var context = new ComputerDBContext();
 
+            //We want these objects, select their Ids
+            var relevantIds = selectedProducts.Select(p => p.Id).ToList();
+
+            //Matching and relevant objects are those that share the same Id
+            var relevantObjects = context.CompuerProducts.Where(x=>relevantIds.Contains(x.Id)).Include(x=>x.ComponentCategory).Include(k=>k.BrandManufacturer).ToList();
+
+            return relevantObjects;
+        }
+
+        internal ComputerPart? ChooseProductFromList(List<ComputerPart> parts)
+        {
+            Console.WriteLine("Input the corresponding objects Id");
+            int choice = GeneralHelpers.ReturnValidIntOrNone();
+            if (choice == 0) { return null; }
+            var valid = parts.FirstOrDefault(x => x.Id == choice);
+            if (valid == null) 
+            {
+                return null;
             }
-                return;
+            return valid;
 
         }
+
+        internal void CheckoutObject( List<ComputerPart>? selectedProducts)
+        {
+            Console.Clear();
+            Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
+            var products = GetDBProductsFromList(selectedProducts);
+            foreach(var product in products)
+            {
+                string onSale = product.Sale ? "Yes" : "No";
+                Console.WriteLine($"Id: [{product.Id}] Name: [{product.Name}] Price: [{product.Price}]€ On Sale?: [{onSale}] Category: [{product.ComponentCategory.Name}] Brand:[{product.BrandManufacturer.Name}]");
+            }
+            var choosenObject = ChooseProductFromList(products);
+            if (choosenObject == null)
+            {
+                return;
+            }
+            Console.WriteLine($"Id: {choosenObject.Id} Name; {choosenObject.Name}");
+
+            var category = GetCategory(choosenObject.Id) ?? throw new Exception("Could not find category");
+            var brand = GetBrand(choosenObject.Id) ?? throw new Exception("Could not find brand");
+            choosenObject.Read(brand, category);
+            Console.SetCursorPosition(5, 40);
+            Console.WriteLine("Add to basket?");
+            bool yes = GeneralHelpers.ChangeYesOrNo(false);
+            if (!yes)
+            {
+                InformOfQuittingOperation();
+                return;
+            }
+            //if (yes && currentCustomerId != null)
+            //{
+            //    AddProductToBasket(choosenObject, currentCustomerId.Value);
+            //}
+            //else if (currentCustomerId == null)
+            //{
+            //    Console.WriteLine("You need to be logged in to add to basket");
+            //    InformOfQuittingOperation();
+            //}
+        }
+
+        //internal void AdjustBasketItems(CustomerAccount? currentCustomer, List<BasketProduct> basketProducts)
+        //{
+        //    if (basketProducts.Count == 0)
+        //    {
+        //        return;
+        //    }
+        //    else if (basketProducts.Count > 1)
+        //    {
+        //        Console.WriteLine("Which basket item? Input their Id, cancel operation by submitting 0");
+        //        foreach (var product in basketProducts)
+        //        {
+        //            Console.WriteLine($"Id: {product.Id} {product.ComputerPart.Name} Quantity: {product.Quantity}");
+        //        }
+        //        int choice = GeneralHelpers.ReturnValidIntOrNone();
+        //        if(choice == 0)
+        //        {
+        //            return;
+        //        }
+        //        var valid = basketProducts.FirstOrDefault(X => X.Id == choice);
+        //        if (valid == null)
+        //        {
+        //            throw new Exception("Could not find that product, returning");
+        //        }
+        //        var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == valid.ComputerPartId);
+        //        Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
+        //        int amount = GeneralHelpers.StringToInt();
+        //        if (amount > storeItem.Stock)
+        //        {
+        //            Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
+        //            amount= storeItem.Stock;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var item = basketProducts.First(); 
+        //        var storeItem = GetStoreProducts().FirstOrDefault(x => x.Id == item.ComputerPartId);
+        //        Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
+        //        int amount = GeneralHelpers.StringToInt();
+        //        if (amount > storeItem.Stock)
+        //        {
+        //            Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
+        //            amount = storeItem.Stock;
+        //        }
+
+        //    }
+        //        return;
+
+        //}
     }
 }

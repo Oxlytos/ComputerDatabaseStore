@@ -2,6 +2,7 @@
 using ComputerStoreApplication.Logic;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using DnsClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -60,14 +61,41 @@ namespace ComputerStoreApplication.Models.ComputerComponents
         }
         public void Read(Brand brand, ComponentCategory category)
         {
-            Console.WriteLine($"Product name: {this.Name}");
-            Console.WriteLine($"Description : {this.Description}");
-            Console.WriteLine($"Price : {this.Price}€");
-            Console.WriteLine($"Brand : {brand.Name}");
-            Console.WriteLine($"Category : {category.Name}");
-            Console.WriteLine($"Stock : {this.Stock}");
-            string onSale = this.Sale ? "On sale!":"Not on sale";
-            Console.WriteLine($"On Sale? : {onSale}");
+            Console.Clear();
+            int left = 2;
+            int top = 18;
+            int middleOfTheScreen = GeneralHelpers.ReturnMiddleOfTheScreenXAxisWithOffsetForSomeStringOrLength(20);
+            var rows = new List<string>
+            {
+                //Nicer formatting
+                $"Id: {this.Id}".PadRight(40),
+                " ",
+                this.Name.PadRight(40),
+                 " ",
+                $"Price: {this.Price} €".PadRight(40),
+                 " ",
+                (this.Sale ? "ON SALE!" : "(Not on sale)").PadRight(40),
+                 " ",
+                $"Category: {category.Name}".PadRight(40),
+                 " ",
+                $"Brand/Manufacturer: {brand.Name}",
+                 " ",
+                $"This many left: {this.Stock}"
+            };
+            //Some text wrapping, longer chunks of texts (like description) gets broken up into chunks by max length
+            foreach (var line in GeneralHelpers.TextWrapper(this.Description, 40))
+            {
+                rows.Add(line.PadRight(40));
+            }
+            var window = new MickesWindow.Window(
+                     $"More info detailed view...",
+                    50,
+                     top,
+                     rows
+                 );
+            //Draw X window
+            window.Draw();
+
 
         }
         internal ComputerPart UpdateForm(List<Brand> manufacturers, List<ComponentCategory> componentCategories)

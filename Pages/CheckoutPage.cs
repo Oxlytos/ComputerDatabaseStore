@@ -46,9 +46,9 @@ namespace ComputerStoreApplication.Pages
                     {
                         CrudCreatorHelper.AdjustBasketItems(CurrentCustomer, applicationLogic);
                         applicationLogic.RefreshCurrentCustomerBasket(CurrentCustomer);
-                        applicationLogic.VerifyStoreItems();
-                        applicationLogic.VerifyBasketItems(CurrentCustomerId);
-                        applicationLogic.ComputerPartShopDB.SaveChanges();
+                        //applicationLogic.VerifyStoreItems();
+                        //applicationLogic.VerifyBasketItems(CurrentCustomerId);
+                        //applicationLogic.ComputerPartShopDB.SaveChanges();
                         
                     }
                     return this;
@@ -74,7 +74,7 @@ namespace ComputerStoreApplication.Pages
                 Console.WriteLine("Can't access without being logged in");
                 Console.ReadLine();
                 appLol.CurrentPage = new HomePage();
-                return;
+                
             }
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
@@ -101,11 +101,22 @@ namespace ComputerStoreApplication.Pages
             Graphics.PageBanners.DrawCheckoutPage();
             SetPageCommands();
             DrawAccountProfile(applicationLogic);
-            Console.WriteLine("Different products in basket: " + basketProducts.Count);
-            foreach (var product in basketProducts) 
+            if(basketProducts.Count > 0)
             {
-                Console.WriteLine($"Id {product.Id} Name: {product.ComputerPart.Name} Quantity: {product.Quantity}");
+                Console.WriteLine("Different products in basket: " + basketProducts.Count + ", with " + basketProducts.Sum(x => x.Quantity).ToString() + " total amount of products in the basket");
+
+                foreach (var product in basketProducts)
+                {
+                    Console.WriteLine($"Id {product.Id} Name: {product.ComputerPart.Name} Quantity: {product.Quantity} Price: {product.ComputerPart.Price}");
+                }
+
+                Console.WriteLine("\nExpected cost (without shipping) ~ " + basketProducts.Sum(x => x.ComputerPart.Price * x.Quantity).ToString() + "€");
             }
+            else
+            {
+                Console.WriteLine("You'll se info about your basket items here, when you fill it upp");
+            }
+          
         }
         public void DrawAccountProfile(ApplicationManager applicationLogic)
         {

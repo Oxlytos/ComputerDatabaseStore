@@ -23,7 +23,7 @@ namespace ComputerStoreApplication.Pages
 
         public void Load(ApplicationManager appLol)
         {
-            //kolla om inloggad
+            
             Products = appLol.GetStoreProducts();
             if (!appLol.IsLoggedInAsCustomer)
             {
@@ -35,8 +35,6 @@ namespace ComputerStoreApplication.Pages
             //om inloggad, hämta nnuvarande kund
             CurrentCustomerId = appLol.CustomerId;
             CurrentCustomer = appLol.GetCustomerInfo(appLol.CustomerId);
-           
-
         }
         public void RenderPage(ApplicationManager applicationLogic)
         {
@@ -54,12 +52,10 @@ namespace ComputerStoreApplication.Pages
                     {
                         string onSale = product.Sale ? "Yes" : "No";
                         Console.WriteLine($"Id: [{product.Id}] Name: [{product.Name}]\t Price: [{product.Price}]€\t On Sale?: [{onSale}] Category: [{product.ComponentCategory.Name}]\t Brand:[{product.BrandManufacturer.Name}]");
-
                     }
                 }
-                
+                Console.WriteLine("");
             }
-
         }
         public void DrawAccountProfile(ApplicationManager applicationLogic)
         {
@@ -72,7 +68,6 @@ namespace ComputerStoreApplication.Pages
         public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
             //har vi inte deras input
-            //har vi inte deras input
             if (!PageCommands.TryGetValue(UserInput.Key, out var whateverButtonUserPressed))
                 return this; //retunera samma sida igen
 
@@ -84,7 +79,7 @@ namespace ComputerStoreApplication.Pages
                     return new CheckoutPage() ;
                 case PageControls.PageOption.ViewObject:
                     CheckoutObject(applicationLogic);
-                    return new CheckoutPage();
+                    return new BrowseProducts();
                 case PageControls.PageOption.Home:
                     return new HomePage();
                 case PageControls.PageOption.CustomerPage:
@@ -119,37 +114,35 @@ namespace ComputerStoreApplication.Pages
         public void CheckoutObject(ApplicationManager app)
         {
             Console.WriteLine("What object do you wanna view, and maybe add to your basket? Input their corresponding Id");
-            var objectToView = StoreHelper.ChooceViewObject(Products);
-            var context = new ComputerDBContext();
+            var products = app.GetDBProductsFromList(Products);
+            var choosenObject = app.ChooseProductFromList(products);
+            if (choosenObject == null)
+            {
+                return;
+            }
+            Console.WriteLine($"Id: {choosenObject.Id} Name; {choosenObject.Name}");
 
-            var category = context.ComponentCategories.FirstOrDefault(x => x.Id == objectToView.CategoryId);
-            if (category == null) 
-            {
-                throw new Exception("Could not fint category");
-            }
-            var brand = context.BrandManufacturers.FirstOrDefault(x => x.Id == objectToView.BrandId);
-            if (brand == null) 
-            {
-                throw new Exception("Could not find brand");
-            }
-            Console.ReadLine();
-            objectToView.Read(brand, category);
+            var category = app.GetCategory(choosenObject.Id) ?? throw new Exception("Could not find category");
+            var brand = app.GetBrand(choosenObject.Id) ?? throw new Exception("Could not find brand");
+            choosenObject.Read(brand, category);
+            Console.SetCursorPosition(5, 40);
             Console.WriteLine("Add to basket?");
-            bool yes = GeneralHelpers.YesOrNoReturnBoolean();
+            bool yes = GeneralHelpers.ChangeYesOrNo(false);
+            if (!yes)
+            {
+                app.InformOfQuittingOperation();
+                return;
+            }
             if (yes && CurrentCustomer != null)
             {
-                app.AddProductToBasket(objectToView, CurrentCustomerId.Value);
+                app.AddProductToBasket(choosenObject, CurrentCustomerId.Value);
             }
-            else if(CurrentCustomer==null) 
+            else if (CurrentCustomer == null)
             {
                 Console.WriteLine("You need to be logged in to add to basket");
                 app.InformOfQuittingOperation();
             }
-            else
-            {
-                Console.WriteLine("Error with adding to basket");
-                app.InformOfQuittingOperation();
-            }
+
         }
         public void TryAndLogin(ApplicationManager app)
         {

@@ -110,12 +110,13 @@ namespace ComputerStoreApplication.Helpers
                     {
                         return intVal;
                     }
+
                 }
-                else
+                else 
                 {
                     return 0;
                 }
-                    Console.WriteLine("Invalid input, please enter a  integer:");
+                    
             }
         }
 
@@ -442,18 +443,24 @@ namespace ComputerStoreApplication.Helpers
             {
                 Console.WriteLine($"ID: {m.Id} Name: {m.Name}");
             }
-            int choice = GeneralHelpers.ReturnValidIntOrNone();
-            if(choice == 0)
-            {
-                return brand;
-            }
             while (true)
             {
+                int choice = GeneralHelpers.ReturnValidIntOrNone();
 
+                if (choice == 0)
+                {
+                    return brand;
+                }
+                 
+                var hit = brands.FirstOrDefault(v => v.Id == choice);
+
+                if (hit != null)
+                {
+                    return hit;
+                }
+                Console.WriteLine("Invalid id, try again (0 to cancel)");
             }
-            var hit = brands.FirstOrDefault(v => v.Id == choice);
-            return hit;
-            return brand;
+         
         }
         internal static int ChooseManufacturerById(List<Brand> manufacturers)
         {
@@ -467,8 +474,12 @@ namespace ComputerStoreApplication.Helpers
                 if (Int32.TryParse(Console.ReadLine(), out int choice))
                 {
                     var hit = manufacturers.FirstOrDefault(v => v.Id == choice);
-                    return hit.Id;
+                    if (hit != null) 
+                    {
+                        return hit.Id;
+                    }
                 }
+                  
                 Console.WriteLine("Invalid input");
             }
         }
@@ -633,21 +644,27 @@ namespace ComputerStoreApplication.Helpers
         }
         internal static int ChangeInt(int current)
         {
-            Console.WriteLine("Input int, or leave empty to keep current");
-            string? userInputAnew = Console.ReadLine(); // read inside the loop
-            if (Int32.TryParse(userInputAnew, out int intVal))
+         
+            while (true)
             {
-                return intVal;
-            }
-            else if (current < 0)
-            {
-                return StringToInt();
-            }
-            else
-            {
-                return current;
+                Console.WriteLine("Input int, or leave empty to keep current");
+                string? userInputAnew = Console.ReadLine(); // read inside the loop
+                if (Int32.TryParse(userInputAnew, out int intVal))
+                {
+                    return intVal;
+                }
+                else if (current < 0)
+                {
+                    return StringToInt();
+                }
+                else
+                {
+                    return current;
+                }
             }
         }
+           
+       
         internal static decimal ChangeDecimal(decimal current)
         {
             {
@@ -695,6 +712,13 @@ namespace ComputerStoreApplication.Helpers
                 Console.WriteLine("Invalid input, please enter a valid decimal number:");
             }
         }
+        public static IEnumerable<string> TextWrapper(string text, int maxlength)
+        {
+            for (int i = 0; i < text.Length; i += maxlength) 
+            {
+                yield return text.Substring(i, Math.Min(maxlength, text.Length - i));
+            }
+        }
         internal static bool ChangeYesOrNo(bool currentBool)
         {
             Console.WriteLine("'y' for yes, and 'n' for no");
@@ -707,8 +731,9 @@ namespace ComputerStoreApplication.Helpers
             {
                 return false;
             }
-            return currentBool;
+                return currentBool;
         }
+                
         internal static bool YesOrNoReturnBoolean()
         {
             while (true)

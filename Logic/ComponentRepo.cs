@@ -10,6 +10,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static ComputerStoreApplication.Crud_Related.CrudHandler;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ComputerStoreApplication.Logic
@@ -127,7 +128,6 @@ namespace ComputerStoreApplication.Logic
             var trackedCustomerInfo = context.Customers.Include(q => q.ProductsInBasket).FirstOrDefault(c => c.Id == customerId);
             if (trackedCustomerInfo == null)
             {
-
                 throw new InvalidOperationException("Customer not found");
             }
             var basketItem = trackedCustomerInfo.ProductsInBasket.FirstOrDefault(bp => bp.CustomerId == customerId && bp.ComputerPartId == prod);
@@ -147,7 +147,6 @@ namespace ComputerStoreApplication.Logic
                 trackedCustomerInfo.ProductsInBasket.Add(newItem); // <-- add directly to DbSet othwerise EF cries a bit
                
             }
-
             //Lower store stock of x item
             var storeObjects = context.CompuerProducts.FirstOrDefault(x=>x.Id==prod);
             if (storeObjects != null)
@@ -155,11 +154,14 @@ namespace ComputerStoreApplication.Logic
                 storeObjects.Stock -= count;
             }
             //when troubleshooting tracking
-            foreach (var bp in context.ChangeTracker.Entries<BasketProduct>())
-            {
-                Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
-            }
+            //foreach (var bp in context.ChangeTracker.Entries<BasketProduct>())
+            //{
+            //    Console.WriteLine($"Tracked BasketProduct Id: {bp.Entity.Id}, CustomerId: {bp.Entity.CustomerId}");
+            //}
+         
             context.SaveChanges();
+            Console.WriteLine("Added to basket!");
+            Console.ReadKey();
             //TrySaveChanges();
         }
         public void RemoveSingularObjectFromBasket(BasketProduct prod, CustomerAccount cus)
@@ -247,13 +249,17 @@ namespace ComputerStoreApplication.Logic
         internal ComponentCategory GetCatagory(int productId)
         {
             using var context = new ComputerDBContext();
-            return context.ComponentCategories.FirstOrDefault(x => x.Id == productId);
+            var product = context.CompuerProducts.FirstOrDefault(x => x.Id == productId);
+            var category = context.ComponentCategories.FirstOrDefault(x => x.Id == product.CategoryId);
+            return category;
         }
 
         internal Brand GetBrand(int productId)
         {
             using var context = new ComputerDBContext();
-            return context.BrandManufacturers.FirstOrDefault(x => x.Id == productId);
+            var product = context.CompuerProducts.FirstOrDefault(x => x.Id == productId);
+            var brand = context.BrandManufacturers.FirstOrDefault(x => x.Id == product.BrandId);
+            return context.CompuerProducts.FirstOrDefault(x => x.Id == productId).BrandManufacturer;
         }
     }
 }

@@ -285,15 +285,22 @@ namespace ComputerStoreApplication.Logic
            
             if (customer == null)
             {
-                throw new Exception("No customer logged in our found!");
+                Console.WriteLine("No customer logged in our found!");
+                Console.ReadKey();
+                return;
             }
             if (!customer.ProductsInBasket.Any())
             {
-                throw new ArgumentOutOfRangeException("Empty basket!");
+                Console.WriteLine("No items in basket, returning!");
+                Console.ReadKey();
+                return;
+
             }
             if (customer.CustomerShippingInfos == null||customer.CustomerShippingInfos.Count==0) 
             {
-                throw new Exception("You need to register an adress to your account"); 
+                Console.WriteLine("No address registered, returning");
+                Console.ReadKey();
+                return;
             }
             LocationHolder locationHolder = new LocationHolder
             {
@@ -487,6 +494,14 @@ namespace ComputerStoreApplication.Logic
         internal Brand GetBrand(int productId)
         {
             return _repo.GetBrand(productId);
+        }
+
+        internal int GetBasketItemCount(int customerId)
+        {
+            using var context = new ComputerDBContext();
+            return context.BasketProducts
+                .Where(x => x.CustomerId == customerId)
+                .Sum(x => x.Quantity);
         }
     }
 }

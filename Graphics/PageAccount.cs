@@ -11,17 +11,29 @@ namespace ComputerStoreApplication.Graphics
     {
         internal static List<string> ReturnCustomerProfileAccountString(ApplicationManager app)
         {
+            List<string> strings = new List<string>();
+            if (app.IsLoggedInAsAdmin)
+            {
+                return ReturnAdminProfileAccountString(app);
+            }
             if (!app.IsLoggedInAsCustomer)
             {
-                return null;
+                strings.Add("Not logged in");
+                return strings;
             }
-            int? totalAmountInBasket = 0;
-            List<string> strings = new List<string>();
+            using var context = new ComputerDBContext();
+            var customer = context.Customers.FirstOrDefault(x=>x.Id==app.CustomerId);
+            if(customer == null)
+            {
+                strings.Add("Not logged in");
+                return strings;
+            }
+            int? totalAmountInBasket = app.BasketItemCount;
+         
             if (app.IsLoggedInAsCustomer)
             {
-                //totalAmountInBasket = currentCustomer.ProductsInBasket?.Sum(p => p.Quantity) ?? 0;
                
-                //strings.AddRange(currentCustomer.FirstName, currentCustomer.SurName, currentCustomer.Email, " Objects in basket: " + totalAmountInBasket);
+                strings.AddRange(customer.FirstName, customer.SurName, customer.Email, " Objects in basket: " + totalAmountInBasket);
             }
             else
             {
@@ -32,17 +44,36 @@ namespace ComputerStoreApplication.Graphics
         }
         internal static List<string> ReturnAdminProfileAccountString(ApplicationManager app)
         {
+            List<string> strings = new List<string>();
+            if (app.IsLoggedInAsCustomer)
+            {
+                return ReturnCustomerProfileAccountString(app);
+            }
             if (!app.IsLoggedInAsAdmin)
             {
-                return null;
+                strings.Add("Not logged in");
+                return strings;
             }
-            List<string> strings = new List<string>();
-                //strings.AddRange(admin.UserName, admin.FirstName, admin.SurName, admin.Email);
+            var context = new ComputerDBContext();
+            var admin = context.Admins.FirstOrDefault(x => x.Id == app.AdminId);
+            if(admin == null)
+            {
+                strings.Add("Not logged in");
+                return strings;
+            }
+         
+            strings.AddRange(admin.UserName, admin.FirstName, admin.SurName, admin.Email);
             return strings;
         }
         internal static void DrawAccountGraphic(List<string> textElements, string headerText, ConsoleColor bannerColor)
         {
             //Width
+            if ( textElements == null)
+            {
+                textElements = new List<string> { "Not logged in" };
+            }
+            //Adds a little space from the left
+            textElements = textElements.Select(s => " "+ s).ToList();
             int longestLineLength = Math.Max(headerText.Length, textElements.Max(s => s.Length));
 
             //Banner width more or less
@@ -55,8 +86,8 @@ namespace ComputerStoreApplication.Graphics
             int rightPageAligned = Console.WindowWidth - graphicWidth - padding;
             rightPageAligned = Math.Clamp(rightPageAligned, 0, Console.BufferWidth - totalWidth);
             Console.BackgroundColor = bannerColor;
-            var windowTop1 = new Helpers.WindowStuff.WideWindow(headerText, rightPageAligned, 0, textElements);
-            windowTop1.Draw();
+            var window = new Helpers.WindowStuff.WideWindow(headerText, rightPageAligned, 0, textElements);
+            window.Draw();
             Console.BackgroundColor = ConsoleColor.Black;
         }
     }

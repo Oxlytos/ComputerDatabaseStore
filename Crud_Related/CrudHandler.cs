@@ -6,6 +6,7 @@ using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
 using ComputerStoreApplication.MongoModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
@@ -89,16 +90,17 @@ namespace ComputerStoreApplication.Crud_Related
             //We go to that categorys method and do its crud
             categoryCRUD(logic);
         }
-        private static void CRUDBrands(ApplicationManager manager)
+        private static void CRUDBrands(ApplicationManager app)
         {
-            var brands = manager.GetManufacturers();
+            using var context = new ComputerDBContext();
+            var brands = context.BrandManufacturers;
             if (brands == null)
             {
                 Console.WriteLine("No brands yet, want to create one?");
                 bool answer = GeneralHelpers.YesOrNoReturnBoolean();
                 if (answer)
                 {
-                    TryCreateBrand(manager, brands);
+                    TryCreateBrand(app);
                 }
             }
             else
@@ -128,28 +130,29 @@ namespace ComputerStoreApplication.Crud_Related
                     switch (crudChoice)
                     {
                         case CRUD.Read:
-                            CrudCreatorHelper.ReadBrandStatistics(manager, validBrand);
+                            CrudCreatorHelper.ReadBrandStatistics(app, validBrand);
                             break;
                         case CRUD.Update:
                             CrudCreatorHelper.UpdateBrandName(validBrand);
                             break;
                         case CRUD.Delete:
-                            manager.ComputerPartShopDB.Remove(validBrand);
+                            context.Remove(validBrand);
                             break;
                     }
                 }
                 else
                 {
-                    TryCreateBrand(manager, brands);
+                    TryCreateBrand(app);
 
                 }
-                manager.ComputerPartShopDB.SaveChanges();
+                context.SaveChanges();
             }
         }
 
         private static void CRUDCustomers(ApplicationManager logic)
         {
-            var customers = logic.GetCustomers();
+            using var context = new ComputerDBContext();
+            var customers = context.Customers;
             if (customers == null)
             {
                 Console.WriteLine("No customers yet, returning");
@@ -194,17 +197,17 @@ namespace ComputerStoreApplication.Crud_Related
                         CrudCreatorHelper.UpdateCustomerData(customer);
                         break;
                     case CRUD.Delete:
-                        logic.ComputerPartShopDB.Remove(customer);
+                        context.Remove(customer);
                         break;
                 }
-
-                logic.ComputerPartShopDB.SaveChanges();
+                context.SaveChanges();
             }
         }
 
         private static void CRUDPaymentMethods(ApplicationManager logic)
         {
-            var paymentMethods = logic.ComputerPartShopDB.PaymentMethods.ToList();
+            using var context = new ComputerDBContext();
+            var paymentMethods = context.PaymentMethods.ToList();
             if (paymentMethods == null)
             {
                 Console.WriteLine("No payment methods, empty collection");
@@ -254,10 +257,10 @@ namespace ComputerStoreApplication.Crud_Related
                             CrudCreatorHelper.UpdatePaymentMethod(thing);
                             break;
                         case CRUD.Delete:
-                            logic.ComputerPartShopDB.Remove(thing);
+                            context.Remove(thing);
                             break;
                     }
-                    logic.ComputerPartShopDB.SaveChanges();
+                    context.SaveChanges();
                 }
                 else
                 {
@@ -270,6 +273,7 @@ namespace ComputerStoreApplication.Crud_Related
 
         private static void TryCreatePaymentMethod(ApplicationManager logic, List<PaymentMethod> paymentMethods)
         {
+            using var context = new ComputerDBContext();
             PaymentMethod paymentMethod = new PaymentMethod();
             paymentMethod = CrudCreatorHelper.CreatePaymentMethod();
             if (paymentMethods.Any())
@@ -281,28 +285,32 @@ namespace ComputerStoreApplication.Crud_Related
                     return;
                 }
             }
-            logic.ComputerPartShopDB.Add(paymentMethod);
-            logic.ComputerPartShopDB.SaveChanges();
+            context.Add(paymentMethod);
+            context.SaveChanges();
             return;
         }
-        private static void TryCreateBrand(ApplicationManager manager, List<Brand> brands)
+        private static void TryCreateBrand(ApplicationManager manager)
         {
+            using var context = new ComputerDBContext();
             Brand newBrand = new Brand();
             newBrand = CrudCreatorHelper.CreateBrand();
-            var alreadyExits = brands.FirstOrDefault(x => x.Name.ToLower() == newBrand.Name.ToLower());
+            var alreadyExits = context.BrandManufacturers.FirstOrDefault(x => x.Name.ToLower() == newBrand.Name.ToLower());
             if (alreadyExits != null)
             {
                 Console.WriteLine("Already exits");
                 return;
             }
-            manager.ComputerPartShopDB.Add(newBrand);
-            manager.ComputerPartShopDB.SaveChanges();
+            context.Add(newBrand);
+            context.SaveChanges();
             return;
         }
 
         private static void CRUDComputerParts(ApplicationManager logic)
         {
-            var storeObjects = logic.GetComputerParts();
+            using var context = new ComputerDBContext();
+            var storeObjects = context.CompuerProducts;
+            var allManufactuers = context.BrandManufacturers.ToList();
+            var categories = context.ComponentCategories.ToList();
             if (storeObjects == null)
             {
                 Console.WriteLine("No products, empty collection");
@@ -310,7 +318,7 @@ namespace ComputerStoreApplication.Crud_Related
                 bool yes = GeneralHelpers.YesOrNoReturnBoolean();
                 if (yes)
                 {
-                    TryAddPart(logic, storeObjects);
+                    TryAddPart(logic);
                 }
                 else
                 {
@@ -344,8 +352,7 @@ namespace ComputerStoreApplication.Crud_Related
                     logic.InformOfQuittingOperation();
                     return;
                 }
-                var allManufactuers = logic.GetManufacturers();
-                var categories = logic.GetCategories();
+                
                 if (userCrudValue != CRUD.Create)
                 {
                     Console.WriteLine("Which object from the list? Input its Id");
@@ -368,27 +375,29 @@ namespace ComputerStoreApplication.Crud_Related
                             CrudCreatorHelper.UpdateProduct(thing, allManufactuers, categories);
                             break;
                         case CRUD.Delete:
-                            logic.ComputerPartShopDB.Remove(thing);
+                            context.Remove(thing);
                             break;
                     }
-                    logic.ComputerPartShopDB.SaveChanges();
+                    Console.ReadLine();
+                    context.SaveChanges();
                 }
               
                 else
                 {
-                    TryAddPart(logic, storeObjects);
+                    TryAddPart(logic);
                     return;
                 }
             }
         }
-        private static void TryAddPart(ApplicationManager logic, List<ComputerPart>? storeObjects)
+        private static void TryAddPart(ApplicationManager logic)
         {
+            using var context = new ComputerDBContext();
             var categories = logic.GetCategories();
             var brands = logic.GetManufacturers();
             ComputerPart computerPart = CrudCreatorHelper.CreateComputerPart(categories, brands);
-            if (storeObjects.Any())
+            if (context.CompuerProducts.Any())
             {
-                var alreadyExists = storeObjects.FirstOrDefault(x => x.Name.ToLower() == computerPart.Name.ToLower());
+                var alreadyExists = context.CompuerProducts.FirstOrDefault(x => x.Name.ToLower() == computerPart.Name.ToLower());
                 if (alreadyExists != null)
                 {
                     Console.WriteLine("Already exists");
@@ -397,14 +406,14 @@ namespace ComputerStoreApplication.Crud_Related
             }
             //To mongo
             _ = MongoConnection.AdminCreateProduct(computerPart.Name, logic.AdminId);
-            logic.ComputerPartShopDB.Add(computerPart);
-            logic.ComputerPartShopDB.SaveChanges();
+            context.CompuerProducts.Add(computerPart);
+            context.SaveChanges();
         }
 
         private static void CRUDDeliveryServices(ApplicationManager logic)
         {
-            var deliveryServices = logic.ComputerPartShopDB.DeliveryProviders.ToList();
-            if (deliveryServices == null)
+             using var context = new ComputerDBContext();
+            if (context.DeliveryProviders == null)
             {
                 Console.WriteLine("No deliver services registered, empty collection");
                 Console.WriteLine("Add something to this collection?");
@@ -412,7 +421,7 @@ namespace ComputerStoreApplication.Crud_Related
                 if (yes)
                 {
                     //Create
-                    TryAddDeliveryService(logic, deliveryServices);
+                    TryAddDeliveryService(logic);
                     return;
                 }
                 else
@@ -424,7 +433,7 @@ namespace ComputerStoreApplication.Crud_Related
             else
             {
                 Console.WriteLine("These are the current delivery services registered");
-                foreach (var postal in deliveryServices)
+                foreach (var postal in context.DeliveryProviders)
                 {
                     Console.WriteLine($"Id: {postal.Id} {postal.Name} ");
                 }
@@ -441,7 +450,7 @@ namespace ComputerStoreApplication.Crud_Related
                 {
                     Console.WriteLine("Which object from the list? Input its Id");
                     int valid = GeneralHelpers.StringToInt();
-                    var thing = deliveryServices.FirstOrDefault(x => x.Id == valid);
+                    var thing = context.DeliveryProviders.FirstOrDefault(x => x.Id == valid);
                     if (thing == null)
                     {
                         return;
@@ -455,33 +464,35 @@ namespace ComputerStoreApplication.Crud_Related
                             CrudCreatorHelper.UpdateDeliverService(thing);
                             break;
                         case CRUD.Delete:
-                            logic.ComputerPartShopDB.Remove(thing);
+                            context.Remove(thing);
                             break;
                     }
-                    logic.ComputerPartShopDB.SaveChanges();
+                    Console.ReadLine();
+                    context.SaveChanges();
                 }
                 else
                 {
-                    TryAddDeliveryService(logic, deliveryServices);
+                    TryAddDeliveryService(logic);
                 }
             }
         }
 
-        private static void TryAddDeliveryService(ApplicationManager logic, List<DeliveryProvider>? deliveryServices)
+        private static void TryAddDeliveryService(ApplicationManager logic)
         {
+            using var context = new ComputerDBContext();
             DeliveryProvider deliveryProvider = new DeliveryProvider();
             deliveryProvider = CrudCreatorHelper.CreateDeliveryProvider();
-            if (deliveryServices.Any())
+            if (context.DeliveryProviders.Any())
             {
-                var alreadyExists = deliveryServices.FirstOrDefault(x => x.Name.ToLower() == deliveryProvider.Name.ToLower());
+                var alreadyExists = context.DeliveryProviders.FirstOrDefault(x => x.Name.ToLower() == deliveryProvider.Name.ToLower());
                 if (alreadyExists != null)
                 {
                     Console.WriteLine("Already exists");
                 }
 
             }
-            logic.ComputerPartShopDB.Add(deliveryProvider);
-            logic.ComputerPartShopDB.SaveChanges();
+            context.Add(deliveryProvider);
+            context.SaveChanges();
             return;
         }
 
@@ -494,6 +505,7 @@ namespace ComputerStoreApplication.Crud_Related
         //Everything category releated
         private static void CRUDCategories(ApplicationManager logic)
         {
+            using var context = new ComputerDBContext();
             var storeCategories = logic.GetCategories();
             if (storeCategories == null)
             {
@@ -545,33 +557,37 @@ namespace ComputerStoreApplication.Crud_Related
                             break;
                         case CRUD.Delete:
                             Console.WriteLine("Category won't be removed if its used by a product");
-                            logic.ComputerPartShopDB.Remove(category);
+                            context.Remove(category);
                             break;
                     }
+                    Console.ReadLine();
+                    context.SaveChanges();
                 }
                 else
                 {
-                    TryAddCategory(logic, storeCategories);
+                    TryAddCategory(logic);
 
                 }
             }
         }
 
-        private static void TryAddCategory(ApplicationManager logic, List<ComponentCategory> storeCategories)
+        private static void TryAddCategory(ApplicationManager logic)
         {
-            ComponentCategory newCat = CrudCreatorHelper.CreateCategory();
 
-            if (storeCategories.Any())
+            ComponentCategory newCat = CrudCreatorHelper.CreateCategory();
+            using var context = new ComputerDBContext();
+
+            if (context.ComponentCategories.Any())
             {
-                var alreadyExists = storeCategories.FirstOrDefault(x => x.Name.ToLower() == newCat.Name.ToLower());
+                var alreadyExists = context.ComponentCategories.FirstOrDefault(x => x.Name.ToLower() == newCat.Name.ToLower());
                 if (alreadyExists != null)
                 {
                     Console.WriteLine("That category already exists");
                     return;
                 }
             }
-            logic.ComputerPartShopDB.Add(newCat);
-            logic.ComputerPartShopDB.SaveChanges();
+            context.Add(newCat);
+            context.SaveChanges();
             Console.ReadLine();
             return;
         }
@@ -624,42 +640,6 @@ namespace ComputerStoreApplication.Crud_Related
                 return;
             }
         }
-        public static void AddNewBrand(ApplicationManager logic)
-        {
-            Console.Clear();
-            Console.WriteLine("Current brands");
-            var brands = logic.GetManufacturers();
-            foreach (var brand in brands)
-            {
-                Console.WriteLine($"{brand.Name}");
-            }
-            Console.WriteLine("Add new brand?");
-            bool yes = GeneralHelpers.YesOrNoReturnBoolean();
-            if (yes)
-            {
-                Console.WriteLine("Name?");
-                string name = GeneralHelpers.SetName(40);
-                Brand newBrand = new Brand
-                {
-                    Name = name,
-                };
-                var currentBrands = logic.GetManufacturers();
-                var valid = currentBrands.FirstOrDefault(x => x.Name.ToLower() == newBrand.Name.ToLower());
-                //Dosen't already exist
-                if (valid == null)
-                {
-                    Console.WriteLine("Adding new brand!");
-                    logic.ComputerPartShopDB.Add(newBrand);
-                    logic.ComputerPartShopDB.SaveChanges();
-                    Console.ReadLine();
-                }
-
-            }
-            else
-            {
-                logic.InformOfQuittingOperation();
-            }
-        }
 
         internal static void CRUDShippingInfo(ApplicationManager app, CustomerAccount currentCustomer)
         {
@@ -668,7 +648,8 @@ namespace ComputerStoreApplication.Crud_Related
                 Cities = app.ComputerPartShopDB.Cities.ToList(),
                 Countries = app.ComputerPartShopDB.Countries.ToList(),
             };
-            var addresses = app.ComputerPartShopDB.CustomerShippingInfos.Where(x => x.CustomerId == currentCustomer.Id).ToList();
+            using var context = new ComputerDBContext();
+            var addresses = context.CustomerShippingInfos.Where(x => x.CustomerId == currentCustomer.Id).ToList();
             if (addresses.Count > 0)
             {
                 Console.WriteLine("Found these addresses linked to your account");
@@ -721,20 +702,22 @@ namespace ComputerStoreApplication.Crud_Related
                         app.ComputerPartShopDB.Remove(adress);
                         break;
                 }
+                Console.ReadLine();
             }
             else
             {
                 CustomerShippingInfo newInfo = TryCreateCustomerShippingInfo(app, locationHolder);
             }
-            app.ComputerPartShopDB.SaveChanges();
+            context.SaveChanges();
         }
 
         private static CustomerShippingInfo TryCreateCustomerShippingInfo(ApplicationManager app, LocationHolder locationHolder)
         {
+            using var context = new ComputerDBContext();
            CustomerShippingInfo newInfo = CrudCreatorHelper.CreateAddress(app, locationHolder);
             newInfo.CustomerId = app.CustomerId;
-            app.ComputerPartShopDB.CustomerShippingInfos.Add(newInfo);
-            app.ComputerPartShopDB.SaveChanges();
+            context.CustomerShippingInfos.Add(newInfo);
+            context.SaveChanges();
             return newInfo;
         }
     }

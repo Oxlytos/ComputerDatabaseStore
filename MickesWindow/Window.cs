@@ -76,6 +76,7 @@ namespace ComputerStoreApplication.MickesWindow
             {
                 Console.WriteLine("Screen/window was proprably to small, " + e.Message);
             }
+            Console.SetCursorPosition(10,10);
 
            
         }

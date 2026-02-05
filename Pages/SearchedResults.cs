@@ -74,10 +74,10 @@ namespace ComputerStoreApplication.Pages
             }
             appLol.AddProductToBasket(objectToAdd, CurrentCustomerId.Value);
         }
-        public void DrawAccountProfile()
+        public void DrawAccountProfile(ApplicationManager applicationManager)
         {
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnCustomerProfileAccountString(CurrentCustomer);
+            accountInfo = PageAccount.ReturnCustomerProfileAccountString(applicationManager);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
         }
@@ -97,13 +97,13 @@ namespace ComputerStoreApplication.Pages
 
         }
 
-        public void RenderPage()
+        public void RenderPage(ApplicationManager applicationManager)
         {
             Console.Clear();
             ConsoleHelper.ResetConsole();
             SetPageCommands();
             Graphics.PageBanners.DrawSearchedResults();
-            DrawAccountProfile();
+            DrawAccountProfile(applicationManager);
         }
 
         public void SetPageCommands()

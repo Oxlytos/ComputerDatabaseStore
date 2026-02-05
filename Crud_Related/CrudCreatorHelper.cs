@@ -5,6 +5,7 @@ using ComputerStoreApplication.Models.ComputerComponents;
 using ComputerStoreApplication.Models.Customer;
 using ComputerStoreApplication.Models.Store;
 using ComputerStoreApplication.Models.Vendors_Producers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace ComputerStoreApplication.Crud_Related
             {
                 return;
             }
-            foreach (var product in result.Result) 
+            foreach (var product in result.Result)
             {
                 Console.WriteLine($"We have this many unique products in {cat.Name}: {product.DifferentProducts}, with a total stock of: {product.TotalStock} ");
             }
@@ -40,6 +41,7 @@ namespace ComputerStoreApplication.Crud_Related
             {
                 Console.WriteLine($"We've sold {totalSold.Result} in this category");
             }
+            Console.ReadKey();
         }
 
         internal static void UpdateCategory(ComponentCategory part)
@@ -53,7 +55,7 @@ namespace ComputerStoreApplication.Crud_Related
             part.Name = name;
 
         }
-        internal static DeliveryProvider CreateDeliveryProvider() 
+        internal static DeliveryProvider CreateDeliveryProvider()
         {
             DeliveryProvider deliveryProvider = new DeliveryProvider();
             Console.WriteLine("Name?");
@@ -62,7 +64,7 @@ namespace ComputerStoreApplication.Crud_Related
             deliveryProvider.Price = GeneralHelpers.StringToDecimal();
             Console.WriteLine("Avg. Delivery time (not including weekends)");
             deliveryProvider.AverageDeliveryTime = GeneralHelpers.StringToInt();
-            
+
             return deliveryProvider;
         }
 
@@ -71,9 +73,9 @@ namespace ComputerStoreApplication.Crud_Related
             Console.WriteLine("To keep current properties, leave empty");
             Console.WriteLine("Name?");
             string name = GeneralHelpers.ChangeName(thing.Name, 30);
-            if (!string.IsNullOrEmpty(name)) 
+            if (!string.IsNullOrEmpty(name))
             {
-            thing.Name = name;
+                thing.Name = name;
             }
             Console.WriteLine("Price for service (per order)");
             thing.Price = GeneralHelpers.ChangeDecimal(thing.Price);
@@ -113,7 +115,7 @@ namespace ComputerStoreApplication.Crud_Related
         }
         internal static void ReadProductData(ApplicationManager logic, ComputerPart thing)
         {
-           var result = logic.Dapper.TotalStockValueOnSpecificProduct(thing).Result;
+            var result = logic.Dapper.TotalStockValueOnSpecificProduct(thing).Result;
             var resultOrders = logic.Dapper.CountOrdersForProduct(thing.Id);
             Console.WriteLine($"Info on {thing.Name}");
             Console.WriteLine($"We got this many in stock of this product: {result.InStock}");
@@ -121,6 +123,7 @@ namespace ComputerStoreApplication.Crud_Related
             Console.WriteLine($"Our total stock value (quantity * value per unit) of this product is {result.StockValue} €");
             Console.WriteLine($"Total revenue thus far is {result.TotalRevenue} €");
             Console.WriteLine($"Its a part of {resultOrders.Result} orders");
+            Console.ReadKey();
         }
 
         internal static void UpdateProduct(ComputerPart thing, List<Brand> allManufactuers, List<ComponentCategory> categories)
@@ -187,6 +190,7 @@ namespace ComputerStoreApplication.Crud_Related
         {
             var result = logic.Dapper.GetHowManyUseThisPayMethod(thing.Id);
             Console.WriteLine($"This many people use {thing.Name}: {result.Result}");
+            Console.ReadKey();
         }
 
         internal static PaymentMethod CreatePaymentMethod()
@@ -197,28 +201,53 @@ namespace ComputerStoreApplication.Crud_Related
             return pay;
         }
 
-      
+
         internal static void UpdateCustomerData(CustomerAccount customer)
         {
             Console.WriteLine("Firstname? Leave empty for no change");
-                    customer.FirstName = GeneralHelpers.ChangeName(customer.FirstName, 30);
+            customer.FirstName = GeneralHelpers.ChangeName(customer.FirstName, 30);
             Console.WriteLine("Surname? Leave empty for no change");
-            customer.SurName= GeneralHelpers.ChangeName(customer.SurName, 30);
+            customer.SurName = GeneralHelpers.ChangeName(customer.SurName, 30);
             Console.WriteLine("Email? Leave empty for no change");
-           customer.Email= GeneralHelpers.ChangeName(customer.Email, 50);
+            customer.Email = GeneralHelpers.ChangeName(customer.Email, 50);
             Console.WriteLine("Phone number? Leave empty for no change");
             customer.PhoneNumber = GeneralHelpers.ChangeName(customer.PhoneNumber, 15);
+            Console.WriteLine("Update customer password?");
+            bool passYes = GeneralHelpers.YesOrNoReturnBoolean();
+            if (passYes)
+            {
+                Console.WriteLine("New autogenerated one, or choose a specific one?");
+                bool generate = GeneralHelpers.YesOrNoReturnBoolean();
+                if (generate) 
+                {
+                    customer.ChangePassword(Guid.NewGuid().ToString());
+                }
+                else
+                {
+                    Console.WriteLine("Input their new password");
+                    string input = Console.ReadLine();
+                    if (string.IsNullOrEmpty(input))
+                    {
+                        Console.WriteLine("Granting customer a generated one, input was empty");
+                        customer.CreatePassword();
+                    }
+                    else
+                    {
+                        customer.ChangePassword(input);
+                    }
+                }
+            }
         }
 
         internal static void UpdateAddress(CustomerShippingInfo toUpdate, LocationHolder locationHolder)
         {
             Console.WriteLine("Leave empty to keep current");
             Console.WriteLine("Streetname?");
-            toUpdate.StreetName = GeneralHelpers.ChangeName(toUpdate.StreetName,50);
+            toUpdate.StreetName = GeneralHelpers.ChangeName(toUpdate.StreetName, 50);
             Console.WriteLine("Postal code?");
             toUpdate.PostalCode = GeneralHelpers.ChangeInt(toUpdate.PostalCode);
             Console.WriteLine("State/Province?");
-            toUpdate.State_Or_County_Or_Province=GeneralHelpers.ChangeName(toUpdate.State_Or_County_Or_Province, 40);
+            toUpdate.State_Or_County_Or_Province = GeneralHelpers.ChangeName(toUpdate.State_Or_County_Or_Province, 40);
 
             Console.WriteLine("Country?");
             Country country = GeneralHelpers.ChooseOrCreateCountry(locationHolder);
@@ -231,6 +260,7 @@ namespace ComputerStoreApplication.Crud_Related
 
         internal static CustomerShippingInfo CreateAddress(ApplicationManager app, LocationHolder locationHolder)
         {
+            using var context = new ComputerDBContext();
             CustomerShippingInfo customerShippingInfo = new CustomerShippingInfo();
             Console.WriteLine("Street name?");
             customerShippingInfo.StreetName = GeneralHelpers.SetName(80);
@@ -240,36 +270,36 @@ namespace ComputerStoreApplication.Crud_Related
             customerShippingInfo.State_Or_County_Or_Province = GeneralHelpers.SetName(40);
 
             Country country = GeneralHelpers.ChooseOrCreateCountry(locationHolder);
-            
+
 
             City city = GeneralHelpers.ChooseOrCreateCity(locationHolder, country);
 
-            var countryExists = app.ComputerPartShopDB.Countries.FirstOrDefault(c => c.Name.ToLower() == country.Name.ToLower());
+            var countryExists = context.Countries.FirstOrDefault(c => c.Name.ToLower() == country.Name.ToLower());
             if (countryExists == null)
             {
                 city.Country = country;
-                app.ComputerPartShopDB.Countries.Add(country);
-                app.ComputerPartShopDB.SaveChanges();
+                context.Countries.Add(country);
+                context.SaveChanges();
             }
             else
             {
                 country = countryExists;
-                city.Country= country;
+                city.Country = country;
             }
 
-            var cityExists = app.ComputerPartShopDB.Cities.FirstOrDefault(c => c.Name.ToLower() == city.Name.ToLower()&& c.CountryId == country.Id);
+            var cityExists = context.Cities.FirstOrDefault(c => c.Name.ToLower() == city.Name.ToLower() && c.CountryId == country.Id);
 
             if (cityExists == null)
             {
-                app.ComputerPartShopDB.Cities.Add(city);
-                app.ComputerPartShopDB.SaveChanges();
+                context.Cities.Add(city);
+                context.SaveChanges();
             }
             else
             {
                 city = cityExists;
                 city.Country = country;
             }
-           
+
             customerShippingInfo.City = city;
 
             return customerShippingInfo;
@@ -277,7 +307,7 @@ namespace ComputerStoreApplication.Crud_Related
 
         internal static void ReadAddressInfo(CustomerShippingInfo adress, LocationHolder locationHolder)
         {
-            if (locationHolder.Cities == null || locationHolder.Countries == null||locationHolder==null)
+            if (locationHolder.Cities == null || locationHolder.Countries == null || locationHolder == null)
             {
                 return;
             }
@@ -288,24 +318,28 @@ namespace ComputerStoreApplication.Crud_Related
                 return;
             }
             Country country = locationHolder.Countries.FirstOrDefault(c => c.Id == city.CountryId);
-            if(country== null) 
+            if (country == null)
             {
-                return ;
+                return;
             }
             Console.WriteLine("Your address info");
             Console.WriteLine($"Street {adress.StreetName}");
             Console.WriteLine($"Postal code {adress.PostalCode}");
             Console.WriteLine($"State/Province {adress.State_Or_County_Or_Province}");
             Console.WriteLine($"City {city.Name} in {country.Name}");
+            Console.ReadKey();
         }
 
         internal static void AdjustBasketItems(CustomerAccount currentCustomer, ApplicationManager logic)
         {
-            var basketProducts = logic.GetBasketProductsFromCustomerId(logic.CustomerId);
+            using var context = new ComputerDBContext();
+
             if (currentCustomer == null)
             {
                 return;
             }
+            var basketProducts = context.BasketProducts.Where(x => x.CustomerId == currentCustomer.Id).Include(b=>b.ComputerPart).ToList() ;
+
             if (basketProducts.Count == 0)
             {
                 Console.WriteLine("No basket products found, returning...");
@@ -331,7 +365,7 @@ namespace ComputerStoreApplication.Crud_Related
                 //this is the item but tracked with ef
                 //loads of errors when saving otherewise, something with Ids and columns not macthing
                 //trackedbasketitem makes sure we're modifying the entity in the db
-                var trackedBasketItem = logic.ComputerPartShopDB.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
+                var trackedBasketItem = context.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
 
                 if (trackedBasketItem == null)
                 {
@@ -339,57 +373,64 @@ namespace ComputerStoreApplication.Crud_Related
                     return;
                 }
                 var storeItem = storeProducts.FirstOrDefault(x => x.Id == trackedBasketItem.ComputerPartId);
-                if(storeItem == null)
+                if (storeItem == null)
                 {
                     Console.WriteLine("Error finding store item, returning...");
                     return;
                 }
                 Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
                 int amount = GeneralHelpers.ReturnValidIntOrNone();
-                if (amount > storeItem.Stock)
-                {
-                    Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
-                    trackedBasketItem.Quantity = storeItem.Stock;
-                }
                 if (amount == 0)
                 {
-                    logic.ComputerPartShopDB.Remove(trackedBasketItem);
+                    context.Remove(trackedBasketItem);
                 }
                 else
                 {
-                    trackedBasketItem.Quantity=amount;
+                    if (amount > storeItem.Stock)
+                    {
+                        Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
+                        trackedBasketItem.Quantity = storeItem.Stock;
+                    }
+                    trackedBasketItem.Quantity = amount;
                 }
+              
+               
+                
                 logic.VerifyStoreItems();
                 logic.VerifyBasketItems(currentCustomer.Id);
 
-                logic.ComputerPartShopDB.SaveChanges();
+                context.SaveChanges();
                 
                 return;
             }
+
             else
             {
                 var basketItem = basketProducts.First();
-                var trackedBasketItem = logic.ComputerPartShopDB.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
+                var trackedBasketItem = context.BasketProducts.FirstOrDefault(b => b.Id == basketItem.Id);
                 var storeItem = storeProducts.FirstOrDefault(x => x.Id == trackedBasketItem.ComputerPartId);
                 Console.WriteLine($"How many of this product? Maximum is {storeItem.Stock}");
                 int amount = GeneralHelpers.ReturnValidIntOrNone();
+               
+                if (amount == 0)
+                {
+                    context.Remove(trackedBasketItem);
+
+                }
                 if (amount > storeItem.Stock)
                 {
                     Console.WriteLine("Input is greater than available stock, we've capped it at available amount");
                     trackedBasketItem.Quantity = storeItem.Stock;
-                }
-                if (amount == 0)
-                {
-                    logic.ComputerPartShopDB.Remove(trackedBasketItem);
-                  
                 }
                 else
                 {
                     trackedBasketItem.Quantity = amount;
                 }
+                Console.WriteLine($"Current basked item quantity of {basketItem.ComputerPart.Name} is {basketItem.Quantity}");
+                Console.ReadLine();
                 logic.VerifyStoreItems();
                 logic.VerifyBasketItems(currentCustomer.Id);
-                logic.ComputerPartShopDB.SaveChanges();
+                context.SaveChanges();
             }
         }
 
@@ -400,7 +441,7 @@ namespace ComputerStoreApplication.Crud_Related
 
             if (revenue.Result != null)
             {
-              Console.WriteLine($"Total revune of this brand is: {revenue.Result}");
+                Console.WriteLine($"Total revune of this brand is: {revenue.Result}");
             }
             else
             {
@@ -416,9 +457,10 @@ namespace ComputerStoreApplication.Crud_Related
                 {
                     Console.WriteLine("Nothing to show");
                 }
-                    
-               
+
+
             }
+            Console.ReadKey();
         }
 
         internal static void UpdateBrandName(Brand validBrand)
@@ -448,18 +490,19 @@ namespace ComputerStoreApplication.Crud_Related
             }
             if (customerspentBrand != null)
             {
-                    Console.WriteLine($"Their favoured brand seems to be {customerspentBrand.Result.BrandName}, since they've spent {customerspentBrand.Result.TotalSpent} € on their products!");
+                Console.WriteLine($"Their favoured brand seems to be {customerspentBrand.Result.BrandName}, since they've spent {customerspentBrand.Result.TotalSpent} € on their products!");
             }
+            Console.ReadKey();
         }
 
         internal static void ReadDeliveryServiceData(ApplicationManager logic, DeliveryProvider thing)
         {
             var result = logic.Dapper.GetHowManyUseThisDeliveryService(thing.Id);
-            if (result != null) 
+            if (result != null)
             {
                 Console.WriteLine($"This many people {thing.Name} as their provider for their orders: {result.Result}");
             }
         }
-           
+
     }
 }

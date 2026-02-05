@@ -57,12 +57,10 @@ namespace ComputerStoreApplication.Pages
         }
         public void DrawAccountProfile(ApplicationManager applicationLogic)
         {
-
             List<string> accountInfo = new List<string>();
-            accountInfo = PageAccount.ReturnAdminProfileAccountString(AdminAccount);
+            accountInfo = PageAccount.ReturnAdminProfileAccountString(applicationLogic);
             PageAccount.DrawAccountGraphic(accountInfo, "", ConsoleColor.DarkCyan);
             Console.SetCursorPosition(0, 10);
-
         }
         public async Task<IPage?> HandleUserInput(ConsoleKeyInfo UserInput, ApplicationManager applicationLogic)
         {
@@ -86,6 +84,10 @@ namespace ComputerStoreApplication.Pages
                 case PageControls.PageOption.AdminLogin:
                     Console.SetCursorPosition(0, 15);
                     //try and login
+                    if (applicationLogic.IsLoggedInAsCustomer)
+                    {
+
+                    }
                     if (!applicationLogic.IsLoggedInAsAdmin)
                     {
                         LoginAdmin(applicationLogic);
@@ -98,6 +100,11 @@ namespace ComputerStoreApplication.Pages
                     return this;
                 case PageControls.PageOption.AdminViewStats:
                     //show stats if logged in admin
+                    if (!applicationLogic.IsLoggedInAsAdmin)
+                    {
+                        Console.WriteLine("You need to be logged in as an admin to view these statistics");
+                        Console.ReadKey();
+                    }
                     if (applicationLogic.IsLoggedInAsAdmin)
                     {
                           await ViewStats(applicationLogic);
@@ -186,6 +193,12 @@ namespace ComputerStoreApplication.Pages
         }
         public void LoginAdmin(ApplicationManager app)
         {
+            if (app.IsLoggedInAsCustomer)
+            {
+                    Console.WriteLine("Can't login as a admin while logged in as a customer");
+                    Console.ReadLine();
+                return;
+            }
             Console.WriteLine("Admin username?");
             string username = Console.ReadLine();
             Console.WriteLine("Admin password?");
@@ -224,15 +237,6 @@ namespace ComputerStoreApplication.Pages
            
             AdminId = appLol.AdminId;
             AdminAccount = appLol.GetAdminInfo(appLol.AdminId);
-        }
-        public void AdminAction(ApplicationManager logic)
-        {
-            Console.WriteLine("Choose what action to peform on a category");
-            Console.WriteLine("Register a product to storage");
-            Console.WriteLine("Create a new store product");
-            Console.WriteLine("");
-            Console.ReadLine();
-            Console.WriteLine("What CRUD action?");
         }
      
     }

@@ -82,7 +82,7 @@ namespace ComputerStoreApplication.Models.Store
             List<ComputerPart> parts = new List<ComputerPart>();
             foreach (ComputerPart part in allParts)
             {
-                if (part.Name.ToLower().Contains(input.ToLower()))
+                if (part.Name.ToLower().Contains(input.ToLower())||part.ComponentCategory.Name.ToLower().Contains(input.ToLower())||part.BrandManufacturer.Name.ToLower().Contains(input.ToLower()))
                 {
                     parts.Add(part);
                 }

@@ -31,12 +31,13 @@ namespace ComputerStoreApplication
         {
             //await CheckMongoConnection();
             //For when empty
-           // FillDatabaseWithBaseInformation();
+            //FillDatabaseWithBaseInformation();
             await MainSimulationLogic();
             Console.ReadLine();
         }
         private static async Task CheckMongoConnection()
         {
+            //Get mongo password
             var config = new ConfigurationBuilder().AddUserSecrets<ComputerDBContext>().Build();
             var loginPassword = config["MongoPassword"];
 
@@ -52,6 +53,8 @@ namespace ComputerStoreApplication
                 var result = client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
                 Console.WriteLine("Pinged your deployment. You successfully connected to MongoDB!");
             }
+
+            //common connection expcetion in most cases => check password first
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -70,8 +73,6 @@ namespace ComputerStoreApplication
             IConnectionFactory connectionFactory = new SQLConnectionFactory(connstring);
 
             IDapperService dapperService = new DapperService(connectionFactory);
-            
-            
             
             if (!db.Admins.Any())
             {
@@ -97,94 +98,57 @@ namespace ComputerStoreApplication
             var computerApplicationLogic = new Logic.ApplicationManager(service, mongo, dbContextFactory, dapperService);
             while (true) 
             {
-                Console.Clear();
                 Console.CursorVisible = false;
-                //Render current choosen page => Which changes later
-                //At default load up home page
-                computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
-                //Render X page on and on again until application closses
-                computerApplicationLogic.CurrentPage.RenderPage(computerApplicationLogic);
-                //Key press on a site => Different actions/methods
-                ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
-                //Handle input
-                var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
-                //Do thing on page if there's a command for it
-                if (actionOnPage != null)
+                if (Console.WindowWidth < 70 || Console.WindowHeight < 50)
                 {
-                    //peform action, otherwise it just reloads page
-                    
-                    computerApplicationLogic.CurrentPage = await actionOnPage;
-                    computerApplicationLogic.RefreshBasket();
+                    Console.Clear();
+                    Console.WriteLine("Console window may be to small for simulation to draw properly - expect som quirks");
+                    Console.ReadKey(true);
+                    continue;
+                }
+                try
+                {
+                    Console.Clear();
+                    //Render current choosen page => Which changes later
+                    //At default load up home page
+                    computerApplicationLogic.CurrentPage.Load(computerApplicationLogic);
+
+
+                    //Render X page on and on again until application closses
+                    computerApplicationLogic.CurrentPage.RenderPage(computerApplicationLogic);
+
+
+                    //Key press on a site => Different actions/methods
+                    ConsoleKeyInfo consoleKeyInfo = Console.ReadKey(true);
+
+
+                    //Handle input
+                    var actionOnPage = computerApplicationLogic.CurrentPage.HandleUserInput(consoleKeyInfo, computerApplicationLogic);
+
+
+                    //Do thing on page if there's a command for it
+                    if (actionOnPage != null)
+                    {
+                        //peform action, otherwise it just reloads page
+
+                        computerApplicationLogic.CurrentPage = await actionOnPage;
+                        computerApplicationLogic.RefreshBasket();
+                    }
+                }
+             
+                catch (Exception ex) 
+                {
+                    Console.WriteLine($"Unexpected expcetion occured, {ex.Message} + {ex.TargetSite}");
+                    Console.ReadKey(true);
+                    Console.Clear();
                 }
             }
         }
         static void FillDatabaseWithBaseInformation()
         {
-            //    //CPU arch
             //    Console.WriteLine("Seeding database with base specs");
             //    Console.ReadLine();
             using var db = new Logic.ComputerDBContext();
-            //var x86_64 = new CPUArchitecture { Name = "x86-64" };
-            //var x86 = new CPUArchitecture { Name = "x86" };
-            //var x64 = new CPUArchitecture { Name = "x64" };
-            //var ARM = new CPUArchitecture { Name = "ARM" };
-            //var ia32 = new CPUArchitecture { Name = "IA-32" };
-            //db.AllComponentSpecifcations.AddRange(x86_64, x86, x64, ARM, ia32);
-
-            ////CPU socket
-            ////var amdam4 = new CPUSocket { Name = "AMD AM4" };
-            ////var amdam5 = new CPUSocket { Name = "AMD AM5" };
-            ////var amdstr5 = new CPUSocket { Name = "AMD sTR5" };
-            ////var amdswrx8 = new CPUSocket { Name = "AMD sWRX8" };
-            ////var intel1700 = new CPUSocket { Name = "Intel 1700" };
-            ////var intel1851 = new CPUSocket { Name = "Intel 1851" };
-            ////db.AllComponentSpecifcations.AddRange(amdam4, amdam5, amdstr5, amdswrx8, intel1700, intel1851);
-            //db.SaveChanges();
-
-            //Energy classes
-            //List<EnergyClass> energyClasses = new List<EnergyClass>();
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Bronze" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Silver" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Gold" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Platinum" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Titanium" });
-            //energyClasses.Add(new EnergyClass { Name = "80 Plus Ruby" });
-            //db.AllComponentSpecifcations.AddRange(energyClasses);
-            //db.AddRange(energyClasses);
-            //db.SaveChanges();
-
-            //Most different memeory typesd
-            //List<MemoryType> memoryTypes = new List<MemoryType>();
-            //memoryTypes.Add(new MemoryType { Name = "DDR3 SODIMM" });
-            //memoryTypes.Add(new MemoryType { Name = "DDR3L SODIMM" });
-            //memoryTypes.Add(new MemoryType { Name = "DDR4" });
-            //memoryTypes.Add(new MemoryType { Name = "DDR4 SODIMM" });
-            //memoryTypes.Add(new MemoryType { Name = "DDR5 CUDIMM" });
-            //memoryTypes.Add(new MemoryType { Name = "DDR5 RDIMM" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR5" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR5X" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR6X" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR6" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR7" });
-            //memoryTypes.Add(new MemoryType { Name = "GDDR7X" });
-
-            //db.AllComponentSpecifcations.AddRange(memoryTypes);
-            //db.SaveChanges();
-            //Base profiles that most use
-            //List<RamProfileFeatures> ramProfileFeatures = new List<RamProfileFeatures>();
-            //ramProfileFeatures.Add(new RamProfileFeatures { Name = "XMP" });
-            //ramProfileFeatures.Add(new RamProfileFeatures { Name = "EXPO" });
-            //   db.RamProfiles.AddRange(ramProfileFeatures);
-            //db.SaveChanges();
-
-            //    //maker of chiipsets for cpus, gpus
-            //    List<ChipsetVendor> vendors = new List<ChipsetVendor>();
-            //    vendors.Add(new ChipsetVendor { Name = "Intel" });
-            //    vendors.Add(new ChipsetVendor { Name = "AMD" });
-            //    vendors.Add(new ChipsetVendor { Name = "Nvidia" });
-            //    //  db.Vendors.AddRange(vendors);
-
             ////    //most brands/manufacturers
             List<Brand> manufacturers = new List<Brand>();
             manufacturers.Add(new Brand { Name = "MSI" });
@@ -211,7 +175,6 @@ namespace ComputerStoreApplication
             pays.Add(new PaymentMethod { Name = "Paypal" });
             db.AddRange(pays);
             
-
             List<DeliveryProvider> deliveryProviders = new List<DeliveryProvider>();
             deliveryProviders.Add(new DeliveryProvider { Name = "PostNord", Price = 10, AverageDeliveryTime = 2 });
             deliveryProviders.Add(new DeliveryProvider { Name = "ExpressBud", Price = 20, AverageDeliveryTime = 1 });
@@ -227,8 +190,9 @@ namespace ComputerStoreApplication
             componentCategories.Add(new ComponentCategory { Name = "Motherboard" });
             componentCategories.Add(new ComponentCategory { Name = "RAM" });
             db.AddRange(componentCategories);
-            //db.SaveChanges();
+            db.SaveChanges();
             Console.WriteLine("Saved changes!");
+            Console.ReadLine();
         }
 
 

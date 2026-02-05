@@ -29,25 +29,31 @@ namespace ComputerStoreApplication.Helpers
             public string PaymentMethodName { get; set; } = "None";
             public List<DisplayPackage> ShippingInfos { get; set; } = new List<DisplayPackage>();
         }
-
+        //Big ol display objc to somehwat show everything in a nice enough manner
+        //But just package, not whole order
         public static DisplayPackage ToDisplay(this CustomerShippingInfo info, List<City> cities, List<Country> countries)
         {
-            if (info == null) return null!;
-            var city = info.City ?? cities.FirstOrDefault(c => c.Id == info.CityId);
-            var country = city?.Country ?? countries.FirstOrDefault(c => c.Id == city?.CountryId);
-
+            if (info == null) 
+            {
+                return null;
+            }
+            var city = cities.FirstOrDefault(c => c.Id == info.CityId);
+            var country = countries.FirstOrDefault(c => c.Id == city?.CountryId);
+            //Display easy like this
             return new DisplayPackage
             {
                 Id = info.Id,
                 StreetName = info.StreetName,
                 PostalCode = info.PostalCode,
-                CityName = city?.Name ?? "Unknown",
-                CountryName = country?.Name ?? "Unknown"
+                //Could be null fields
+                CityName = city?.Name ?? "Unknown/Not Found",
+                CountryName = country?.Name ?? "Unknown/Not Found"
             };
         }
-
+        //Display whole order
         public static DisplayOrder ToDisplay(this Order order, List<City> cities, List<Country> countries)
         {
+            //Order to display
             return new DisplayOrder
             {
                 Id = order.Id,
@@ -57,10 +63,8 @@ namespace ComputerStoreApplication.Helpers
                 ShippingCost = order.ShippingCost,
                 TaxCosts = order.TaxCosts,
                 DeliveryProviderName = order.DeliveryProvider?.Name ?? "None",
-                PaymentMethodName = order.PaymentMethod?.Name ?? "None",
-                ShippingInfos = order.ShippingInfo != null
-                    ? new List<DisplayPackage> { order.ShippingInfo.ToDisplay(cities, countries) }
-                    : new List<DisplayPackage>()
+                PaymentMethodName = order.PaymentMethod?.Name ?? "None", //Display shippinginfo if not null, display within this method :otherwise create a new list of display package
+                ShippingInfos = order.ShippingInfo != null ? new List<DisplayPackage> { order.ShippingInfo.ToDisplay(cities, countries) }: new List<DisplayPackage>()
             };
         }
     }
